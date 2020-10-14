@@ -18,8 +18,8 @@ GUNC Documentation
 
    installation
    usage
-   release-history
    functions
+   changelog
    contributing
    authors
 
@@ -30,7 +30,7 @@ GUNC Documentation
 Python package for detection of chimerism and contamination in prokaryotic genomes.
 
 * Free software: GNU General Public License v3 or later
-* Documentation:  `gunc.embl.de <gunc.embl.de>`_
+* Documentation:  `gunc.embl.de <https://gunc.embl.de>`_
 
 Features
 --------
