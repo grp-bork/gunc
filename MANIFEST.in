@@ -12,5 +12,5 @@ recursive-include docs *.rst conf.py Makefile make.bat
 include versioneer.py
 include gunc/_version.py
 
-# If including data files in the package, add them like:
-# include path/to/data_file
+include data/genome2taxonomy_ref.tsv
+include tests/test_data/*

@@ -1,0 +1,44 @@
+image: "python:3.7"
+
+before_script:
+  - python --version
+  - pip install -r requirements.txt
+  - pip install -r requirements-dev.txt
+
+stages:
+  - Static Analysis
+  - Unit Test
+  - Documentation
+
+flake8:
+  stage: Static Analysis
+  allow_failure: true
+  script:
+  - python3 -m flake8 gunc/*.py
+
+unit_test:
+  stage: Unit Test
+  script:
+  - python -m pytest
+
+coverage:
+  stage: Unit Test
+  script:
+    - coverage run -m pytest
+    - coverage report -m
+    - coverage xml -o coverage.xml
+  artifacts:
+    reports:
+        cobertura: coverage.xml
+    expire_in: 1 week
+
+documentation:
+  stage: Documentation
+  script:
+    - python3 -m pip install .
+    - make -C docs html
+    - mv docs/build/html ./
+  artifacts:
+    paths:
+    - ./html
+    expire_in: 1 week

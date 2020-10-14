@@ -2,5 +2,7 @@
 Release History
 ===============
 
-Initial Release (YYYY-MM-DD)
+Initial Release (2020-10-14)
 ----------------------------
+
+ - First release
