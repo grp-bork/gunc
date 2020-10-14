@@ -1,0 +1,8 @@
+genome	n_contigs	n_genes_called	n_genes_mapped	taxonomic_level	clade_separation_score	contamination_portion	n_effective_clades	genes_retained_in_major_clades	mean_hit_identity	mean_random_clade_separation_score	genes_retained_index	out_of_reference_score	adjustment	clade_separation_score_adjusted	chimeric
+test	15	17	35	kingdom	0.0	0.0	0.0	1.0	0.91747	1.0	2.05882	1.88891	0	0.0	False
+test	15	17	35	phylum	1.0	0.23529	0.63277	1.0	0.91747	0.91945	2.05882	1.88891	0	0.0	False
+test	15	17	35	class	1.0	0.23529	0.65143	1.0	0.91747	0.91332	2.05882	1.88891	0	0.0	False
+test	15	17	35	order	1.0	0.23529	0.67052	1.0	0.91747	0.91207	2.05882	1.88891	0	0.0	False
+test	15	17	35	family	1.0	0.23529	0.67052	1.0	0.91747	0.92704	2.05882	1.88891	0	0.0	False
+test	15	17	35	genus	1.0	0.29412	0.9396	1.0	0.91747	0.91688	2.05882	1.88891	0	0.0	False
+test	15	17	35	specI	1.0	0.35294	1.27559	1.0	0.91747	0.91474	2.05882	1.88891	0	0.0	False

@@ -1,9 +1,16 @@
+.. image:: GUNC_LOGO.png
+    :width: 400px
+    :align: left
+    :alt: GUNC
+|
+|
+|
+|
+|
+
 ====
 GUNC
 ====
-
-.. image:: https://img.shields.io/travis/fullama/gunc.svg
-        :target: https://travis-ci.org/fullama/gunc
 
 .. image:: https://img.shields.io/pypi/v/gunc.svg
         :target: https://pypi.python.org/pypi/gunc
@@ -11,10 +18,10 @@ GUNC
 
 Python package for detection of chimerism and contamination in prokaryotic genomes.
 
-* Free software: 3-clause BSD license
-* Documentation: (COMING SOON!) https://fullama.github.io/gunc.
+* Free software: GNU General Public License v3 or later
+* Documentation:  `gunc.embl.de <gunc.embl.de>`_
 
 Features
 --------
 
-* TODO
+* Detects chimerism

@@ -1,0 +1,8 @@
+genome	n_contigs	n_genes_called	n_genes_mapped	taxonomic_level	clade_separation_score	contamination_portion	n_effective_clades	genes_retained_in_major_clades	mean_hit_identity	mean_random_clade_separation_score	genes_retained_index	out_of_reference_score	adjustment	clade_separation_score_adjusted	chimeric
+test_genome.fa	510	1832	1752	kingdom	0.0	0.0	0.0	1.0	0.88	1.0	1.05	0.92	0	0.0	False
+test_genome.fa	510	1832	1752	phylum	0.98	0.18	0.42	0.99	0.89	0.35	1.03	0.92	1	0.98	True
+test_genome.fa	510	1832	1752	class	0.94	0.22	0.56	0.97	0.89	0.42	1.01	0.91	1	0.94	True
+test_genome.fa	510	1832	1752	order	0.94	0.33	1.05	0.97	0.89	0.42	1.01	0.90	1	0.94	True
+test_genome.fa	510	1832	1752	family	0.98	0.31	0.94	0.93	0.91	0.41	0.97	0.88	1	0.98	True
+test_genome.fa	510	1832	1752	genus	0.99	0.28	0.78	0.88	0.92	0.39	0.92	0.85	1	0.99	True
+test_genome.fa	510	1832	1752	specI	0.81	0.19	0.52	0.7	0.95	0.53	0.74	0.70	1	0.81	True

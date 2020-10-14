@@ -46,22 +46,25 @@ setup(
     packages=find_packages(exclude=['docs', 'tests']),
     entry_points={
         'console_scripts': [
-            # 'command = some.module:some_function',
+            "gunc = gunc.gunc:main",
         ],
     },
     include_package_data=True,
     package_data={
         'gunc': [
-            # When adding files here, remember to update MANIFEST.in as well,
-            # or else they will not be included in the distribution on PyPI!
-            # 'path/to/data_file',
+            'data/genome2taxonomy_ref.tsv',
+            'tests/test_data/*'
         ]
     },
     install_requires=requirements,
     license="BSD (3-clause)",
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Environment :: Console',
         'Natural Language :: English',
+        'Development Status :: 4 - Beta',
         'Programming Language :: Python :: 3',
+        'Intended Audience :: Science/Research',
+        'Topic :: Scientific/Engineering :: Bio-Informatics',
+        'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)'
     ],
 )

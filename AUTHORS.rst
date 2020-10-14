@@ -5,9 +5,10 @@ Credits
 Maintainer
 ----------
 
-* Anthony Fullam <anthony.fullam@embl.de>
+* Anthony Fullam <https://github.com/fullama>
 
 Contributors
 ------------
 
-None yet. Why not be the first? See: CONTRIBUTING.rst
+* Askarbek Orakov <askarbek.orakov@embl.de>
+* Sebastian Schmidt <sebastian.schmidt@embl.de>

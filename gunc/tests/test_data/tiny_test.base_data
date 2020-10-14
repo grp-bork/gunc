@@ -1,0 +1,18 @@
+query,genome,id,contig,kingdom,phylum,class,order,family,genus,specI
+k115_6143_1,1747.SAMN03982942,98.6,k115_6143,2 Bacteria,201174 Actinobacteria,1760 Actinobacteria,85009 Propionibacteriales,31957 Propionibacteriaceae,1912216 Cutibacterium,specI_v3_00800
+k115_4699_1,1747.SAMN03982942,100.0,k115_4699,2 Bacteria,201174 Actinobacteria,1760 Actinobacteria,85009 Propionibacteriales,31957 Propionibacteriaceae,1912216 Cutibacterium,specI_v3_00800
+k115_6505_1,1747.SAMN03982942,100.0,k115_6505,2 Bacteria,201174 Actinobacteria,1760 Actinobacteria,85009 Propionibacteriales,31957 Propionibacteriaceae,1912216 Cutibacterium,specI_v3_00800
+k115_1087_1,1747.SAMN03982942,100.0,k115_1087,2 Bacteria,201174 Actinobacteria,1760 Actinobacteria,85009 Propionibacteriales,31957 Propionibacteriaceae,1912216 Cutibacterium,specI_v3_00800
+k115_8310_1,1747.SAMN03982942,99.4,k115_8310,2 Bacteria,201174 Actinobacteria,1760 Actinobacteria,85009 Propionibacteriales,31957 Propionibacteriaceae,1912216 Cutibacterium,specI_v3_00800
+k115_7589_1,1747.SAMN03982942,100.0,k115_7589,2 Bacteria,201174 Actinobacteria,1760 Actinobacteria,85009 Propionibacteriales,31957 Propionibacteriaceae,1912216 Cutibacterium,specI_v3_00800
+k115_2_1,1747.SAMN03982942,96.3,k115_2,2 Bacteria,201174 Actinobacteria,1760 Actinobacteria,85009 Propionibacteriales,31957 Propionibacteriaceae,1912216 Cutibacterium,specI_v3_00800
+k115_2_2,1747.SAMN03982942,97.9,k115_2,2 Bacteria,201174 Actinobacteria,1760 Actinobacteria,85009 Propionibacteriales,31957 Propionibacteriaceae,1912216 Cutibacterium,specI_v3_00800
+k115_364_1,1747.SAMN03982942,92.4,k115_364,2 Bacteria,201174 Actinobacteria,1760 Actinobacteria,85009 Propionibacteriales,31957 Propionibacteriaceae,1912216 Cutibacterium,specI_v3_00800
+k115_364_2,1747.SAMN03982942,98.9,k115_364,2 Bacteria,201174 Actinobacteria,1760 Actinobacteria,85009 Propionibacteriales,31957 Propionibacteriaceae,1912216 Cutibacterium,specI_v3_00800
+k115_6868_1,1747.SAMN03982942,89.5,k115_6868,2 Bacteria,201174 Actinobacteria,1760 Actinobacteria,85009 Propionibacteriales,31957 Propionibacteriaceae,1912216 Cutibacterium,specI_v3_00800
+k115_7226_1,1110502.SAMN02603926,74.3,k115_7226,2 Bacteria,1224 Proteobacteria,28211 Alphaproteobacteria,204441 Rhodospirillales,41295 Rhodospirillaceae,171436 Tistrella,specI_v3_01934
+k115_6866_1,177437.SAMN02603282,68.5,k115_6866,2 Bacteria,1224 Proteobacteria,28221 Deltaproteobacteria,213118 Desulfobacterales,213119 Desulfobacteraceae,2295 Desulfobacterium,specI_v3_09366
+k115_2172_1,1173027.SAMN02261351,80.7,k115_2172,2 Bacteria,1117 Cyanobacteria,NA Cyanobacteria class incertae sedis,1150 Oscillatoriales,1892252 Microcoleaceae,44471 Microcoleus,specI_v3_07253
+k115_3977_1,671223.SAMN05413927,99.2,k115_3977,2 Bacteria,201174 Actinobacteria,1760 Actinobacteria,85009 Propionibacteriales,31957 Propionibacteriaceae,1743 Propionibacterium,specI_v3_06414
+k115_726_1,1574624.SAMN04524164,76.2,k115_726,2 Bacteria,201174 Actinobacteria,1760 Actinobacteria,85009 Propionibacteriales,31957 Propionibacteriaceae,1912216 Cutibacterium,specI_v3_01401
+k115_1450_1,329726.SAMN02604308,87.8,k115_1450,2 Bacteria,1117 Cyanobacteria,NA Cyanobacteria class incertae sedis,1890424 Synechococcales,1890429 Acaryochloridaceae,155977 Acaryochloris,specI_v3_10941

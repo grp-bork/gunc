@@ -1,15 +1,38 @@
-.. Packaging Scientific Python documentation master file, created by
-   sphinx-quickstart on Thu Jun 28 12:35:56 2018.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+
+.. image:: GUNC_LOGO.png
+    :width: 400px
+    :align: left
+    :alt: GUNC
+
+|
+|
+|
+|
+|
 
 GUNC Documentation
 ==================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    installation
    usage
    release-history
-   min_versions
+   functions
+   contributing
+   authors
+
+.. image:: https://img.shields.io/pypi/v/gunc.svg
+        :target: https://pypi.python.org/pypi/gunc
+
+
+Python package for detection of chimerism and contamination in prokaryotic genomes.
+
+* Free software: GNU General Public License v3 or later
+* Documentation:  `gunc.embl.de <gunc.embl.de>`_
+
+Features
+--------
+
+* Detects chimerism

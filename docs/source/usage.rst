@@ -2,8 +2,8 @@
 Usage
 =====
 
-Start by importing GUNC.
+Quickstart
 
-.. code-block:: python
+.. code-block:: shell
 
-    import gunc
+    gunc -i genome.fa -d /path/to/db
