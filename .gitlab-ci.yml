@@ -37,8 +37,11 @@ documentation:
   script:
     - python3 -m pip install .
     - make -C docs html
-    - mv docs/build/html ./
+    - mkdir public
+    - mv docs/build/html/* ./public
   artifacts:
     paths:
-    - ./html
+    - public
     expire_in: 1 week
+  only:
+    - master
