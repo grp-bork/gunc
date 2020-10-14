@@ -2,9 +2,9 @@
 import os
 import sys
 import argparse
-from . import _version
 from . import external_tools
 from .get_scores import chim_score
+import versioneer
 
 
 def parse_args(args):
@@ -49,7 +49,7 @@ def parse_args(args):
     parser.add_argument('-v', '--version',
                         help='Print version number and exit.',
                         action='version',
-                        version=_version.__version__)
+                        version=versioneer.get_version())
     args = parser.parse_args()
     return args
 
