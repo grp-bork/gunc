@@ -32,7 +32,7 @@ coverage:
         cobertura: coverage.xml
     expire_in: 1 week
 
-documentation:
+pages:
   stage: Documentation
   script:
     - python3 -m pip install .
