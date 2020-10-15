@@ -41,7 +41,7 @@ setup(
     long_description=readme,
     author="Anthony Fullam",
     author_email='anthony.fullam@embl.de',
-    url='https://github.com/fullama/gunc',
+    url='https://github.com/grp-bork/gunc',
     python_requires='>={}'.format('.'.join(str(n) for n in min_version)),
     packages=find_packages(exclude=['docs', 'tests']),
     entry_points={

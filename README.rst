@@ -5,10 +5,6 @@
 
 |
 
-.. |documentation| raw:: html
-
-    <a href="https://grp-bork.embl-community.io/gunc/">GUNC Documentation</a>
-
 ====
 GUNC
 ====
@@ -20,7 +16,7 @@ GUNC
 Python package for detection of chimerism and contamination in prokaryotic genomes.
 
 * Free software: GNU General Public License v3 or later
-* Documentation: |documentation|
+* Documentation: `GUNC Documentation <https://grp-bork.embl-community.io/gunc/>`_
 
 Features
 --------
