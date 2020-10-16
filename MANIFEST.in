@@ -12,5 +12,4 @@ recursive-include docs *.rst conf.py Makefile make.bat
 include versioneer.py
 include gunc/_version.py
 
-include data/genome2taxonomy_ref.tsv
-include tests/test_data/*
+include gunc/data/genome2taxonomy_ref.tsv
