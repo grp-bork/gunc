@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os
 import sys
-import argparse
+import configargparse
 from . import external_tools
 from .get_scores import chim_score
 from ._version import get_versions
@@ -17,18 +17,21 @@ def parse_args(args):
         {Namespace} -- assigned args
 
     """
-    parser = argparse.ArgumentParser()
+    description = ('Tool for detection of chimerism and '
+                   'contamination in prokaryotic genomes.\n')
+    parser = configargparse.ArgumentParser(default_config_files=['~/.gunc'],
+                                           description=description)
     group = parser.add_mutually_exclusive_group(required=True)
 
     parser.add_argument('-d', '--database_file',
                         help='Diamond database reference file.',
-                        required=True,
+                        env_var='GUNC_DB',
                         metavar='')
     group.add_argument('-i', '--input_file',
-                       help='Input file in FASTA fna format..',
+                       help='Input file in FASTA fna format.',
                        metavar='')
     group.add_argument('-g', '--gene_calls',
-                       help='Input genecalls FASTA faa format..',
+                       help='Input genecalls FASTA faa format.',
                        metavar='')
     parser.add_argument('-p', '--threads',
                         help='number of CPU threads.',
@@ -46,6 +49,10 @@ def parse_args(args):
                         help='Run with high sensitivity',
                         action='store_true',
                         default=False)
+    parser.add_argument('-c', '--config',
+                        help='Config file path',
+                        is_config_file=True,
+                        metavar='')
     parser.add_argument('-v', '--version',
                         help='Print version number and exit.',
                         action='version',
@@ -54,6 +61,8 @@ def parse_args(args):
         parser.print_help(sys.stderr)
         sys.exit()
     args = parser.parse_args()
+    if not args.database_file:
+        sys.exit('[WARNING] database_file argument missing.')
     return args
 
 
