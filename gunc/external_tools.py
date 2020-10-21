@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys
+import shutil
 import argparse
 import subprocess
 
@@ -98,6 +99,16 @@ def diamond(input_file, threads, temp_dir, database_file, out_file):
                                 universal_newlines=True)
     except subprocess.CalledProcessError:
         sys.exit('[ERROR] Failed to run Diamond')
+
+
+def check_diamond_version():
+    return subprocess.check_output('diamond --version',
+                                   shell=True,
+                                   universal_newlines=True).strip().split()[2]
+
+
+def check_if_tool_exists(tool_name):
+    return shutil.which(tool_name) is not None
 
 
 if __name__ == "__main__":

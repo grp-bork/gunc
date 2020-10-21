@@ -50,6 +50,9 @@ def parse_args(args):
                         help='Print version number and exit.',
                         action='version',
                         version=get_versions()['version'])
+    if not args:
+        parser.print_help(sys.stderr)
+        sys.exit()
     args = parser.parse_args()
     return args
 
@@ -66,8 +69,20 @@ def create_dir(path):
         os.makedirs(path)
 
 
+def start_checks():
+    if not external_tools.check_if_tool_exists('diamond'):
+        sys.exit('[ERROR] Diamond not found..')
+    else:
+        diamond_ver = external_tools.check_diamond_version()
+        if diamond_ver != '2.0.4':
+            sys.exit(f'[ERROR] Diamond version is {diamond_ver}, not 2.0.4')
+    if not external_tools.check_if_tool_exists('prodigal'):
+        sys.exit('[ERROR] Prodigal not found..')
+
+
 def main():
     args = parse_args(sys.argv[1:])
+    start_checks()
 
     if args.input_file:
         input_basename = os.path.basename(args.input_file)
