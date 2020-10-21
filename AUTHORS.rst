@@ -10,5 +10,5 @@ Maintainer
 Contributors
 ------------
 
-* Askarbek Orakov <askarbek.orakov@embl.de>
-* Sebastian Schmidt <sebastian.schmidt@embl.de>
+* Askarbek Orakov <https://github.com/Askarbek-orakov>
+* Sebastian Schmidt <https://github.com/defleury>
