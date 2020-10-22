@@ -103,8 +103,8 @@ def calc_mean_clade_separation_score(contigs, taxons):
         float: average completeness score
     """
     scores = []
-    for _ in range(50):
-        random.shuffle(contigs)
+    for i in range(50):
+        random.Random(i).shuffle(contigs)
         scores.append(calc_completeness_score(contigs, taxons))
     return mean(scores)
 

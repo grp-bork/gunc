@@ -22,12 +22,10 @@ def test_calc_completeness_score():
     assert calc_completeness_score([0, 0, 1, 1], [0, 1, 0, 1]) == 0
 
 
-# def test_calc_mean_clade_separation_score():
-#     # This is awkward as its supposed to be a bit random
-#     mean = calc_mean_clade_separation_score([0, 0, 1, 1], [1, 1, 0, 0])
-#     print(mean)
-#     assert mean > .25
-#     assert mean < .75
+def test_calc_mean_clade_separation_score():
+    # This is awkward as its supposed to be a bit random
+    mean = calc_mean_clade_separation_score([0, 0, 1, 1], [1, 1, 0, 0])
+    assert mean == .4
 
 
 def test_create_base_data():
