@@ -11,10 +11,10 @@ ref_base_data_path = resource_filename(__name__,
 ref_base_data = pd.read_csv(ref_base_data_path)
 
 
-def test_get_chimerism_score():
-    assert get_chimerism_score([1]) == 0
-    assert get_chimerism_score([2, 8, 1, 1, 3]) == pytest.approx(1.84,
-                                                                 rel=1e-2)
+def test_get_n_effective_surplus_clades():
+    assert get_n_effective_surplus_clades([1]) == 0
+    assert get_n_effective_surplus_clades([2, 8, 1, 1, 3]) == pytest.approx(1.84,
+                                                                            rel=1e-2)
 
 
 def test_calc_completeness_score():
@@ -77,7 +77,6 @@ def test_column_to_list():
                  'k115_364_1',
                  'k115_364_2',
                  'k115_6868_1']
-    print(diamond_df)
     assert column_to_list(diamond_df, 'query') == test_list
 
 
@@ -115,12 +114,12 @@ def test_get_scores_for_taxlevel():
     assert data['taxonomic_level'] == 'kingdom'
     assert data['clade_separation_score'] == 0
     assert data['contamination_portion'] == 0
-    assert data['n_effective_clades'] == 0
-    assert data['genes_retained_in_major_clades'] == 1
+    assert data['n_effective_surplus_clades'] == 0
+    assert data['proportion_genes_retained_in_major_clades'] == 1
     assert round(data['mean_hit_identity'], 2) == 0.92
     assert round(data['mean_random_clade_separation_score'], 2) == pytest.approx(1, rel=1e-1)
     assert round(data['genes_retained_index'], 2) == 2.06
-    assert round(data['out_of_reference_score'], 2) == 1.89
+    assert round(data['reference_representation_score'], 2) == 1.89
     assert data['adjustment'] == 0
     assert data['clade_separation_score_adjusted'] == 0
     assert data['chimeric'] is False
@@ -139,12 +138,12 @@ def test_get_scores_for_taxlevel():
     assert data['taxonomic_level'] == 'specI'
     assert round(data['clade_separation_score'], 2) == 1
     assert round(data['contamination_portion'], 2) == 0.35
-    assert round(data['n_effective_clades'], 2) == 1.28
-    assert data['genes_retained_in_major_clades'] == 1
+    assert round(data['n_effective_surplus_clades'], 2) == 1.28
+    assert data['proportion_genes_retained_in_major_clades'] == 1
     assert round(data['mean_hit_identity'], 2) == 0.92
     assert round(data['mean_random_clade_separation_score'], 2) == pytest.approx(0.92, rel=1e-1)
     assert round(data['genes_retained_index'], 2) == 2.06
-    assert round(data['out_of_reference_score'], 2) == 1.89
+    assert round(data['reference_representation_score'], 2) == 1.89
     assert data['adjustment'] == 0
     assert data['clade_separation_score_adjusted'] == 0
     assert data['chimeric'] is False

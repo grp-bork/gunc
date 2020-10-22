@@ -57,8 +57,11 @@ def read_diamond_output(file_path):
         return df
 
 
-def get_chimerism_score(counts):
+def get_n_effective_surplus_clades(counts):
     """Calculate Simpson Index.
+
+    Inverse Simpson Index of all clade labels distribution
+    -1 (as 1 genome is expected)
 
     Arguments:
         counts (list): Counts of taxons in a taxlevel.
@@ -300,7 +303,7 @@ def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
     contigs = column_to_list(tax_data, 'contig')
     taxons = column_to_list(tax_data, tax_level)
 
-    chimerism_score = get_chimerism_score(counts)
+    n_effective_surplus_clades = get_n_effective_surplus_clades(counts)
     contamination_portion = calc_contamination_portion(counts)
     mean_hit_identity = calc_mean_hit_identity(column_to_list(tax_data,
                                                               'id'))
@@ -311,7 +314,7 @@ def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
     genes_retained_index = total_gene_count / genes_called * genes_retained
     clade_separation_score = calc_clade_separation_score(contamination_portion,
                                                          completeness_score)
-    out_of_reference_score = genes_retained_index * mean_hit_identity
+    reference_representation_score = genes_retained_index * mean_hit_identity
     adjustment = determine_adjustment(clade_separation_score,
                                       mean_clade_separation_score,
                                       genes_retained_index)
@@ -324,12 +327,12 @@ def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
                         'taxonomic_level': tax_level,
                         'clade_separation_score': clade_separation_score,
                         'contamination_portion': contamination_portion,
-                        'n_effective_clades': chimerism_score,
-                        'genes_retained_in_major_clades': genes_retained,
+                        'n_effective_surplus_clades': n_effective_surplus_clades,
+                        'proportion_genes_retained_in_major_clades': genes_retained,
                         'mean_hit_identity': mean_hit_identity,
                         'mean_random_clade_separation_score': mean_clade_separation_score,
                         'genes_retained_index': genes_retained_index,
-                        'out_of_reference_score': out_of_reference_score,
+                        'reference_representation_score': reference_representation_score,
                         'adjustment': adjustment,
                         'clade_separation_score_adjusted': clade_separation_score_adjusted,
                         'chimeric': chimeric})
