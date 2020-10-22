@@ -2,6 +2,7 @@
 import os
 import sys
 import configargparse
+from . import gunc_database
 from . import external_tools
 from .get_scores import chim_score
 from ._version import get_versions
@@ -53,6 +54,9 @@ def parse_args(args):
                         help='Config file path',
                         is_config_file=True,
                         metavar='')
+    group.add_argument('--download_db',
+                       help='Download database to given direcory.',
+                       metavar='')
     parser.add_argument('-v', '--version',
                         help='Print version number and exit.',
                         action='version',
@@ -61,8 +65,6 @@ def parse_args(args):
         parser.print_help(sys.stderr)
         sys.exit()
     args = parser.parse_args()
-    if not args.database_file:
-        sys.exit('[WARNING] database_file argument missing.')
     return args
 
 
@@ -79,6 +81,7 @@ def create_dir(path):
 
 
 def start_checks():
+    """Checks if tool dependencies are available."""
     if not external_tools.check_if_tool_exists('diamond'):
         sys.exit('[ERROR] Diamond not found..')
     else:
@@ -93,7 +96,14 @@ def start_checks():
 
 def main():
     args = parse_args(sys.argv[1:])
+    if args.download_db:
+        gunc_database.get_db(args.download_db)
+        sys.exit()
+
     start_checks()
+
+    if not args.database_file:
+        sys.exit('[WARNING] database_file argument missing.')
 
     if args.input_file:
         input_basename = os.path.basename(args.input_file)
