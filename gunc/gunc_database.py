@@ -85,8 +85,6 @@ def check_md5(file_url, file_path):
 def get_db(base_dir):
     """Download GUNC DB.
 
-    [description]
-
     Arguments:
         base_dir {str} -- Path of output directory
     """

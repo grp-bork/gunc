@@ -15,10 +15,10 @@ GUNC
         :target: https://anaconda.org/bioconda/gunc
 .. image:: https://anaconda.org/bioconda/gunc/badges/downloads.svg
         :target: https://anaconda.org/bioconda/gunc
-.. image:: https://anaconda.org/bioconda/gunc/badges/installer/conda.svg
-        :target: https://conda.anaconda.org/bioconda
 .. image:: https://img.shields.io/badge/license-GPLv3-blue.svg?style=flat-square&maxAge=2678400
         :target: https://choosealicense.com/licenses/gpl-3.0/
+.. image:: https://anaconda.org/bioconda/gunc/badges/installer/conda.svg
+        :target: https://conda.anaconda.org/bioconda
 
 
 

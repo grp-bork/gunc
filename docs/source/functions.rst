@@ -3,7 +3,7 @@ Key Functions
 =============
 
 
-.. autofunction:: gunc.get_scores.get_chimerism_score
+.. autofunction:: gunc.get_scores.get_n_effective_surplus_clades
 .. autofunction:: gunc.get_scores.calc_completeness_score
 .. autofunction:: gunc.get_scores.calc_mean_clade_separation_score
 .. autofunction:: gunc.get_scores.create_base_data

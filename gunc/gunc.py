@@ -35,15 +35,15 @@ def parse_args(args):
                        help='Input genecalls FASTA faa format.',
                        metavar='')
     parser.add_argument('-p', '--threads',
-                        help='number of CPU threads.',
+                        help='number of CPU threads. Default: 4',
                         default='4',
                         metavar='')
     parser.add_argument('-t', '--temp_dir',
-                        help='Directory to store temporary files.',
+                        help='Directory to store temp files. Default: cwd',
                         default=os.getcwd(),
                         metavar='')
     parser.add_argument('-o', '--out_dir',
-                        help='Output dir.',
+                        help='Output dir.  Default: cwd',
                         default=os.getcwd(),
                         metavar='')
     parser.add_argument('-s', '--sensitive',
