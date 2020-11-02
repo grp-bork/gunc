@@ -118,7 +118,7 @@ def test_get_scores_for_taxlevel():
     assert data['n_effective_clades'] == 0
     assert data['genes_retained_in_major_clades'] == 1
     assert round(data['mean_hit_identity'], 2) == 0.92
-    assert round(data['mean_random_clade_separation_score'], 2) == pytest.approx(1, rel=1e-1)
+    assert round(data['mean_random_clade_separation_score'], 2) == 0
     assert round(data['genes_retained_index'], 2) == 2.06
     assert round(data['out_of_reference_score'], 2) == 1.89
     assert data['adjustment'] == 0
