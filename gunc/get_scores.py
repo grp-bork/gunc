@@ -134,7 +134,7 @@ def calc_expected_clade_separation_score(contigs, taxons):
     counts = taxons.value_counts()
     H_t = scipy.stats.entropy(counts.values)
     if H_t == 0:
-        return 1.0
+        return 0.0
 
     bucket_sizes = contigs.value_counts().value_counts()
     nr_elements = (bucket_sizes * bucket_sizes.index)
