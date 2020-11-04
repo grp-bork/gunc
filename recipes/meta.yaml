@@ -19,14 +19,16 @@ build:
 requirements:
   host:
     - pip
-    - python
+    - python >=3.6
   run:
     - prodigal
     - diamond 2.0.4
     - numpy
     - pandas
-    - python
+    - python >=3.6
     - scikit-learn
+    - configargparse
+    - plotly
 
 test:
   imports:

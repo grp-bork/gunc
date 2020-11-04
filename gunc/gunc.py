@@ -4,6 +4,7 @@ import sys
 import configargparse
 from . import gunc_database
 from . import external_tools
+from . import visualisation
 from .get_scores import chim_score
 from ._version import get_versions
 
@@ -48,6 +49,10 @@ def parse_args(args):
                         metavar='')
     parser.add_argument('-s', '--sensitive',
                         help='Run with high sensitivity',
+                        action='store_true',
+                        default=False)
+    parser.add_argument('-f', '--figure',
+                        help='Output interactive figure.',
                         action='store_true',
                         default=False)
     parser.add_argument('-c', '--config',
@@ -125,8 +130,22 @@ def main():
     gene_count = external_tools.get_record_count_in_fasta(diamond_inputfile)
 
     print('[INFO] Calculating scores for each tax-level:')
-    df = chim_score(diamond_outfile, gene_count, args.sensitive)
+    df, tax_data = chim_score(diamond_outfile, gene_count, args.sensitive)
     df.to_csv(f'{diamond_outfile}.chimerism_scores', index=False, sep='\t')
+
+    print('[INFO] Creating visualisation data.')
+    genome_name = tax_data['base_data']['genome'].iloc[0]
+    viz_data = visualisation.create_data(tax_data, genome_name)
+    viz_data_path = os.path.join(args.out_dir,
+                                 f'{input_basename}.viz.json')
+    with open(viz_data_path, 'w') as f:
+        f.write(viz_data)
+    print('[INFO] Creating visualisation.')
+    viz_html_path = os.path.join(args.out_dir,
+                                 f'{input_basename}.viz.html')
+    viz_html = visualisation.create_html(viz_data, genome_name)
+    with open(viz_html_path, 'w') as f:
+        f.write(viz_html)
 
 
 if __name__ == "__main__":

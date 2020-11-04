@@ -278,7 +278,7 @@ def is_chimeric(clade_separation_score_adjusted):
         return False
 
 
-def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
+def get_scores_for_taxlevel(base_data, tax_level, tax_data,
                             genome_name, total_gene_count, genes_called,
                             contig_count):
     """Run chimerism check.
@@ -288,7 +288,7 @@ def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
     Arguments:
         base_data (DataFrame): Diamond output merged with taxonomy table
         tax_level (str): tax level to run
-        abundant_lineages_cutoff (float): Cutoff val for abundant lineages
+        tax_data (DataFrame): base_data with no abundant lineages removed
         genome_name (str): Name of input genome
         total_gene_count (int): Total number of genes in input
         genes_called (int): Num genes assigned by diamond.
@@ -297,8 +297,6 @@ def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
     Returns:
         OrderedDict: scores for chosen taxlevel
     """
-    tax_data = base_data.groupby(tax_level).filter(
-        lambda x: len(x) > abundant_lineages_cutoff)
     counts = tax_data[tax_level].value_counts()
     contigs = column_to_list(tax_data, 'contig')
     taxons = column_to_list(tax_data, tax_level)
@@ -361,23 +359,27 @@ def chim_score(diamond_file_path, gene_count=0, sensitive=False):
                                                             gene_count)
 
     scores = []
+    tax_data = {'base_data': base_data}
     for tax_level in ['kingdom', 'phylum', 'class',
                       'order', 'family', 'genus', 'specI']:
         print(tax_level)
+        tax_data[tax_level] = base_data.groupby(tax_level).filter(
+                lambda x: len(x) > abundant_lineages_cutoff)
+
         scores.append(get_scores_for_taxlevel(base_data,
                                               tax_level,
-                                              abundant_lineages_cutoff,
+                                              tax_data[tax_level],
                                               genome_name,
                                               gene_count,
                                               genes_called,
                                               contig_count))
     df = pd.DataFrame(scores).round(2)
-    return df
+    return df, tax_data
 
 
 if __name__ == "__main__":
     args = parse_args(sys.argv[1:])
-    df = chim_score(args.diamond_file_path, args.sensitive)
+    df, _ = chim_score(args.diamond_file_path, args.sensitive)
     df.to_csv(f'{args.diamond_file_path}.chimerism_scores',
               index=False,
               sep='\t')

@@ -1,6 +1,7 @@
 # List required packages in this file, one per line.
 numpy
 pandas
+plotly
 requests
 scikit-learn
 configargparse
