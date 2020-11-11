@@ -13,3 +13,4 @@ include versioneer.py
 include gunc/_version.py
 
 include gunc/data/genome2taxonomy_ref.tsv
+include gunc/data/template.html

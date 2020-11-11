@@ -2,6 +2,6 @@
 numpy
 pandas
 plotly
+sklearn
 requests
-scikit-learn
 configargparse
