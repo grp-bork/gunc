@@ -34,7 +34,7 @@ def parse_args(args):
                                 help='Create interactive visualisation.',
                                 formatter_class=lambda prog:
                                     argparse.ArgumentDefaultsHelpFormatter(prog,
-                                        max_help_position=100))
+                                                                           max_help_position=100))
 
     run.add_argument('-d', '--db_file',
                      help='Diamond database reference file.',

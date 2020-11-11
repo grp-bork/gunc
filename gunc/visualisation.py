@@ -185,9 +185,10 @@ def prepare_plot_data(node_data, link_data):
                         "target": link_data['targetID'],
                         "value": link_data['count'],
                         "color": link_data['link_colours'],
+                        "customdata": link_data['target'],
                         "hovertemplate": '%{value:.g} genes from '
                                          '[%{source.label}] are assigned to '
-                                         '[%{target.label}].<br />'
+                                         '[%{customdata}].<br />'
                                          '<extra></extra>'
                     }
                 }],
