@@ -338,7 +338,7 @@ def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
                         'chimeric': chimeric})
 
 
-def chim_score(diamond_file_path, gene_count=0, sensitive=False):
+def chim_score(diamond_file_path, gene_count=0, sensitive=False, plot=False):
     """Get chimerism scores for a genome.
 
     Arguments:
@@ -359,6 +359,8 @@ def chim_score(diamond_file_path, gene_count=0, sensitive=False):
     genome_name = os.path.basename(diamond_file_path).replace('.diamond.out', '')
     abundant_lineages_cutoff = get_abundant_lineages_cutoff(sensitive,
                                                             gene_count)
+    if plot:
+        return base_data, genome_name, abundant_lineages_cutoff
 
     scores = []
     for tax_level in ['kingdom', 'phylum', 'class',
