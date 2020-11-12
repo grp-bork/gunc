@@ -86,10 +86,10 @@ def main():
                            args.temp_dir,
                            args.database_file,
                            diamond_outfile)
-    gene_count = external_tools.get_record_count_in_fasta(diamond_inputfile)
+    genes_called = external_tools.get_record_count_in_fasta(diamond_inputfile)
 
     print('[INFO] Calculating scores for each tax-level:')
-    df = chim_score(diamond_outfile, gene_count, args.sensitive)
+    df = chim_score(diamond_outfile, genes_called, args.sensitive)
     df.to_csv(f'{diamond_outfile}.chimerism_scores', index=False, sep='\t')
 
 
