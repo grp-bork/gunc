@@ -3,6 +3,8 @@ import os
 import sys
 import random
 import argparse
+import scipy
+import numpy as np
 import pandas as pd
 from sklearn import metrics
 from collections import OrderedDict
@@ -86,24 +88,64 @@ def calc_completeness_score(contigs, taxons):
     """
     return metrics.completeness_score(contigs, taxons)
 
+def expected_entropy_estimate(p, N):
+    """Compute the expected entropy estimate sampling N elements underlying
+    probabilities `p`
 
-def calc_mean_clade_separation_score(contigs, taxons):
-    """Calculate mean clade separation score
-
-    TODO: get info from askarbek
 
     Arguments:
-        contigs (list): contig names in data
-        taxons (list): taxons in data
+        p (array): probabilities (assumed to sum to 1.0)
+        N (int): number of samples
+
+    Returns
+        h (float): expected entropy
+    """
+    h = 0.0
+    for i in range(len(p)):
+        p_i = p[i]
+        n_i = np.arange(1,N)
+        h += np.sum(
+            scipy.special.comb(N, n_i) *
+                    np.power(p_i, n_i) *
+                    np.power(1-p_i, N - n_i) *
+                    n_i * # should be n_i/N, but we moved the 1/N out
+                    np.log(n_i/N))
+
+    return -h/N
+
+def calc_expected_clade_separation_score(contigs, taxons):
+    """Compute the expected CSS under the null hypothesis that there is no
+    influence
+
+    Arguments:
+        contigs (Series): contig names in data
+        taxons (Series): taxons in data
 
     Returns:
-        float: average completeness score
+        float: expected completeness score
     """
-    scores = []
-    for _ in range(50):
-        random.shuffle(contigs)
-        scores.append(calc_completeness_score(contigs, taxons))
-    return mean(scores)
+    # When the bucket is large enough, the estimates are expected to be close
+    # enough to the global estimate that we will no longer compute the estimate
+    # via the more costly `expected_entropy_estimate` function
+    MAX_BUCKET_SIZE = 500
+    counts = taxons.value_counts()
+    H_t = scipy.stats.entropy(counts.values)
+    if H_t == 0:
+        return 0.0
+
+    bucket_sizes = contigs.value_counts().value_counts()
+    nr_elements = (bucket_sizes * bucket_sizes.index)
+    contribution = nr_elements/nr_elements.sum()
+
+    p_t = counts / counts.sum()
+    p_t = p_t.values
+
+    H_t_c = 0.0
+    for bs,c in contribution.iteritems():
+        H_t_c += c * (expected_entropy_estimate(p_t, bs)
+                    if bs <= MAX_BUCKET_SIZE
+                    else H_t)
+    return 1 - H_t_c/H_t
 
 
 def read_genome2taxonomy_reference():
@@ -306,8 +348,8 @@ def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
                                                               'id'))
     completeness_score = calc_completeness_score(contigs, taxons)
     genes_retained = len(tax_data) / len(base_data)
-    mean_clade_separation_score = calc_mean_clade_separation_score(contigs,
-                                                                   taxons)
+    mean_clade_separation_score = calc_expected_clade_separation_score(tax_data['contig'],
+                                                                   tax_data[tax_level])
     genes_retained_index = total_gene_count / genes_called * genes_retained
     clade_separation_score = calc_clade_separation_score(contamination_portion,
                                                          completeness_score)
