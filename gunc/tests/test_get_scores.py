@@ -115,9 +115,9 @@ def test_get_scores_for_taxlevel():
     assert data['n_effective_surplus_clades'] == 0
     assert data['proportion_genes_retained_in_major_clades'] == 1
     assert round(data['mean_hit_identity'], 2) == 0.92
-    assert round(data['mean_random_clade_separation_score'], 2) == pytest.approx(1, rel=1e-1)
-    assert round(data['genes_retained_index'], 2) == 2.06
-    assert round(data['reference_representation_score'], 2) == 1.89
+    assert round(data['mean_random_clade_separation_score'], 2) == 0
+    assert round(data['genes_retained_index'], 2) == 0.49
+    assert round(data['reference_representation_score'], 2) == 0.45
     assert data['adjustment'] == 0
     assert data['clade_separation_score_adjusted'] == 0
     assert data['chimeric'] is False
@@ -140,8 +140,8 @@ def test_get_scores_for_taxlevel():
     assert data['proportion_genes_retained_in_major_clades'] == 1
     assert round(data['mean_hit_identity'], 2) == 0.92
     assert round(data['mean_random_clade_separation_score'], 2) == pytest.approx(0.92, rel=1e-1)
-    assert round(data['genes_retained_index'], 2) == 2.06
-    assert round(data['reference_representation_score'], 2) == 1.89
+    assert round(data['genes_retained_index'], 2) == 0.49
+    assert round(data['reference_representation_score'], 2) == 0.45
     assert data['adjustment'] == 0
     assert data['clade_separation_score_adjusted'] == 0
     assert data['chimeric'] is False
@@ -150,7 +150,7 @@ def test_get_scores_for_taxlevel():
 def test_chim_score():
     diamond_file_path = resource_filename(__name__,
                                           'test_data/test_genome.fa.diamond.out')
-    data = chim_score(diamond_file_path, gene_count=1832)
+    data = chim_score(diamond_file_path, genes_called=1832)
 
     expected_data_path = resource_filename(__name__,
                                            'test_data/test_genome.fa.diamond.out.chimerism_scores')

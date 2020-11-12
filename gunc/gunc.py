@@ -130,7 +130,7 @@ def get_genecount_from_gunc_output(gunc_file):
     """Extract gene count from GUNC output file."""
     with open(gunc_file, 'r') as f:
         next(f)
-        return f.readline().split('\t')[1]
+        return f.readline().split('\t')[2]
 
 
 def main():
@@ -161,10 +161,10 @@ def main():
                                args.temp_dir,
                                args.db_file,
                                diamond_outfile)
-        gene_count = external_tools.get_record_count_in_fasta(diamond_inputfile)
+        genes_called = external_tools.get_record_count_in_fasta(diamond_inputfile)
 
         print('[INFO] Calculating scores for each tax-level:')
-        df = chim_score(diamond_outfile, gene_count, args.sensitive)
+        df = chim_score(diamond_outfile, genes_called, args.sensitive)
         df.to_csv(f'{diamond_outfile}.chimerism_scores', index=False, sep='\t')
 
     if args.cmd == 'plot':
@@ -174,10 +174,10 @@ def main():
                 sys.exit('[ERROR] GUNC file not found!')
         else:
             gunc_file = args.gunc_file
-        gene_count = get_genecount_from_gunc_output(gunc_file)
+        genes_called = get_genecount_from_gunc_output(gunc_file)
         genome_name = os.path.basename(args.diamond_file).replace('.diamond.out', '')
         viz_html = vis.create_viz_from_diamond_file(args.diamond_file,
-                                                    gene_count,
+                                                    genes_called,
                                                     args.tax_levels,
                                                     args.contig_display_num,
                                                     args.remove_minor_clade_level)

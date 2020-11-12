@@ -3,6 +3,8 @@ import os
 import sys
 import random
 import argparse
+import scipy
+import numpy as np
 import pandas as pd
 from sklearn import metrics
 from collections import OrderedDict
@@ -90,23 +92,65 @@ def calc_completeness_score(contigs, taxons):
     return metrics.completeness_score(contigs, taxons)
 
 
-def calc_mean_clade_separation_score(contigs, taxons):
-    """Calculate mean clade separation score
+def expected_entropy_estimate(p, N):
+    """Compute the expected entropy estimate sampling N elements underlying
+    probabilities `p`
 
-    TODO: get info from askarbek
 
     Arguments:
-        contigs (list): contig names in data
-        taxons (list): taxons in data
+        p (array): probabilities (assumed to sum to 1.0)
+        N (int): number of samples
+
+    Returns
+        h (float): expected entropy
+    """
+    h = 0.0
+    for i in range(len(p)):
+        p_i = p[i]
+        n_i = np.arange(1,N)
+        h += np.sum(
+            scipy.special.comb(N, n_i) *
+                    np.power(p_i, n_i) *
+                    np.power(1-p_i, N - n_i) *
+                    n_i * # should be n_i/N, but we moved the 1/N out
+                    np.log(n_i / N))
+
+    return -h / N
+
+
+def calc_expected_clade_separation_score(contigs, taxons):
+    """Compute the expected CSS under the null hypothesis that there is no
+    influence
+
+    Arguments:
+        contigs (Series): contig names in data
+        taxons (Series): taxons in data
 
     Returns:
-        float: average completeness score
+        float: expected completeness score
     """
-    scores = []
-    for i in range(50):
-        random.Random(i).shuffle(contigs)
-        scores.append(calc_completeness_score(contigs, taxons))
-    return mean(scores)
+    # When the bucket is large enough, the estimates are expected to be close
+    # enough to the global estimate that we will no longer compute the estimate
+    # via the more costly `expected_entropy_estimate` function
+    MAX_BUCKET_SIZE = 500
+    counts = taxons.value_counts()
+    H_t = scipy.stats.entropy(counts.values)
+    if H_t == 0:
+        return 0.0
+
+    bucket_sizes = contigs.value_counts().value_counts()
+    nr_elements = (bucket_sizes * bucket_sizes.index)
+    contribution = nr_elements/nr_elements.sum()
+
+    p_t = counts / counts.sum()
+    p_t = p_t.values
+
+    H_t_c = 0.0
+    for bs,c in contribution.iteritems():
+        H_t_c += c * (expected_entropy_estimate(p_t, bs)
+                    if bs <= MAX_BUCKET_SIZE
+                    else H_t)
+    return 1 - H_t_c/H_t
 
 
 def read_genome2taxonomy_reference():
@@ -142,21 +186,21 @@ def get_stats(diamond_df):
         diamond_df (DataFrame): pandas dataframe
 
     Returns:
-        tuple: number of genes called, number of contigs
+        tuple: number of genes mapped, number of contigs
     """
-    genes_called = len(diamond_df)
+    genes_mapped = len(diamond_df)
     contig_count = diamond_df['contig'].nunique()
-    return (genes_called, contig_count)
+    return (genes_mapped, contig_count)
 
 
-def get_abundant_lineages_cutoff(sensitive, total_gene_count):
+def get_abundant_lineages_cutoff(sensitive, genes_mapped):
     """Determine cutoff for abundant lineages.
 
     [description]
 
     Arguments:
         sensitive (bool): sets cutoff to 10 if true
-        total_gene_count (int): total number of genes called
+        genes_mapped (int): total number of genes mapped by diamond to the GUNC DB
 
     Returns:
         number: cutoff used to determine an abundant lineage
@@ -164,19 +208,17 @@ def get_abundant_lineages_cutoff(sensitive, total_gene_count):
     if sensitive:
         return 10
     else:
-        return 0.02 * total_gene_count
+        return 0.02 * genes_mapped
 
 
 def calc_contamination_portion(counts):
-    """Calculate contamination score
-
-    TODO: Get info from askarbek
+    """Calculate contamination portion
 
     Arguments:
         counts (Series): Value counts of taxons in taxlevel
 
     Returns:
-        float: [description]
+        float: portion of genes assigning to all clades except the one with most genes.
     """
     return 1 - counts.max() / counts.sum()
 
@@ -279,7 +321,7 @@ def is_chimeric(clade_separation_score_adjusted):
 
 
 def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
-                            genome_name, total_gene_count, genes_called,
+                            genome_name, genes_called, genes_mapped,
                             contig_count):
     """Run chimerism check.
 
@@ -290,8 +332,8 @@ def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
         tax_level (str): tax level to run
         abundant_lineages_cutoff (float): Cutoff val for abundant lineages
         genome_name (str): Name of input genome
-        total_gene_count (int): Total number of genes in input
-        genes_called (int): Num genes assigned by diamond.
+        genes_called (int): Number of genes called by prodigal and used by diamond for mapping to GUNC DB
+        genes_mapped (int): Number of genes mapped to GUNC DB by diamond
         contig_count (int): Count of contigs
 
     Returns:
@@ -308,10 +350,10 @@ def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
     mean_hit_identity = calc_mean_hit_identity(column_to_list(tax_data,
                                                               'id'))
     completeness_score = calc_completeness_score(contigs, taxons)
-    genes_retained = len(tax_data) / len(base_data)
-    mean_clade_separation_score = calc_mean_clade_separation_score(contigs,
-                                                                   taxons)
-    genes_retained_index = total_gene_count / genes_called * genes_retained
+    portion_genes_retained = len(tax_data) / genes_mapped
+    mean_clade_separation_score = calc_expected_clade_separation_score(tax_data['contig'],
+                                                                   tax_data[tax_level])
+    genes_retained_index = genes_mapped / genes_called * portion_genes_retained
     clade_separation_score = calc_clade_separation_score(contamination_portion,
                                                          completeness_score)
     reference_representation_score = genes_retained_index * mean_hit_identity
@@ -322,13 +364,13 @@ def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
     chimeric = is_chimeric(clade_separation_score_adjusted)
     return OrderedDict({'genome': genome_name,
                         'n_contigs': contig_count,
-                        'n_genes_called': total_gene_count,
-                        'n_genes_mapped': genes_called,
+                        'n_genes_called': genes_called,
+                        'n_genes_mapped': genes_mapped,
                         'taxonomic_level': tax_level,
                         'clade_separation_score': clade_separation_score,
                         'contamination_portion': contamination_portion,
                         'n_effective_surplus_clades': n_effective_surplus_clades,
-                        'proportion_genes_retained_in_major_clades': genes_retained,
+                        'proportion_genes_retained_in_major_clades': portion_genes_retained,
                         'mean_hit_identity': mean_hit_identity,
                         'mean_random_clade_separation_score': mean_clade_separation_score,
                         'genes_retained_index': genes_retained_index,
@@ -338,27 +380,27 @@ def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
                         'chimeric': chimeric})
 
 
-def chim_score(diamond_file_path, gene_count=0, sensitive=False, plot=False):
+def chim_score(diamond_file_path, genes_called=0, sensitive=False, plot=False):
     """Get chimerism scores for a genome.
 
     Arguments:
         diamond_file_path (str): Full path to diamond output
 
     Keyword Arguments:
-        gene_count (int): Count of genes in input (default: ('0'))
+        genes_called (int): Count of genes called by prodigal and used by diamond for mapping into the GUNC DB (default: ('0'))
         sensitive (bool): Run in sensitive mode (default: (False))
     """
-    gene_count = int(gene_count)
-    if gene_count < 10:
+    genes_called = int(genes_called)
+    if genes_called < 10:
         sys.exit('[WARNING] Less than 10 genes called, exiting...')
 
     diamond_df = read_diamond_output(diamond_file_path)
     base_data = create_base_data(diamond_df)
-    genes_called, contig_count = get_stats(diamond_df)
+    genes_mapped, contig_count = get_stats(diamond_df)
 
     genome_name = os.path.basename(diamond_file_path).replace('.diamond.out', '')
     abundant_lineages_cutoff = get_abundant_lineages_cutoff(sensitive,
-                                                            gene_count)
+                                                            genes_mapped)
     if plot:
         return base_data, genome_name, abundant_lineages_cutoff
 
@@ -370,8 +412,8 @@ def chim_score(diamond_file_path, gene_count=0, sensitive=False, plot=False):
                                               tax_level,
                                               abundant_lineages_cutoff,
                                               genome_name,
-                                              gene_count,
                                               genes_called,
+                                              genes_mapped,
                                               contig_count))
     df = pd.DataFrame(scores).round(2)
     return df
