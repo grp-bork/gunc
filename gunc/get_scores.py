@@ -348,7 +348,7 @@ def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
     portion_genes_retained = len(tax_data) / genes_mapped
     mean_clade_separation_score = calc_expected_clade_separation_score(tax_data['contig'],
                                                                    tax_data[tax_level])
-    genes_retained_index = total_gene_count / genes_called * genes_retained
+    genes_retained_index = genes_mapped / genes_called * portion_genes_retained
     clade_separation_score = calc_clade_separation_score(contamination_portion,
                                                          completeness_score)
     out_of_reference_score = genes_retained_index * mean_hit_identity
