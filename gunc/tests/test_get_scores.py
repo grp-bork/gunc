@@ -22,10 +22,11 @@ def test_calc_completeness_score():
     assert calc_completeness_score([0, 0, 1, 1], [0, 1, 0, 1]) == 0
 
 
-def test_calc_mean_clade_separation_score():
-    # This is awkward as its supposed to be a bit random
-    mean = calc_mean_clade_separation_score([0, 0, 1, 1], [1, 1, 0, 0])
-    assert mean == .4
+def test_calc_expected_clade_separation_score():
+    true_labels = pd.Series([0, 0, 1, 1])
+    pred_labels = pd.Series([1, 1, 0, 0])
+    expected = calc_expected_clade_separation_score(true_labels, pred_labels)
+    assert expected == .5
 
 
 def test_create_base_data():
