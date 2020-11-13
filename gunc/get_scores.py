@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import os
 import sys
-import random
 import argparse
 import scipy
 import numpy as np
@@ -92,35 +91,39 @@ def calc_completeness_score(contigs, taxons):
     return metrics.completeness_score(contigs, taxons)
 
 
-def expected_entropy_estimate(p, N):
+def expected_entropy_estimate(probabilities, sample_count):
     """Compute the expected entropy estimate sampling N elements underlying
     probabilities `p`
 
 
     Arguments:
-        p (array): probabilities (assumed to sum to 1.0)
-        N (int): number of samples
+        probabilities (array): probabilities (p) (assumed to sum to 1.0)
+        sample_count (int): number of samples (N)
 
     Returns
-        h (float): expected entropy
+        entropy (float): expected entropy
     """
-    h = 0.0
-    for i in range(len(p)):
-        p_i = p[i]
-        n_i = np.arange(1,N)
-        h += np.sum(
-            scipy.special.comb(N, n_i) *
-                    np.power(p_i, n_i) *
-                    np.power(1-p_i, N - n_i) *
-                    n_i * # should be n_i/N, but we moved the 1/N out
-                    np.log(n_i / N))
-
-    return -h / N
+    entropy = 0.0
+    for probability in probabilities:
+        sample_array = np.arange(1, sample_count)
+        entropy += np.sum(scipy.special.comb(sample_count, sample_array)
+                          * np.power(probability, sample_array)
+                          * np.power(1 - probability,
+                                     sample_count - sample_array)
+                          # should be sample_array/sample_count
+                          # but we moved the 1/sample_count out:
+                          * sample_array
+                          * np.log(sample_array / sample_count))
+    return -entropy / sample_count
 
 
 def calc_expected_clade_separation_score(contigs, taxons):
     """Compute the expected CSS under the null hypothesis that there is no
     influence
+
+    When the bucket is large enough, the estimates are expected to be close
+    enough to the global estimate that we will no longer compute the estimate
+    via the more costly `expected_entropy_estimate` function
 
     Arguments:
         contigs (Series): contig names in data
@@ -129,28 +132,30 @@ def calc_expected_clade_separation_score(contigs, taxons):
     Returns:
         float: expected completeness score
     """
-    # When the bucket is large enough, the estimates are expected to be close
-    # enough to the global estimate that we will no longer compute the estimate
-    # via the more costly `expected_entropy_estimate` function
+
     MAX_BUCKET_SIZE = 500
     counts = taxons.value_counts()
-    H_t = scipy.stats.entropy(counts.values)
-    if H_t == 0:
+    entropy = scipy.stats.entropy(counts.values)
+    if entropy == 0:
         return 0.0
 
     bucket_sizes = contigs.value_counts().value_counts()
     nr_elements = (bucket_sizes * bucket_sizes.index)
-    contribution = nr_elements/nr_elements.sum()
+    contribution = nr_elements / nr_elements.sum()
 
-    p_t = counts / counts.sum()
-    p_t = p_t.values
+    taxon_probability = counts / counts.sum()
+    taxon_probability = taxon_probability.values
 
-    H_t_c = 0.0
-    for bs,c in contribution.iteritems():
-        H_t_c += c * (expected_entropy_estimate(p_t, bs)
-                    if bs <= MAX_BUCKET_SIZE
-                    else H_t)
-    return 1 - H_t_c/H_t
+    entropy_c = 0.0
+    for bucket_size, contig_count in contribution.iteritems():
+        if bucket_size <= MAX_BUCKET_SIZE:
+            entropy_c += (contig_count
+                          * expected_entropy_estimate(taxon_probability,
+                                                      bucket_size))
+        else:
+            entropy_c += contig_count * entropy
+
+    return 1 - entropy_c / entropy
 
 
 def read_genome2taxonomy_reference():
