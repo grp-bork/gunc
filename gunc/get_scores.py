@@ -135,8 +135,8 @@ def calc_expected_clade_separation_score(contigs, taxons):
 
     MAX_BUCKET_SIZE = 500
     counts = taxons.value_counts()
-    entropy = scipy.stats.entropy(counts.values)
-    if entropy == 0:
+    taxon_entropy = scipy.stats.entropy(counts.values)
+    if taxon_entropy == 0:
         return 0.0
 
     bucket_sizes = contigs.value_counts().value_counts()
@@ -146,16 +146,16 @@ def calc_expected_clade_separation_score(contigs, taxons):
     taxon_probability = counts / counts.sum()
     taxon_probability = taxon_probability.values
 
-    entropy_c = 0.0
+    total_entropy = 0.0
     for bucket_size, contig_count in contribution.iteritems():
         if bucket_size <= MAX_BUCKET_SIZE:
-            entropy_c += (contig_count
-                          * expected_entropy_estimate(taxon_probability,
-                                                      bucket_size))
+            total_entropy += (contig_count
+                              * expected_entropy_estimate(taxon_probability,
+                                                          bucket_size))
         else:
-            entropy_c += contig_count * entropy
+            total_entropy += contig_count * taxon_entropy
 
-    return 1 - entropy_c / entropy
+    return 1 - total_entropy / taxon_entropy
 
 
 def read_genome2taxonomy_reference():
@@ -337,7 +337,8 @@ def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
         tax_level (str): tax level to run
         abundant_lineages_cutoff (float): Cutoff val for abundant lineages
         genome_name (str): Name of input genome
-        genes_called (int): Number of genes called by prodigal and used by diamond for mapping to GUNC DB
+        genes_called (int): Number of genes called by prodigal and
+                            used by diamond for mapping to GUNC DB
         genes_mapped (int): Number of genes mapped to GUNC DB by diamond
         contig_count (int): Count of contigs
 
@@ -357,7 +358,7 @@ def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
     completeness_score = calc_completeness_score(contigs, taxons)
     portion_genes_retained = len(tax_data) / genes_mapped
     mean_clade_separation_score = calc_expected_clade_separation_score(tax_data['contig'],
-                                                                   tax_data[tax_level])
+                                                                       tax_data[tax_level])
     genes_retained_index = genes_mapped / genes_called * portion_genes_retained
     clade_separation_score = calc_clade_separation_score(contamination_portion,
                                                          completeness_score)
@@ -392,7 +393,8 @@ def chim_score(diamond_file_path, genes_called=0, sensitive=False, plot=False):
         diamond_file_path (str): Full path to diamond output
 
     Keyword Arguments:
-        genes_called (int): Count of genes called by prodigal and used by diamond for mapping into the GUNC DB (default: ('0'))
+        genes_called (int): Count of genes called by prodigal and used by
+                            diamond for mapping into the GUNC DB (default: ('0'))
         sensitive (bool): Run in sensitive mode (default: (False))
     """
     genes_called = int(genes_called)
