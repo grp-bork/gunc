@@ -1,11 +1,16 @@
 import pytest
-import pandas as pd
-from ..get_scores import *
+from ..gunc import *
+from .._version import get_versions
 from pkg_resources import resource_filename
 
-diamond_output = resource_filename(__name__,
-                                   'test_data/tiny_test.diamond.out')
-diamond_df = read_diamond_output(diamond_output)
-ref_base_data_path = resource_filename(__name__,
-                                       'test_data/tiny_test.base_data')
-ref_base_data = pd.read_csv(ref_base_data_path)
+gunc_output = resource_filename(__name__,
+                                   'test_data/tiny_test.chimerism_scores')
+
+
+def test_get_genecount_from_gunc_output():
+    assert get_genecount_from_gunc_output(gunc_output) == '35'
+
+
+def test_start_checks():
+    with pytest.raises(SystemExit):
+        start_checks()

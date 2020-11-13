@@ -96,7 +96,7 @@ def parse_args(args):
     if not args:
         parser.print_help(sys.stderr)
         sys.exit()
-    args = parser.parse_args()
+    args = parser.parse_args(args)
     return args
 
 

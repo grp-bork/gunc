@@ -25,15 +25,11 @@ def parse_args(args):
                         help='diamond output',
                         required=True,
                         default=False)
-    parser.add_argument('-z', '--dry_run',
-                        help='Dont change anything but print commands instead',
-                        action='store_true',
-                        default=False)
     parser.add_argument('-s', '--sensitive',
                         help='Run with high sensitivity',
                         action='store_true',
                         default=False)
-    args = parser.parse_args()
+    args = parser.parse_args(args)
     return args
 
 

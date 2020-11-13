@@ -11,6 +11,25 @@ ref_base_data_path = resource_filename(__name__,
 ref_base_data = pd.read_csv(ref_base_data_path)
 
 
+def test_parse_args():
+    with pytest.raises(SystemExit):
+        parse_args(['-h'])
+    with pytest.raises(SystemExit):
+        parse_args(['-f'])
+    parser = parse_args(['-f', 'test_path'])
+    assert parser.diamond_file_path == 'test_path'
+    assert parser.sensitive == False
+
+
+def test_read_diamond_output():
+    empty_file = resource_filename(__name__, '__init__.py')
+    with pytest.raises(SystemExit):
+        read_diamond_output(empty_file)
+    diamond_df = read_diamond_output(diamond_output)
+    assert len(diamond_df) == 17
+    assert len(diamond_df.columns) == 4
+
+
 def test_get_n_effective_surplus_clades():
     assert get_n_effective_surplus_clades([1]) == 0
     assert get_n_effective_surplus_clades([2, 8, 1, 1, 3]) == pytest.approx(1.84,
@@ -160,3 +179,6 @@ def test_chim_score():
     pd.testing.assert_frame_equal(data.drop(mrcss, axis=1),
                                   expected_data.drop(mrcss, axis=1))
     assert data[mrcss].tolist() == pytest.approx(expected_data[mrcss].tolist(), rel=1e-1)
+
+    with pytest.raises(SystemExit):
+        chim_score(diamond_file_path, genes_called=2)
