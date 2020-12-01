@@ -73,21 +73,6 @@ def get_chimerism_score(counts):
     return 1 / sum([x ** 2 / denom for x in counts]) - 1
 
 
-def calc_completeness_score(contigs, taxons):
-    """Get completeness score.
-
-    Completeness metric of a cluster labeling given a ground truth.
-    Score of 1.0 stands for perfectly complete labeling.
-
-    Args:
-        contigs ([str]): labels_true
-        taxons ([str]): labels_pred
-
-    Returns:
-        float: score between 0.0 and 1.0.
-    """
-    return metrics.completeness_score(contigs, taxons)
-
 def expected_entropy_estimate(p, N):
     """Compute the expected entropy estimate sampling N elements underlying
     probabilities `p`
@@ -113,16 +98,17 @@ def expected_entropy_estimate(p, N):
 
     return -h/N
 
-def calc_expected_clade_separation_score(contigs, taxons):
-    """Compute the expected CSS under the null hypothesis that there is no
-    influence
+def calc_expected_conditional_entropy(contigs, taxons):
+    """Compute the expected measured conditional entropy under the null
+    hypothesis that there is no relationship between contig membership and
+    taxonomy
 
     Arguments:
         contigs (Series): contig names in data
         taxons (Series): taxons in data
 
     Returns:
-        float: expected completeness score
+        float: expected measured conditional entropy
     """
     # When the bucket is large enough, the estimates are expected to be close
     # enough to the global estimate that we will no longer compute the estimate
@@ -145,7 +131,7 @@ def calc_expected_clade_separation_score(contigs, taxons):
         H_t_c += c * (expected_entropy_estimate(p_t, bs)
                     if bs <= MAX_BUCKET_SIZE
                     else H_t)
-    return 1 - H_t_c/H_t
+    return H_t_c
 
 
 def read_genome2taxonomy_reference():
@@ -260,14 +246,31 @@ def column_to_list(df, column):
     return df[column].to_list()
 
 
-def calc_clade_separation_score(contamination_portion, completeness_score):
+def calc_conditional_entropy(contigs, taxons):
+    """Compute conditional entropy
+
+    Arguments:
+        contigs (Series): IDs of contigs
+        taxons (Series): IDs of taxonomic assignments
+
+    Returns:
+        float: measured conditional entropy
+    """
+    MI = metrics.mutual_info_score(contigs, taxons)
+    H_t = scipy.stats.entropy(taxons.value_counts())
+    return H_t - MI
+
+def calc_clade_separation_score(contamination_portion,
+                                conditional_entropy,
+                                expected_conditional_entropy):
     """Get clade separation score.
 
     TODO: get info from askarbek
 
     Arguments:
         contamination_portion (float): [description]
-        completeness_score (float): [description]
+        conditional_entropy (float): [description]
+        expected_conditional_entropy (float): [description]
 
     Returns:
         number: [description]
@@ -275,26 +278,24 @@ def calc_clade_separation_score(contamination_portion, completeness_score):
     if contamination_portion == 0:
         return 0
     else:
-        return completeness_score
+        return (1 - conditional_entropy/expected_conditional_entropy
+                if conditional_entropy <= expected_conditional_entropy
+                else 0)
 
 
-def determine_adjustment(clade_separation_score, mean_clade_separation_score,
-                         genes_retained_index):
+def determine_adjustment(genes_retained_index):
     """Determine if adjustment is necessary.
 
     TODO: get info from askarbek
 
     Arguments:
-        clade_separation_score ([type]): [description]
-        mean_clade_separation_score ([type]): [description]
         genes_retained_index ([type]): [description]
 
     Returns:
         number: [description]
     """
-    if clade_separation_score > (mean_clade_separation_score + 0.1):
-        if genes_retained_index > 0.4:
-            return 1
+    if genes_retained_index > 0.4:
+        return 1
     return 0
 
 
@@ -337,24 +338,23 @@ def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
     tax_data = base_data.groupby(tax_level).filter(
         lambda x: len(x) > abundant_lineages_cutoff)
     counts = tax_data[tax_level].value_counts()
-    contigs = column_to_list(tax_data, 'contig')
-    taxons = column_to_list(tax_data, tax_level)
+    contigs = tax_data['contig']
+    taxons = tax_data[tax_level]
 
     chimerism_score = get_chimerism_score(counts)
     contamination_portion = calc_contamination_portion(counts)
     mean_hit_identity = calc_mean_hit_identity(column_to_list(tax_data,
                                                               'id'))
-    completeness_score = calc_completeness_score(contigs, taxons)
-    portion_genes_retained = len(tax_data) / genes_mapped
-    mean_clade_separation_score = calc_expected_clade_separation_score(tax_data['contig'],
-                                                                   tax_data[tax_level])
-    genes_retained_index = genes_mapped / genes_called * portion_genes_retained
+    expected_conditional_entropy = calc_expected_conditional_entropy(contigs, taxons)
+    conditional_entropy = calc_conditional_entropy(contigs, taxons)
     clade_separation_score = calc_clade_separation_score(contamination_portion,
-                                                         completeness_score)
+                                                        conditional_entropy,
+                                                        expected_conditional_entropy)
+
+    portion_genes_retained = len(tax_data) / genes_mapped
+    genes_retained_index = genes_mapped / genes_called * portion_genes_retained
     out_of_reference_score = genes_retained_index * mean_hit_identity
-    adjustment = determine_adjustment(clade_separation_score,
-                                      mean_clade_separation_score,
-                                      genes_retained_index)
+    adjustment = determine_adjustment(genes_retained_index)
     clade_separation_score_adjusted = clade_separation_score * adjustment
     chimeric = is_chimeric(clade_separation_score_adjusted)
     return OrderedDict({'genome': genome_name,
@@ -367,7 +367,6 @@ def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
                         'n_effective_clades': chimerism_score,
                         'genes_retained_in_major_clades': portion_genes_retained,
                         'mean_hit_identity': mean_hit_identity,
-                        'mean_random_clade_separation_score': mean_clade_separation_score,
                         'genes_retained_index': genes_retained_index,
                         'out_of_reference_score': out_of_reference_score,
                         'adjustment': adjustment,

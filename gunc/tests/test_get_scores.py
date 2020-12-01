@@ -17,17 +17,11 @@ def test_get_chimerism_score():
                                                                  rel=1e-2)
 
 
-def test_calc_completeness_score():
-    assert calc_completeness_score([0, 0, 1, 1], [1, 1, 0, 0]) == 1
-    assert calc_completeness_score([0, 0, 1, 1], [0, 1, 0, 1]) == 0
+def test_calc_expected_conditional_entropy():
+    s = pd.Series
+    assert calc_conditional_entropy(s([0, 0, 1, 1]), s([1, 1, 0, 0])) == 0
+    assert calc_conditional_entropy(s([0, 0, 1, 1]), s([0, 1, 0, 1])) > 0.1
 
-
-# def test_calc_mean_clade_separation_score():
-#     # This is awkward as its supposed to be a bit random
-#     mean = calc_mean_clade_separation_score([0, 0, 1, 1], [1, 1, 0, 0])
-#     print(mean)
-#     assert mean > .25
-#     assert mean < .75
 
 
 def test_create_base_data():
@@ -81,16 +75,6 @@ def test_column_to_list():
     assert column_to_list(diamond_df, 'query') == test_list
 
 
-def test_calc_clade_separation_score():
-    assert calc_clade_separation_score(0, 10) == 0
-    assert calc_clade_separation_score(1, 10) == 10
-
-
-def test_determine_adjustment():
-    assert determine_adjustment(1, 2, 3) == 0
-    assert determine_adjustment(2, 1, 3) == 1
-    assert determine_adjustment(2, 1, 0) == 0
-
 
 def test_is_chimeric():
     assert is_chimeric(0) is False
@@ -118,10 +102,9 @@ def test_get_scores_for_taxlevel():
     assert data['n_effective_clades'] == 0
     assert data['genes_retained_in_major_clades'] == 1
     assert round(data['mean_hit_identity'], 2) == 0.92
-    assert round(data['mean_random_clade_separation_score'], 2) == 0
     assert round(data['genes_retained_index'], 2) == 0.49
     assert round(data['out_of_reference_score'], 2) == 0.45
-    assert data['adjustment'] == 0
+    assert data['adjustment'] == 1
     assert data['clade_separation_score_adjusted'] == 0
     assert data['chimeric'] is False
 
@@ -142,12 +125,11 @@ def test_get_scores_for_taxlevel():
     assert round(data['n_effective_clades'], 2) == 1.28
     assert data['genes_retained_in_major_clades'] == 1
     assert round(data['mean_hit_identity'], 2) == 0.92
-    assert round(data['mean_random_clade_separation_score'], 2) == pytest.approx(0.92, rel=1e-1)
     assert round(data['genes_retained_index'], 2) == 0.49
     assert round(data['out_of_reference_score'], 2) == 0.45
-    assert data['adjustment'] == 0
-    assert data['clade_separation_score_adjusted'] == 0
-    assert data['chimeric'] is False
+    assert data['adjustment'] == 1
+    assert round(data['clade_separation_score_adjusted'], 2) == 1
+    assert data['chimeric']
 
 
 def test_chim_score():
@@ -158,7 +140,4 @@ def test_chim_score():
     expected_data_path = resource_filename(__name__,
                                            'test_data/test_genome.fa.diamond.out.chimerism_scores')
     expected_data = pd.read_csv(expected_data_path, sep='\t')
-    mrcss = 'mean_random_clade_separation_score'
-    pd.testing.assert_frame_equal(data.drop(mrcss, axis=1),
-                                  expected_data.drop(mrcss, axis=1))
-    assert data[mrcss].tolist() == pytest.approx(expected_data[mrcss].tolist(), rel=1e-1)
+    pd.testing.assert_frame_equal(data, expected_data)
