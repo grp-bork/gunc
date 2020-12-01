@@ -4,9 +4,9 @@ import sys
 import random
 import argparse
 import scipy
+import scipy.stats
 import numpy as np
 import pandas as pd
-from sklearn import metrics
 from collections import OrderedDict
 from pkg_resources import resource_filename
 
@@ -256,7 +256,9 @@ def calc_conditional_entropy(contigs, taxons):
     Returns:
         float: measured conditional entropy
     """
-    MI = metrics.mutual_info_score(contigs, taxons)
+    cross = pd.crosstab(contigs, taxons)
+    MI = scipy.stats.entropy(cross.values.ravel(),
+            np.outer(cross.sum(1), cross.sum()).ravel())
     H_t = scipy.stats.entropy(taxons.value_counts())
     return H_t - MI
 
