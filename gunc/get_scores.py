@@ -66,9 +66,11 @@ def get_n_effective_surplus_clades(counts):
     Returns:
         float: Score describing the extent of chimerism.
     """
-
-    denom = sum(counts) ** 2
-    return 1 / sum([x ** 2 / denom for x in counts]) - 1
+    if len(counts) == 0:
+        return 0
+    else:
+        denom = sum(counts) ** 2
+        return 1 / sum([x ** 2 / denom for x in counts]) - 1
 
 
 def expected_entropy_estimate(probabilities, sample_count):
@@ -231,6 +233,8 @@ def calc_mean_hit_identity(identity_scores):
     Returns:
         float: Score
     """
+    if len(identity_scores) == 0:
+        return 0
     return mean(identity_scores) / 100
 
 
@@ -268,6 +272,10 @@ def calc_clade_separation_score(contamination_portion,
     """
     if contamination_portion == 0:
         return 0
+    elif contamination_portion == np.nan:
+        return np.nan
+    elif expected_conditional_entropy == 0:
+        return np.nan
     else:
         return (1 - conditional_entropy / expected_conditional_entropy
                 if conditional_entropy <= expected_conditional_entropy
@@ -349,6 +357,8 @@ def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
     adjustment = determine_adjustment(genes_retained_index)
     clade_separation_score_adjusted = clade_separation_score * adjustment
     chimeric = is_chimeric(clade_separation_score_adjusted)
+    if len(tax_data) == 0:
+        chimeric = np.nan
     return OrderedDict({'genome': genome_name,
                         'n_contigs': contig_count,
                         'n_genes_called': genes_called,

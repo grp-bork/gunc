@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 import pandas as pd
 from ..get_scores import *
 from pkg_resources import resource_filename
@@ -125,6 +126,29 @@ def test_get_scores_for_taxlevel():
     assert data['adjustment'] == 1
     assert round(data['clade_separation_score_adjusted'], 2) == 1
     assert data['chimeric']
+
+    data = get_scores_for_taxlevel(ref_base_data,
+                                   'class',
+                                   1000,
+                                   'test',
+                                   35,
+                                   17,
+                                   15)
+    assert data['genome'] == 'test'
+    assert data['n_contigs'] == 15
+    assert data['n_genes_called'] == 35
+    assert data['n_genes_mapped'] == 17
+    assert data['taxonomic_level'] == 'class'
+    np.testing.assert_equal(data['clade_separation_score'], np.nan)
+    np.testing.assert_equal(data['contamination_portion'], np.nan)
+    assert round(data['n_effective_surplus_clades'], 2) == 0
+    assert data['proportion_genes_retained_in_major_clades'] == 0
+    assert round(data['mean_hit_identity'], 2) == 0
+    assert round(data['genes_retained_index'], 2) == 0
+    assert round(data['reference_representation_score'], 2) == 0
+    assert data['adjustment'] == 0
+    np.testing.assert_equal(data['clade_separation_score_adjusted'], np.nan)
+    np.testing.assert_equal(data['chimeric'], np.nan)
 
 
 def test_chim_score():
