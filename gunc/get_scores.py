@@ -315,7 +315,7 @@ def determine_adjustment(genes_retained_index):
 def is_chimeric(clade_separation_score_adjusted):
     """Determine if chimeric.
 
-    The cutoff of 0.4 was identified using benchmarks and is used to call 
+    The cutoff of 0.45 was identified using benchmarks and is used to call 
 	a genome chimeric/contaminated if CSS is higher than this cutoff.
 
     Arguments:
@@ -324,7 +324,7 @@ def is_chimeric(clade_separation_score_adjusted):
     Returns:
         bool: is genome chimeric
     """
-    if clade_separation_score_adjusted > 0.4:
+    if clade_separation_score_adjusted > 0.45:
         return True
     else:
         return False
