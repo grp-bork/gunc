@@ -55,16 +55,16 @@ def read_diamond_output(file_path):
 
 
 def get_n_effective_surplus_clades(counts):
-    """Calculate Simpson Index.
+    """Calculate Inverse Simpson Index.
 
     Inverse Simpson Index of all clade labels distribution
     -1 (as 1 genome is expected)
 
     Arguments:
-        counts (list): Counts of taxons in a taxlevel.
+        counts (Series): Counts of taxons in a taxlevel.
 
     Returns:
-        float: Score describing the extent of chimerism.
+        float: Score describing the extent of chimerism, i.e. the effective number of surplus clades represented at a taxlevel.
     """
     if len(counts) == 0:
         return 0
@@ -143,7 +143,8 @@ def calc_expected_conditional_entropy(contigs, taxons):
 def read_genome2taxonomy_reference():
     """Read in genome2taxonomy reference data.
 
-    This file translates the genomes in the diamond reference file to taxonomy.
+    This file translates the genomes in the diamond reference file to 
+	taxonomy with seven taxonomic levels from kingdom to species.
 
     Returns:
         pandas.DataFrame: genome2taxonomy reference
@@ -167,13 +168,14 @@ def create_base_data(diamond_df):
 
 
 def get_stats(diamond_df):
-    """Get summary statistics of diamond output.
+    """Get summary statistics of diamond mapping output.
 
     Arguments:
         diamond_df (pandas.DataFrame): diamond output
 
     Returns:
-        tuple: number of genes mapped, number of contigs
+        tuple: number of genes mapped to GUNC reference DB, 
+			   number of contigs containing mapped genes
     """
     genes_mapped = len(diamond_df)
     contig_count = diamond_df['contig'].nunique()
@@ -182,6 +184,11 @@ def get_stats(diamond_df):
 
 def get_abundant_lineages_cutoff(sensitive, genes_mapped):
     """Determine cutoff for abundant lineages.
+
+    Removal of all genes coming from clades consisting of <2% of all mapped
+	genes is intended to reduce noise introduced by genes mapping to a wide
+	range of clades due to their poor representation in the reference.
+	In sensitive mode that value is reduced to just 10 genes.
 
     Arguments:
         sensitive (bool): sets cutoff to 10 if true
@@ -200,7 +207,7 @@ def calc_contamination_portion(counts):
     """Calculate contamination portion
 
     Arguments:
-        counts (pandas.Series): Value counts of taxons in taxlevel
+        counts (pandas.Series): Counts of taxons in a taxlevel.
 
     Returns:
         float: portion of genes assigning to all clades except the one with most genes.
@@ -223,13 +230,14 @@ def mean(list_of_numbers):
 def calc_mean_hit_identity(identity_scores):
     """Calculate mean hit identity score.
 
-    TODO: get info from askarbek
+    Calculates the mean identity with which genes in abundant lineages (>2%) 
+	hit genes in the reference. 
 
     Arguments:
         identity_scores (list): list of identity scores
 
     Returns:
-        float: Score
+        float: the mean of identity scores
     """
     if len(identity_scores) == 0:
         return 0
@@ -241,7 +249,7 @@ def calc_conditional_entropy(contigs, taxons):
 
     Arguments:
         contigs (pandas.Series): IDs of contigs
-        taxons (pandas.Series): IDs of taxonomic assignments
+        taxons (pandas.Series): IDs of taxonomic clade assignments
 
     Returns:
         float: measured conditional entropy
@@ -256,17 +264,23 @@ def calc_conditional_entropy(contigs, taxons):
 def calc_clade_separation_score(contamination_portion,
                                 conditional_entropy,
                                 expected_conditional_entropy):
-    """Get clade separation score.
+    """Get clade separation score (CSS).
 
-    TODO: get info from askarbek
+    CSS = 0, if contamination_portion = 0 or H(T|C) <= H(T|R)
+	CSS = 1 - H(T|C)/H(T|R), else
 
     Arguments:
-        contamination_portion (float): [description]
-        conditional_entropy (float): [description]
-        expected_conditional_entropy (float): [description]
+        contamination_portion (float): GUNC contamination portion, when equal to 0 
+									   means all genes map to the same taxonomic clade.
+        conditional_entropy (float): H(T|C), the entropy of taxonomic clade labels given 
+		                             their contig assignment.
+        expected_conditional_entropy (float): H(T|R), the expected value of H(T|C) given 
+		                                      identical contig size distribution and given 
+											  there is no relationship between taxonomic 
+											  clade and contig labels.
 
     Returns:
-        float: CSS
+        float: GUNC CSS
     """
     if contamination_portion == 0:
         return 0
@@ -283,13 +297,14 @@ def calc_clade_separation_score(contamination_portion,
 def determine_adjustment(genes_retained_index):
     """Determine if adjustment is necessary.
 
-    TODO: get info from askarbek
+    Adjustment of GUNC CSS score is done by setting it to 0 when there are <40% of all called 
+	genes retained in abundant lineages/clades representing >2% of all mapped genes. 
 
     Arguments:
-        genes_retained_index (float): Proportion of genes retained
+        genes_retained_index (float): proportion of all called genes retained in abundant lineages (>2%).
 
     Returns:
-        int: adjustment value
+        int: 1 or 0. If 1, keeps CSS as it was. If 0, sets CSS to zero.
     """
     if genes_retained_index > 0.4:
         return 1
@@ -300,7 +315,8 @@ def determine_adjustment(genes_retained_index):
 def is_chimeric(clade_separation_score_adjusted):
     """Determine if chimeric.
 
-    TODO: Why .4
+    The cutoff of 0.4 was identified using benchmarks and is used to call 
+	a genome chimeric/contaminated if CSS is higher than this cutoff.
 
     Arguments:
         clade_separation_score_adjusted (float): score
@@ -324,7 +340,7 @@ def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
     Arguments:
         base_data (pandas.DataFrame): Diamond output merged with taxonomy table
         tax_level (str): tax level to run
-        abundant_lineages_cutoff (float): Cutoff val for abundant lineages
+        abundant_lineages_cutoff (float): Cutoff value for abundant lineages
         genome_name (str): Name of input genome
         genes_called (int): Number of genes called by prodigal and
                             used by diamond for mapping to GUNC DB
