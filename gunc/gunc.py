@@ -226,9 +226,9 @@ def main():
             diamond_inputfile = merge_genecalls(genecall_files,
                                                 gene_calls_out_dir)
             diamond_outfile = os.path.join(args.out_dir,
-                                           f'merged.diamond.out')
+                                           'merged.diamond.out')
             genes_called_outfile = os.path.join(gene_calls_out_dir,
-                                                f'gene_counts.json')
+                                                'gene_counts.json')
             write_json(genes_called, genes_called_outfile)
 
         external_tools.diamond(diamond_inputfile,
