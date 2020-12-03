@@ -404,7 +404,6 @@ def chim_score(diamond_file_path, genes_called=0, sensitive=False, plot=False):
     scores = []
     for tax_level in ['kingdom', 'phylum', 'class',
                       'order', 'family', 'genus', 'specI']:
-        print(tax_level)
         scores.append(get_scores_for_taxlevel(base_data,
                                               tax_level,
                                               abundant_lineages_cutoff,

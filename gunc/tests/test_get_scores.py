@@ -81,6 +81,7 @@ def test_is_chimeric():
 
 
 def test_get_scores_for_taxlevel():
+    # Test kingdom level
     data = get_scores_for_taxlevel(ref_base_data,
                                    'kingdom',
                                    0.34,
@@ -104,6 +105,7 @@ def test_get_scores_for_taxlevel():
     assert data['clade_separation_score_adjusted'] == 0
     assert data['chimeric'] is False
 
+    # Test specI level
     data = get_scores_for_taxlevel(ref_base_data,
                                    'specI',
                                    0.34,
@@ -127,6 +129,7 @@ def test_get_scores_for_taxlevel():
     assert round(data['clade_separation_score_adjusted'], 2) == 1
     assert data['chimeric']
 
+    # Test case where nothing is left after minor clade filtering
     data = get_scores_for_taxlevel(ref_base_data,
                                    'class',
                                    1000,
