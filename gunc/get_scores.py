@@ -37,10 +37,10 @@ def read_diamond_output(file_path):
     """Read in Diamond output.
 
     Args:
-        file_path (Str): Full path to diamond output.
+        file_path (str): Full path to diamond output.
 
     Returns:
-        DataFrame: Pandas df with diamond output.
+        pandas.DataFrame: diamond output
     """
     df = pd.read_csv(file_path,
                      sep='\t',
@@ -79,10 +79,10 @@ def expected_entropy_estimate(probabilities, sample_count):
 
 
     Arguments:
-        probabilities (array): probabilities (p) (assumed to sum to 1.0)
+        probabilities (numpy.array): probabilities (p) (assumed to sum to 1.0)
         sample_count (int): number of samples (N)
 
-    Returns
+    Returns:
         entropy (float): expected entropy
     """
     entropy = 0.0
@@ -109,8 +109,8 @@ def calc_expected_conditional_entropy(contigs, taxons):
     via the more costly `expected_entropy_estimate` function
 
     Arguments:
-        contigs (Series): contig names in data
-        taxons (Series): taxons in data
+        contigs (pandas.Series): contig names in data
+        taxons (pandas.Series): taxons in data
 
     Returns:
         float: expected measured conditional entropy
@@ -147,7 +147,7 @@ def read_genome2taxonomy_reference():
 	taxonomy with seven taxonomic levels from kingdom to species.
 
     Returns:
-        DataFrame: Pandas dataframe
+        pandas.DataFrame: genome2taxonomy reference
     """
     genome2taxonomy = resource_filename(__name__,
                                         'data/genome2taxonomy_ref.tsv')
@@ -158,10 +158,10 @@ def create_base_data(diamond_df):
     """Assign taxonomies to diamond output.
 
     Arguments:
-        diamond_df (DataFrame): diamond output
+        diamond_df (pandas.DataFrame): diamond output
 
     Returns:
-        DataFrame: merged dataframe
+        pandas.DataFrame: merged dataframe
     """
     genome2taxonomy_df = read_genome2taxonomy_reference()
     return pd.merge(diamond_df, genome2taxonomy_df, on='genome', how="inner")
@@ -171,7 +171,7 @@ def get_stats(diamond_df):
     """Get summary statistics of diamond mapping output.
 
     Arguments:
-        diamond_df (DataFrame): pandas dataframe
+        diamond_df (pandas.DataFrame): diamond output
 
     Returns:
         tuple: number of genes mapped to GUNC reference DB, 
@@ -195,7 +195,7 @@ def get_abundant_lineages_cutoff(sensitive, genes_mapped):
         genes_mapped (int): total number of genes mapped by diamond to the GUNC DB
 
     Returns:
-        number: cutoff used to determine an abundant lineage
+        float: cutoff used to determine an abundant lineage
     """
     if sensitive:
         return 10
@@ -207,7 +207,7 @@ def calc_contamination_portion(counts):
     """Calculate contamination portion
 
     Arguments:
-        counts (Series): Counts of taxons in a taxlevel.
+        counts (pandas.Series): Counts of taxons in a taxlevel.
 
     Returns:
         float: portion of genes assigning to all clades except the one with most genes.
@@ -248,8 +248,8 @@ def calc_conditional_entropy(contigs, taxons):
     """Compute conditional entropy
 
     Arguments:
-        contigs (Series): IDs of contigs
-        taxons (Series): IDs of taxonomic clade assignments
+        contigs (pandas.Series): IDs of contigs
+        taxons (pandas.Series): IDs of taxonomic clade assignments
 
     Returns:
         float: measured conditional entropy
@@ -280,7 +280,7 @@ def calc_clade_separation_score(contamination_portion,
 											  clade and contig labels.
 
     Returns:
-        number: GUNC CSS
+        float: GUNC CSS
     """
     if contamination_portion == 0:
         return 0
@@ -301,10 +301,10 @@ def determine_adjustment(genes_retained_index):
 	genes retained in abundant lineages/clades representing >2% of all mapped genes. 
 
     Arguments:
-        genes_retained_index (float): a portion of all called genes retained in abundant lineages (>2%).
+        genes_retained_index (float): proportion of all called genes retained in abundant lineages (>2%).
 
     Returns:
-        number: 1 or 0. If 1, keeps CSS as it was. If 0, sets CSS to zero.
+        int: 1 or 0. If 1, keeps CSS as it was. If 0, sets CSS to zero.
     """
     if genes_retained_index > 0.4:
         return 1
@@ -338,7 +338,7 @@ def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
     Calculates the various scores needed to determine if genome ic chimeric.
 
     Arguments:
-        base_data (DataFrame): Diamond output merged with taxonomy table
+        base_data (pandas.DataFrame): Diamond output merged with taxonomy table
         tax_level (str): tax level to run
         abundant_lineages_cutoff (float): Cutoff value for abundant lineages
         genome_name (str): Name of input genome
@@ -400,6 +400,9 @@ def chim_score(diamond_file_path, genes_called=0, sensitive=False, plot=False):
         genes_called (int): Count of genes called by prodigal and used by
                             diamond for mapping into the GUNC DB (default: ('0'))
         sensitive (bool): Run in sensitive mode (default: (False))
+
+    Returns:
+        pandas.DataFrame: GUNC scores
     """
     genes_called = int(genes_called)
     if genes_called < 10:
@@ -418,7 +421,6 @@ def chim_score(diamond_file_path, genes_called=0, sensitive=False, plot=False):
     scores = []
     for tax_level in ['kingdom', 'phylum', 'class',
                       'order', 'family', 'genus', 'specI']:
-        print(tax_level)
         scores.append(get_scores_for_taxlevel(base_data,
                                               tax_level,
                                               abundant_lineages_cutoff,

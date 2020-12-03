@@ -63,7 +63,6 @@ def prodigal(input_file, out_file):
         out_file {str} -- fullpath of output file
     """
     try:
-        print('[INFO] Running Prodigal..', flush=True)
         subprocess.check_output(['prodigal',
                                  '-i', input_file,
                                  '-a', out_file,
