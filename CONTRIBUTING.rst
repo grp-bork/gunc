@@ -66,6 +66,7 @@ Ready to contribute? Here's how to set up `gunc` for local development.
     $ mkvirtualenv gunc
     $ cd gunc/
     $ python setup.py develop
+    $ pip install -r requirements-dev.txt (only needed for development: flake8, pytest, sphinx, coverage etc..)
 
 4. Create a branch for local development::
 
@@ -73,13 +74,11 @@ Ready to contribute? Here's how to set up `gunc` for local development.
 
    Now you can make your changes locally.
 
-5. When you're done making changes, check that your changes pass flake8 and the tests, including testing other Python versions with tox::
+5. When you're done making changes, check that your changes pass flake8 and unittests::
 
-    $ flake8 gunc tests
-    $ python setup.py test
-    $ tox
+    $ python -m flake8 gunc/*.py
+    $ python -m pytest
 
-   To get flake8 and tox, just pip install them into your virtualenv.
 
 6. Commit your changes and push your branch to GitHub::
 
