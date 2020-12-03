@@ -12,3 +12,4 @@ Contributors
 
 * Askarbek Orakov <https://github.com/Askarbek-orakov>
 * Sebastian Schmidt <https://github.com/defleury>
+* Luis Pedro Coelho <https://github.com/luispedro>
