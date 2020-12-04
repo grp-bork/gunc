@@ -12,7 +12,7 @@ stages:
 
 flake8:
   stage: Static Analysis
-  allow_failure: true
+  #allow_failure: true
   script:
   - python3 -m flake8 gunc/*.py
 
