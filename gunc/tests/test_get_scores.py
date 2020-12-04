@@ -75,9 +75,9 @@ def test_calc_mean_hit_identity():
 def test_is_chimeric():
     assert is_chimeric(0) is False
     assert is_chimeric(1) is True
-    assert is_chimeric(0.39) is False
-    assert is_chimeric(0.4) is False
-    assert is_chimeric(0.41) is True
+    assert is_chimeric(0.44) is False
+    assert is_chimeric(0.45) is False
+    assert is_chimeric(0.46) is True
 
 
 def test_get_scores_for_taxlevel():
