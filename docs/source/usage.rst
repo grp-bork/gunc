@@ -31,7 +31,7 @@ Special Flags
 
  * :code:`--config` Config file path. All options can optionally be provided using a config file. The config file can be located at :code:`~/.gunc` or provided via command line with the :code:`--config` option
 
- * :code:`--download_db` Download database to given direcory.
+ * :code:`--download_db` Download database to given directory.
  * :code:`--version` Print version number and exit.
  * :code:`--help` Print help message and exit.
 
