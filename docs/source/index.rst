@@ -18,6 +18,7 @@ GUNC Documentation
 
    installation
    usage
+   output
    functions
    changelog
    contributing
