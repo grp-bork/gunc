@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+import sys
+import pandas as pd
+
+
+def read_tsv(tsv_file):
+    return pd.read_csv(tsv_file, sep='\t')
+
+
+def merge_checkm_gunc(checkm_file, gunc_file):
+    checkm = read_tsv(checkm_file)
+    gunc = read_tsv(gunc_file)
+    output = []
+    for guncdata in gunc.itertuples():
+        samplename = guncdata.genome
+        checkmdata = checkm[checkm['Bin Id'] == samplename]
+        if len(checkmdata) == 1:
+            checkmdata = checkmdata.to_dict(orient='records')[0]
+        elif len(checkmdata) == 0:
+            print(f'[WARNING] {samplename} not found in {checkm_file}.')
+            continue
+        else:
+            sys.exit(f'[ERROR] {samplename} appears more '
+                     f'than once in {checkm_file}')
+        MIMAG_medium = (checkmdata['Completeness'] >= 50
+                        and checkmdata['Contamination'] < 10)
+        MIMAG_high = (checkmdata['Completeness'] >= 90
+                      and checkmdata['Contamination'] < 5)
+        passGUNC = guncdata.clade_separation_score_adjusted < 0.45
+        line = {'genome': samplename,
+                'GUNC.n_contigs': guncdata.n_contigs,
+                'GUNC.n_genes_called': guncdata.n_genes_called,
+                'GUNC.n_genes_mapped': guncdata.n_genes_mapped,
+                'GUNC.divergence_level': guncdata.taxonomic_level,
+                'GUNC.CSS': guncdata.clade_separation_score,
+                'GUNC.CSS_adjusted': guncdata.clade_separation_score_adjusted,
+                'GUNC.contamination_portion': guncdata.contamination_portion,
+                'GUNC.n_effective_surplus_clades': guncdata.n_effective_surplus_clades,
+                'GUNC.RRS': guncdata.reference_representation_score,
+                'checkM.lineage': checkmdata['Marker lineage'],
+                'checkM.genome_size': checkmdata['Genome size (bp)'],
+                'checkM.GC': checkmdata['GC'],
+                'checkM.coding_density': checkmdata['Coding density'],
+                'checkM.N50_contigs': checkmdata['N50 (contigs)'],
+                'checkM.completeness': checkmdata['Completeness'],
+                'checkM.contamination': checkmdata['Contamination'],
+                'checkM.strain_heterogeneity': checkmdata['Strain heterogeneity'],
+                'pass.MIMAG_medium': MIMAG_medium,
+                'pass.MIMAG_high': MIMAG_high,
+                'pass.GUNC': passGUNC}
+        output.append(line)
+    return(pd.DataFrame(output))

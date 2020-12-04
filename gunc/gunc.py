@@ -5,6 +5,7 @@ import glob
 import json
 import argparse
 import pandas as pd
+from . import checkm_merge
 from . import gunc_database
 from . import external_tools
 from . import visualisation as vis
@@ -34,6 +35,8 @@ def parse_args(args):
     run_group = run.add_mutually_exclusive_group(required=True)
     download_db = subparsers.add_parser('download_db',
                                         help='Download GUNC db.')
+    merge_checkm = subparsers.add_parser('merge_checkm',
+                                         help='Merge GUNC CheckM outputs.')
     vis = subparsers.add_parser('plot',
                                 help='Create interactive visualisation.',
                                 formatter_class=lambda prog:
@@ -107,6 +110,18 @@ def parse_args(args):
     download_db.add_argument('path',
                              help='Download database to given direcory.',
                              metavar='dest_path')
+    merge_checkm.add_argument('-g', '--gunc_file',
+                              help='Path of gunc_scores.tsv file.',
+                              required=True,
+                              metavar='')
+    merge_checkm.add_argument('-c', '--checkm_file',
+                              help='CheckM output file',
+                              required=True,
+                              metavar='')
+    merge_checkm.add_argument('-o', '--out_dir',
+                              help='Output directory for merged file',
+                              default=os.getcwd(),
+                              metavar='')
     parser.add_argument('-v', '--version',
                         help='Print version number and exit.',
                         action='version',
@@ -302,7 +317,7 @@ def run_gunc(diamond_outfiles, genes_called, out_dir, sensitive, detailed_output
     Returns:
         pandas.DataFrame: One line per inputfile Gunc scores
     """
-    gunc_output = pd.DataFrame()
+    gunc_output = []
     for diamond_file in diamond_outfiles:
         basename = os.path.basename(diamond_file).replace('.diamond.out', '')
         print(f'[INFO] Calculating GUNC scores for {basename}:')
@@ -314,7 +329,9 @@ def run_gunc(diamond_outfiles, genes_called, out_dir, sensitive, detailed_output
                                                   f'{basename}.chimerism_scores')
             create_dir(detailed_gunc_out_dir)
             detailed.to_csv(detailed_gunc_out_file, index=False, sep='\t')
-        return gunc_output.append(single, sort=False)
+        gunc_output.append(single)
+        print(single, gunc_output)
+    return pd.concat(gunc_output)
 
 
 def run(args):
@@ -382,6 +399,12 @@ def plot(args):
         f.write(viz_html)
 
 
+def merge_checkm(args):
+    merged = checkm_merge.merge_checkm_gunc(args.checkm_file, args.gunc_file)
+    outfile = os.path.join(args.out_dir, 'gunc_checkM.merged.tsv')
+    merged.to_csv(outfile, sep='\t', index=False)
+
+
 def main():
     args = parse_args(sys.argv[1:])
     if args.cmd == 'download_db':
@@ -393,6 +416,8 @@ def main():
         run(args)
     if args.cmd == 'plot':
         plot(args)
+    if args.cmd == 'merge_checkm':
+        merge_checkm(args)
 
 
 if __name__ == "__main__":
