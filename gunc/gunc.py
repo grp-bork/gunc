@@ -36,7 +36,7 @@ def parse_args(args):
     download_db = subparsers.add_parser('download_db',
                                         help='Download GUNC db.')
     merge_checkm = subparsers.add_parser('merge_checkm',
-                                         help='Merge GUNC CheckM outputs.')
+                                         help='Merge GUNC and CheckM outputs.')
     vis = subparsers.add_parser('plot',
                                 help='Create interactive visualisation.',
                                 formatter_class=lambda prog:
@@ -103,7 +103,7 @@ def parse_args(args):
                      default='kingdom',
                      metavar='')
     vis.add_argument('-c', '--contig_display_num',
-                     help='Numper of contigs to visualise.',
+                     help='Number of contigs to visualise.',
                      default=1000,
                      type=int,
                      metavar='')
@@ -400,6 +400,7 @@ def plot(args):
 
 
 def merge_checkm(args):
+    """Merge gunc output with checkmoutput."""
     merged = checkm_merge.merge_checkm_gunc(args.checkm_file, args.gunc_file)
     outfile = os.path.join(args.out_dir, 'gunc_checkM.merged.tsv')
     merged.to_csv(outfile, sep='\t', index=False)

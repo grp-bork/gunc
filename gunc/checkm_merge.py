@@ -4,10 +4,27 @@ import pandas as pd
 
 
 def read_tsv(tsv_file):
+    """Read tsv to pandas.DataFrame
+
+    Args:
+        tsv_file (str): Pathof tsv file to read.
+
+    Returns:
+        pandas.DataFrame: of tsv file
+    """
     return pd.read_csv(tsv_file, sep='\t')
 
 
 def merge_checkm_gunc(checkm_file, gunc_file):
+    """Merge checkM and gunc outputs.
+
+    Args:
+        checkm_file (str): Path of qa.tsv file form checkm
+        gunc_file (str): Path of gunc_scores.tsv file
+
+    Returns:
+        pandas.DataFrame: Merged scores
+    """
     checkm = read_tsv(checkm_file)
     gunc = read_tsv(gunc_file)
     output = []

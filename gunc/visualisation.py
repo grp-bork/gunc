@@ -16,16 +16,16 @@ def reshape_tax_levels(df, tax_levels):
          3) taxlevel of item in first col (tax level of source)
 
     Arguments:
-        df {DataFrame} -- With each column being a taxlevel and rows being contigs.
-        tax_levels {list} -- Of tax levels to pair together
+        df (pandas.DataFrame): With each column being a taxlevel and rows being contigs.
+        tax_levels (list): Of tax levels to pair together
 
     Returns:
-        DataFrame -- Reshaped to the form of source,target,source_tax_level
+        pandas.DataFrame: Reshaped to the form of source,target,source_tax_level
     """
     data = []
     for pair in zip(tax_levels, tax_levels[1:]):
         data += [row + [pair[0]] for row in df[list(pair)].values.tolist()]
-    return pd.DataFrame(data, columns=['source', 'target', 'source_tax_level'])
+    return pd.pandas.DataFrame(data, columns=['source', 'target', 'source_tax_level'])
 
 
 def create_cat_codes_from_df(df):
@@ -34,10 +34,10 @@ def create_cat_codes_from_df(df):
     Creates a dict mapping each unique value in a df to a number.
 
     Arguments:
-        df {DataFrame} -- Containing values that need unique codes.
+        df (pandas.DataFrame): Containing values that need unique codes.
 
     Returns:
-        Dict -- Value: unique number
+        Dict:Value: unique number
     """
     return {x: i for i, x in enumerate(set(df.values.ravel('K')))}
 
@@ -46,16 +46,16 @@ def convert_data(data, ref_dict):
     """Convert data using a feference dict.
 
     Replace all values in data using mapping in ref_dict.
-    Data can be a DataFrame or iteable.
+    Data can be a pandas.DataFrame or iteable.
 
     Arguments:
-        data {iter/DataFrame} -- Data to be converted
-        ref_dict {Dict} -- Mapping of values to replace in data
+        data (iter or pandas.DataFrame): Data to be converted
+        ref_dict (Dict): Mapping of values to replace in data
 
     Returns:
-        iter/DataFrame -- data with values replaced
+        iter or pandas.DataFrame: data with values replaced
     """
-    if isinstance(data, pd.DataFrame):
+    if isinstance(data, pd.pandas.DataFrame):
         return data.replace(ref_dict)
     else:
         return [ref_dict.get(item, item) for item in data]
@@ -64,14 +64,14 @@ def convert_data(data, ref_dict):
 def group_identical_rows(df):
     """Group identical rows.
 
-    Merges all identical rows in a DataFrame and adds a col
+    Merges all identical rows in a pandas.DataFrame and adds a col
     with the original count of rows.
 
     Arguments:
-        df {DataFrame} -- With rows to be grouped.
+        df (pandas.DataFrame): With rows to be grouped.
 
     Returns:
-        DataFrame -- With duplicate rows merged and count col added.
+        pandas.DataFrame: With duplicate rows merged and count col added.
     """
     columns = df.columns.tolist()
     return df.groupby(columns).size().to_frame('count').reset_index()
@@ -86,11 +86,11 @@ def extract_node_data(base_data, cat_codes):
         3) label: the label to assign to each node
 
     Arguments:
-        base_data {DataFrame} -- With each column being a taxlevel and rows being contigs.
-        cat_codes {Dict} -- Mapping of each clade in base_data to unique number.
+        base_data (pandas.DataFrame): With each column being a taxlevel and rows being contigs.
+        cat_codes (Dict): Mapping of each clade in base_data to unique number.
 
     Returns:
-        DataFrame -- with node,colour,label columns
+        pandas.DataFrame: with node,colour,label columns
     """
     node_colours = {'kingdom': '#50514f',
                     'phylum': '#f25f5c',
@@ -108,7 +108,7 @@ def extract_node_data(base_data, cat_codes):
                 label_dict[item] = item
     node_colours = [colour_dict.get(x, 'black') for x in nodes]
     node_labels = [label_dict.get(x, '') for x in nodes]
-    return pd.DataFrame(list(zip(nodes, node_colours, node_labels)),
+    return pd.pandas.DataFrame(list(zip(nodes, node_colours, node_labels)),
                         columns=['node', 'colour', 'label'])
 
 
@@ -118,12 +118,12 @@ def prepare_data(tax_data, tax_levels):
     Prepares node data and link data.
 
     Arguments:
-        tax_data {DataFrame} -- With each column being a taxlevel and rows being contigs.
-        tax_levels {List} -- Of tax levels to consider
+        tax_data (pandas.DataFrame): With each column being a taxlevel and rows being contigs.
+        tax_levels (list): Of tax levels to consider
 
     Returns:
-        DataFrame -- node_data
-        DataFrame -- link_data
+        pandas.DataFrame: node_data
+        pandas.DataFrame: link_data
     """
 
     node_colours = {'kingdom': '#50514f',
@@ -155,11 +155,11 @@ def prepare_plot_data(node_data, link_data):
     """Create plotly Figure instance.
 
     Arguments:
-        node_data {DataFrame} -- node_data
-        link_data {DataFrame} -- link_data
+        node_data (pandas.DataFrame): node_data
+        link_data (pandas.DataFrame): link_data
 
     Returns:
-        plotly.graph_objects.Figure -- Sankey plot.
+        plotly.graph_objects.Figure: Sankey plot.
     """
     plot_data = {
             "data": [
@@ -207,7 +207,7 @@ def get_html_template():
     """Read in HTML template.
 
     Returns:
-        str -- Template
+        str: HTML Template
     """
     template_path = resource_filename(__name__, 'data/template.html')
     with open(template_path, 'r') as f:
@@ -220,13 +220,13 @@ def create_html(plot_data, genome_name, display_info, levels_info):
     Put the plot ond ohter data in to HTML template
 
     Arguments:
-        plot_data {plotly.graph_object.Figure} -- sankey plot
-        genome_name {str} -- Name of genome
-        display_info {str} -- Showing how many contigs were used to produce plot
-        levels_info {str} -- Showing Tax levels being shown in plot
+        plot_data (plotly.graph_object.Figure): sankey plot
+        genome_name (str): Name of genome
+        display_info (str): Showing how many contigs were used to produce plot
+        levels_info (str): Showing Tax levels being shown in plot
 
     Returns:
-        str -- Complete HTML
+        str: Complete HTML
     """
     return get_html_template().format(plot=plot_data.to_html(),
                                       genome_name=genome_name,
@@ -238,13 +238,13 @@ def create_html(plot_data, genome_name, display_info, levels_info):
 def parse_tax_levels_arg(tax_levels):
     """Parse contig level argument sting.
 
-    Need to convert commaseperated input string to list to be used later.
+    Need to convert comma seperated input string to list to be used later.
 
     Arguments:
-        tax_levels {str} -- commanseperated tax_levels
+        tax_levels (str): commanseperated tax_levels
 
     Returns:
-        list -- tax levels to be used in plot
+        list: tax levels to be used in plot
     """
     tax_levels = [x.strip() for x in tax_levels.split(',')]
     allowed = ['kingdom', 'phylum', 'family', 'genus', 'specI', 'contig']
@@ -264,14 +264,14 @@ def create_viz_from_diamond_file(diamond_file, gene_count, tax_levels,
     Uses diamond plot as input.
 
     Arguments:
-        diamond_file {str} -- GUNC diamond output file path
-        gene_count {int} -- Count of genes in original fasta
-        tax_levels {str} -- Commaseperated taxlevels to consider in plot
-        contig_display_num {int} -- Number of contigs to use for plot
-        remove_minor_clade_level {str} -- Tax level at which to remove minor clades
+        diamond_file (str): GUNC diamond output file path
+        gene_count (int): Count of genes in original fasta
+        tax_levels (str): Commaseperated taxlevels to consider in plot
+        contig_display_num (int): Number of contigs to use for plot
+        remove_minor_clade_level (str): Tax level at which to remove minor clades
 
     Returns:
-        str -- HTML to write to disk
+        str: HTML to write to disk
     """
     tax_data, genome_name, cutoff = chim_score(diamond_file,
                                                gene_count,

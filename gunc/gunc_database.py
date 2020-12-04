@@ -11,10 +11,10 @@ def md5sum_file(file):
     """Computes MD5 sum of file.
 
     Arguments:
-        file {str} -- Path of file to md5sum
+        file (str): Path of file to md5sum
 
     Returns:
-        str -- md5sum
+        str: md5sum
     """
     block_size = 8192
     m = hashlib.md5()
@@ -32,8 +32,8 @@ def download_file(file_url, out_file):
     Streams a file from URL to disk.
 
     Arguments:
-        file_url {str} -- URL of file to download
-        out_file {str} -- Target file path
+        file_url (str): URL of file to download
+        out_file (str): Target file path
     """
     with requests.get(file_url, stream=True) as r:
         with open(out_file, 'wb') as f:
@@ -46,8 +46,8 @@ def decompress_gzip_file(gz_file, out_file):
     Uncompressed given gzip file to out_file.
 
     Arguments:
-        gz_file {str} -- Path of gzip file
-        out_file {str} -- Path of target uncompressed out file
+        gz_file (str): Path of gzip file
+        out_file (str): Path of target uncompressed out file
     """
     with gzip.open(gz_file, 'rb') as f_in:
         with open(out_file, 'wb') as f_out:
@@ -60,10 +60,10 @@ def get_md5_from_url(file_url):
     Assumes the md5 file is the file url with .md5 appended
 
     Arguments:
-        file_url {str} -- URL of file
+        file_url (str): URL of file
 
     Returns:
-        str -- md5sum
+        str: md5sum
     """
     return requests.get(f'{file_url}.md5').text.split(' ')[0]
 
@@ -72,8 +72,8 @@ def check_md5(file_url, file_path):
     """Check md5 and remove file if incorect.
 
     Arguments:
-        file_url {str} -- URL of file
-        file_path {str} -- Path of file
+        file_url (str): URL of file
+        file_path (str): Path of file
     """
     expected_md5 = get_md5_from_url(file_url)
     downloaded_md5 = md5sum_file(file_path)
@@ -86,7 +86,7 @@ def get_db(base_dir):
     """Download GUNC DB.
 
     Arguments:
-        base_dir {str} -- Path of output directory
+        base_dir (str): Path of output directory
     """
 
     base_url = 'https://swifter.embl.de/~fullam/gunc/'
