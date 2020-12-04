@@ -143,8 +143,8 @@ def calc_expected_conditional_entropy(contigs, taxons):
 def read_genome2taxonomy_reference():
     """Read in genome2taxonomy reference data.
 
-    This file translates the genomes in the diamond reference file to 
-	taxonomy with seven taxonomic levels from kingdom to species.
+    This file translates the genomes in the diamond reference file to
+    taxonomy with seven taxonomic levels from kingdom to species.
 
     Returns:
         pandas.DataFrame: genome2taxonomy reference
@@ -174,8 +174,8 @@ def get_stats(diamond_df):
         diamond_df (pandas.DataFrame): diamond output
 
     Returns:
-        tuple: number of genes mapped to GUNC reference DB, 
-			   number of contigs containing mapped genes
+        tuple: number of genes mapped to GUNC reference DB,
+               number of contigs containing mapped genes
     """
     genes_mapped = len(diamond_df)
     contig_count = diamond_df['contig'].nunique()
@@ -186,9 +186,9 @@ def get_abundant_lineages_cutoff(sensitive, genes_mapped):
     """Determine cutoff for abundant lineages.
 
     Removal of all genes coming from clades consisting of <2% of all mapped
-	genes is intended to reduce noise introduced by genes mapping to a wide
-	range of clades due to their poor representation in the reference.
-	In sensitive mode that value is reduced to just 10 genes.
+    genes is intended to reduce noise introduced by genes mapping to a wide
+    range of clades due to their poor representation in the reference.
+    In sensitive mode that value is reduced to just 10 genes.
 
     Arguments:
         sensitive (bool): sets cutoff to 10 if true
@@ -230,8 +230,8 @@ def mean(list_of_numbers):
 def calc_mean_hit_identity(identity_scores):
     """Calculate mean hit identity score.
 
-    Calculates the mean identity with which genes in abundant lineages (>2%) 
-	hit genes in the reference. 
+    Calculates the mean identity with which genes in abundant lineages (>2%)
+    hit genes in the reference.
 
     Arguments:
         identity_scores (list): list of identity scores
@@ -267,17 +267,17 @@ def calc_clade_separation_score(contamination_portion,
     """Get clade separation score (CSS).
 
     CSS = 0, if contamination_portion = 0 or H(T|C) <= H(T|R)
-	CSS = 1 - H(T|C)/H(T|R), else
+    CSS = 1 - H(T|C)/H(T|R), else
 
     Arguments:
-        contamination_portion (float): GUNC contamination portion, when equal to 0 
-									   means all genes map to the same taxonomic clade.
-        conditional_entropy (float): H(T|C), the entropy of taxonomic clade labels given 
-		                             their contig assignment.
-        expected_conditional_entropy (float): H(T|R), the expected value of H(T|C) given 
-		                                      identical contig size distribution and given 
-											  there is no relationship between taxonomic 
-											  clade and contig labels.
+        contamination_portion (float): GUNC contamination portion, when equal to 0
+                                       means all genes map to the same taxonomic clade.
+        conditional_entropy (float): H(T|C), the entropy of taxonomic clade labels given
+                                     their contig assignment.
+        expected_conditional_entropy (float): H(T|R), the expected value of H(T|C) given
+                                              identical contig size distribution and given
+                                              there is no relationship between taxonomic
+                                              clade and contig labels.
 
     Returns:
         float: GUNC CSS
@@ -297,8 +297,8 @@ def calc_clade_separation_score(contamination_portion,
 def determine_adjustment(genes_retained_index):
     """Determine if adjustment is necessary.
 
-    Adjustment of GUNC CSS score is done by setting it to 0 when there are <40% of all called 
-	genes retained in abundant lineages/clades representing >2% of all mapped genes. 
+    Adjustment of GUNC CSS score is done by setting it to 0 when there are <40% of all called
+    genes retained in abundant lineages/clades representing >2% of all mapped genes.
 
     Arguments:
         genes_retained_index (float): proportion of all called genes retained in abundant lineages (>2%).
@@ -315,8 +315,8 @@ def determine_adjustment(genes_retained_index):
 def is_chimeric(clade_separation_score_adjusted):
     """Determine if chimeric.
 
-    The cutoff of 0.45 was identified using benchmarks and is used to call 
-	a genome chimeric/contaminated if CSS is higher than this cutoff.
+    The cutoff of 0.45 was identified using benchmarks and is used to call
+    a genome chimeric/contaminated if CSS is higher than this cutoff.
 
     Arguments:
         clade_separation_score_adjusted (float): score
