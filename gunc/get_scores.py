@@ -17,7 +17,7 @@ def parse_args(args):
         args (list): list of args supplied to script.
 
     Returns:
-        (Namespace): assigned args
+        Namespace: assigned args
 
     """
     parser = argparse.ArgumentParser()
@@ -61,10 +61,11 @@ def get_n_effective_surplus_clades(counts):
     -1 (as 1 genome is expected)
 
     Arguments:
-        counts (Series): Counts of taxons in a taxlevel.
+        counts (pandas.Series): Counts of taxons in a taxlevel.
 
     Returns:
-        float: Score describing the extent of chimerism, i.e. the effective number of surplus clades represented at a taxlevel.
+        float: Score describing the extent of chimerism,
+        i.e. the effective number of surplus clades represented at a taxlevel.
     """
     if len(counts) == 0:
         return 0
@@ -79,7 +80,7 @@ def expected_entropy_estimate(probabilities, sample_count):
 
 
     Arguments:
-        probabilities (numpy.array): probabilities (p) (assumed to sum to 1.0)
+        probabilities (numpy.ndarray): probabilities (p) (assumed to sum to 1.0)
         sample_count (int): number of samples (N)
 
     Returns:
@@ -143,8 +144,8 @@ def calc_expected_conditional_entropy(contigs, taxons):
 def read_genome2taxonomy_reference():
     """Read in genome2taxonomy reference data.
 
-    This file translates the genomes in the diamond reference file to 
-	taxonomy with seven taxonomic levels from kingdom to species.
+    This file translates the genomes in the diamond reference file to
+    taxonomy with seven taxonomic levels from kingdom to species.
 
     Returns:
         pandas.DataFrame: genome2taxonomy reference
@@ -174,8 +175,9 @@ def get_stats(diamond_df):
         diamond_df (pandas.DataFrame): diamond output
 
     Returns:
-        tuple: number of genes mapped to GUNC reference DB, 
-			   number of contigs containing mapped genes
+        tuple:
+        (number of genes mapped to GUNC reference DB,
+        number of contigs containing mapped genes)
     """
     genes_mapped = len(diamond_df)
     contig_count = diamond_df['contig'].nunique()
@@ -186,13 +188,13 @@ def get_abundant_lineages_cutoff(sensitive, genes_mapped):
     """Determine cutoff for abundant lineages.
 
     Removal of all genes coming from clades consisting of <2% of all mapped
-	genes is intended to reduce noise introduced by genes mapping to a wide
-	range of clades due to their poor representation in the reference.
-	In sensitive mode that value is reduced to just 10 genes.
+    genes is intended to reduce noise introduced by genes mapping to a wide
+    range of clades due to their poor representation in the reference.
+    In sensitive mode that value is reduced to just 10 genes.
 
     Arguments:
         sensitive (bool): sets cutoff to 10 if true
-        genes_mapped (int): total number of genes mapped by diamond to the GUNC DB
+        genes_mapped (int): total number of genes mapped by diamond to GUNC DB
 
     Returns:
         float: cutoff used to determine an abundant lineage
@@ -210,7 +212,9 @@ def calc_contamination_portion(counts):
         counts (pandas.Series): Counts of taxons in a taxlevel.
 
     Returns:
-        float: portion of genes assigning to all clades except the one with most genes.
+        float:
+        portion of genes assigning to all clades
+        except the one with most genes.
     """
     return 1 - counts.max() / counts.sum()
 
@@ -230,8 +234,8 @@ def mean(list_of_numbers):
 def calc_mean_hit_identity(identity_scores):
     """Calculate mean hit identity score.
 
-    Calculates the mean identity with which genes in abundant lineages (>2%) 
-	hit genes in the reference. 
+    Calculates the mean identity with which genes in abundant lineages (>2%)
+    hit genes in the reference.
 
     Arguments:
         identity_scores (list): list of identity scores
@@ -267,17 +271,17 @@ def calc_clade_separation_score(contamination_portion,
     """Get clade separation score (CSS).
 
     CSS = 0, if contamination_portion = 0 or H(T|C) <= H(T|R)
-	CSS = 1 - H(T|C)/H(T|R), else
+    CSS = 1 - H(T|C)/H(T|R), else
 
     Arguments:
-        contamination_portion (float): GUNC contamination portion, when equal to 0 
-									   means all genes map to the same taxonomic clade.
-        conditional_entropy (float): H(T|C), the entropy of taxonomic clade labels given 
-		                             their contig assignment.
-        expected_conditional_entropy (float): H(T|R), the expected value of H(T|C) given 
-		                                      identical contig size distribution and given 
-											  there is no relationship between taxonomic 
-											  clade and contig labels.
+        contamination_portion (float): GUNC contamination portion,
+            when equal to 0 means all genes map to the same taxonomic clade.
+        conditional_entropy (float): H(T|C),
+            the entropy of taxonomic clade labels given their contig assignment.
+        expected_conditional_entropy (float): H(T|R),
+            the expected value of H(T|C) given identical contig size
+            distribution and given there is no relationship between taxonomic
+            clade and contig labels.
 
     Returns:
         float: GUNC CSS
@@ -297,11 +301,13 @@ def calc_clade_separation_score(contamination_portion,
 def determine_adjustment(genes_retained_index):
     """Determine if adjustment is necessary.
 
-    Adjustment of GUNC CSS score is done by setting it to 0 when there are <40% of all called 
-	genes retained in abundant lineages/clades representing >2% of all mapped genes. 
+    Adjustment of GUNC CSS score is done by setting it to 0 when there are
+    <40% of all called genes retained in abundant lineages/clades representing
+    >2% of all mapped genes.
 
     Arguments:
-        genes_retained_index (float): proportion of all called genes retained in abundant lineages (>2%).
+        genes_retained_index (float): proportion of all called genes retained
+                                      in abundant lineages (>2%).
 
     Returns:
         int: 1 or 0. If 1, keeps CSS as it was. If 0, sets CSS to zero.
@@ -315,8 +321,8 @@ def determine_adjustment(genes_retained_index):
 def is_chimeric(clade_separation_score_adjusted):
     """Determine if chimeric.
 
-    The cutoff of 0.4 was identified using benchmarks and is used to call 
-	a genome chimeric/contaminated if CSS is higher than this cutoff.
+    The cutoff of 0.4 was identified using benchmarks and is used to call
+    a genome chimeric/contaminated if CSS is higher than this cutoff.
 
     Arguments:
         clade_separation_score_adjusted (float): score
@@ -359,7 +365,8 @@ def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
     n_effective_surplus_clades = get_n_effective_surplus_clades(counts)
     contamination_portion = calc_contamination_portion(counts)
     mean_hit_identity = calc_mean_hit_identity(tax_data['id'].tolist())
-    expected_conditional_entropy = calc_expected_conditional_entropy(contigs, taxons)
+    expected_conditional_entropy = calc_expected_conditional_entropy(contigs,
+                                                                     taxons)
     conditional_entropy = calc_conditional_entropy(contigs, taxons)
     clade_separation_score = calc_clade_separation_score(contamination_portion,
                                                          conditional_entropy,
@@ -412,7 +419,8 @@ def chim_score(diamond_file_path, genes_called=0, sensitive=False, plot=False):
     base_data = create_base_data(diamond_df)
     genes_mapped, contig_count = get_stats(diamond_df)
 
-    genome_name = os.path.basename(diamond_file_path).replace('.diamond.out', '')
+    genome_name = os.path.basename(diamond_file_path).replace('.diamond.out',
+                                                              '')
     abundant_lineages_cutoff = get_abundant_lineages_cutoff(sensitive,
                                                             genes_mapped)
     if plot:
@@ -429,7 +437,7 @@ def chim_score(diamond_file_path, genes_called=0, sensitive=False, plot=False):
                                               genes_mapped,
                                               contig_count))
     df = pd.DataFrame(scores).round(2)
-    return df
+    return df, df.iloc[[df['clade_separation_score_adjusted'].idxmax()]]
 
 
 if __name__ == "__main__":

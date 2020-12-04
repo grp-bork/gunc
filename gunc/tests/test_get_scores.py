@@ -157,7 +157,7 @@ def test_get_scores_for_taxlevel():
 def test_chim_score():
     diamond_file_path = resource_filename(__name__,
                                           'test_data/test_genome.fa.diamond.out')
-    data = chim_score(diamond_file_path, genes_called=1832)
+    data, _ = chim_score(diamond_file_path, genes_called=1832)
 
     expected_data_path = resource_filename(__name__,
                                            'test_data/test_genome.fa.diamond.out.chimerism_scores')
