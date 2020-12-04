@@ -17,3 +17,5 @@ Key Functions
 .. autofunction:: gunc.get_scores.is_chimeric
 .. autofunction:: gunc.get_scores.get_scores_for_taxlevel
 .. autofunction:: gunc.get_scores.chim_score
+.. autofunction:: gunc.gunc.merge_genecalls
+.. autofunction:: gunc.gunc.split_diamond_output
