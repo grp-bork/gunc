@@ -109,7 +109,7 @@ def extract_node_data(base_data, cat_codes):
     node_colours = [colour_dict.get(x, 'black') for x in nodes]
     node_labels = [label_dict.get(x, '') for x in nodes]
     return pd.pandas.DataFrame(list(zip(nodes, node_colours, node_labels)),
-                        columns=['node', 'colour', 'label'])
+                               columns=['node', 'colour', 'label'])
 
 
 def prepare_data(tax_data, tax_levels):
