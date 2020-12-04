@@ -12,7 +12,7 @@ Quickstart
 Required Flags
 --------------
 
-One of the following it required. If contigs are supplied the gene calls will be done using prodigal.
+One of the following it required. If contigs are supplied the gene calls will be done using prodigal with option "-p meta".
 
  * :code:`--input_file` Input file in FASTA fna format.
  * :code:`--gene_calls` Input genecalls FASTA faa format.
@@ -24,7 +24,7 @@ Optional Flags
  * :code:`--threads` Number of CPU threads.
  * :code:`--temp_dir` Directory to store temporary files. Default: Current working directory.
  * :code:`--out_dir` Directory in which to put output. Default: Current working directory.
- * :code:`--sensitive` Run with high sensitivity. (Uses a different cutoff to determine an abundant lineage)
+ * :code:`--sensitive` Run with high sensitivity. (define abundant lineages as those having >10 genes instead of the default of >2% of all genes)
 
 Special Flags
 -------------
@@ -33,5 +33,5 @@ Special Flags
 
  * :code:`--download_db` Download database to given direcory.
  * :code:`--version` Print version number and exit.
- * :code:`--help` Print hekp message and exit.
+ * :code:`--help` Print help message and exit.
 
