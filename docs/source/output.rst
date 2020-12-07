@@ -18,3 +18,11 @@ n_effective_surplus_clades - an Inverse Simpson Index of fractions of all clades
 mean_hit_identity - the mean identity with which genes in abundant lineages (>2%) hit genes in the reference.
 reference_representation_score - genes_retained_index * mean_hit_identity. Estimates how well a genomes is represented in the GUNC DB. 
 pass.GUNC - True if clade_separation_score > 0.45, a cutoff benchmarked using simulated genomes. Otherwise, False.
+
+Output files
+------------
+
+{PREFIX}.all_levels.tsv - output file with results for each taxonomic level. 
+{PREFIX}.maxCSS_level.tsv - output file with scores for a taxonomic level with the highest CSS score (or one closer to kingdom if multiple maxima)
+
+Please note that most of genomes having reference_representation_score >0.5 (roughly) are labelled as pssing GUNC filters not necessarily because they are non-chimeric but rather because they are so poorly represented in the reference that it is much more difficult to judge. Depending on your datasets and your intentions you can as well stop such genomes from passing GUNC filtering using option {TBD}.
