@@ -381,20 +381,18 @@ def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
     if len(tax_data) == 0:
         chimeric = np.nan
     return OrderedDict({'genome': genome_name,
-                        'n_contigs': contig_count,
                         'n_genes_called': genes_called,
                         'n_genes_mapped': genes_mapped,
+                        'n_contigs': contig_count,
                         'taxonomic_level': tax_level,
-                        'clade_separation_score': clade_separation_score,
+                        'proportion_genes_retained_in_major_clades': portion_genes_retained,
+                        'genes_retained_index': genes_retained_index,
+                        'clade_separation_score': clade_separation_score_adjusted,
                         'contamination_portion': contamination_portion,
                         'n_effective_surplus_clades': n_effective_surplus_clades,
-                        'proportion_genes_retained_in_major_clades': portion_genes_retained,
                         'mean_hit_identity': mean_hit_identity,
-                        'genes_retained_index': genes_retained_index,
                         'reference_representation_score': reference_representation_score,
-                        'adjustment': adjustment,
-                        'clade_separation_score_adjusted': clade_separation_score_adjusted,
-                        'chimeric': chimeric})
+                        'pass.GUNC': chimeric})
 
 
 def chim_score(diamond_file_path, genes_called=0, sensitive=False, plot=False):
@@ -437,7 +435,7 @@ def chim_score(diamond_file_path, genes_called=0, sensitive=False, plot=False):
                                               genes_mapped,
                                               contig_count))
     df = pd.DataFrame(scores).round(2)
-    return df, df.iloc[[df['clade_separation_score_adjusted'].idxmax()]]
+    return df, df.iloc[[df['clade_separation_score'].idxmax()]]
 
 
 if __name__ == "__main__":

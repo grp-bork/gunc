@@ -1,9 +1,8 @@
-genome	n_contigs	n_genes_called	n_genes_mapped	taxonomic_level	clade_separation_score	contamination_portion	n_effective_surplus_clades	proportion_genes_retained_in_major_clades	mean_hit_identity	genes_retained_index	out_of_reference_score	adjustment	clade_separation_score_adjusted	chimeric
-test	15	35	17	kingdom	0.0	0.0	0.0	1.0	0.91747	0.48571	0.44563	0	0.0	False
-test	15	35	17	phylum	1.0	0.23529	0.63277	1.0	0.91747	0.48571	0.44563	0	0.0	False
-test	15	35	17	class	1.0	0.23529	0.65143	1.0	0.91747	0.48571	0.44563	0	0.0	False
-test	15	35	17	order	1.0	0.23529	0.67052	1.0	0.91747	0.48571	0.44563	0	0.0	False
-test	15	35	17	family	1.0	0.23529	0.67052	1.0	0.91747	0.48571	0.44563	0	0.0	False
-test	15	35	17	genus	1.0	0.29412	0.9396	1.0	0.91747	0.48571	0.44563	0	0.0	False
-test	15	35	17	specI	1.0	0.35294	1.27559	1.0	0.91747	0.48571	0.44563	0	0.0	False
-
+genome	n_genes_called	n_genes_mapped	n_contigs	taxonomic_level	proportion_genes_retained_in_major_clades	genes_retained_index	clade_separation_score	contamination_portion	n_effective_surplus_clades	mean_hit_identity	out_of_reference_score	pass.GUNC
+test	35	17	15	kingdom	1	0.48571	0	0	0	0.91747	0.44563	FALSE
+test	35	17	15	phylum	1	0.48571	0	0.23529	0.63277	0.91747	0.44563	FALSE
+test	35	17	15	class	1	0.48571	0	0.23529	0.65143	0.91747	0.44563	FALSE
+test	35	17	15	order	1	0.48571	0	0.23529	0.67052	0.91747	0.44563	FALSE
+test	35	17	15	family	1	0.48571	0	0.23529	0.67052	0.91747	0.44563	FALSE
+test	35	17	15	genus	1	0.48571	0	0.29412	0.9396	0.91747	0.44563	FALSE
+test	35	17	15	specI	1	0.48571	0	0.35294	1.27559	0.91747	0.44563	FALSE

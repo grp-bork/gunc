@@ -326,7 +326,7 @@ def run_gunc(diamond_outfiles, genes_called, out_dir, sensitive, detailed_output
         if detailed_output:
             detailed_gunc_out_dir = os.path.join(out_dir, 'gunc_output')
             detailed_gunc_out_file = os.path.join(detailed_gunc_out_dir,
-                                                  f'{basename}.chimerism_scores')
+                                                  f'{basename}.all_levels.tsv')
             create_dir(detailed_gunc_out_dir)
             detailed.to_csv(detailed_gunc_out_file, index=False, sep='\t')
         gunc_output.append(single)
@@ -360,7 +360,7 @@ def run(args):
 
     gunc_output = run_gunc(diamond_outfiles, genes_called, args.out_dir,
                            args.sensitive, args.detailed_output)
-    gunc_out_file = os.path.join(args.out_dir, 'gunc_scores.tsv')
+    gunc_out_file = os.path.join(args.out_dir, 'GUNC.maxCSS_level.tsv')
     gunc_output.to_csv(gunc_out_file, index=False, sep='\t')
 
 

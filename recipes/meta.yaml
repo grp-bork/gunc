@@ -26,7 +26,8 @@ requirements:
     - numpy
     - pandas
     - python >=3.6
-    - sklearn
+    - scipy
+    - requests
     - plotly
 
 test:

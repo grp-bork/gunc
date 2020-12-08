@@ -18,6 +18,7 @@ GUNC Documentation
 
    installation
    usage
+   output
    functions
    changelog
    contributing
@@ -35,11 +36,8 @@ GUNC Documentation
         :target: https://conda.anaconda.org/bioconda
 
 
-Python package for detection of chimerism and contamination in prokaryotic genomes.
 
 * Free software: GNU General Public License v3 or later
 
-Features
---------
+Genome UNClutterer (GUNC) is a tool for detection of chimerism and contamination in prokaryotic genomes resulting from mis-binning of genomic contigs from unrelated lineages. It does so by applying an entropy based score on taxonomic assignment and contig location of all genes in a genome.
 
-* Detects chimerism

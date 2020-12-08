@@ -34,7 +34,7 @@ Required Flags
 
  * :code:`--db_file` Path to the GUNC database file. Can be set as environment variable GUNC_DB.
 
-One of the following it required. If contigs are supplied the gene calls will be done using prodigal.
+One of the following it required. If contigs are supplied the gene calls will be done using prodigal with option "-p meta".
 
  * :code:`--input_dir` Input file in FASTA fna format.
  * :code:`--file_suffix` Only needed if suffix of files in :code:`--input_dir` is not the default .fa.
@@ -100,7 +100,7 @@ GUNC DOWNLOAD_DB
 Required Flags
 ^^^^^^^^^^^^^^
 
- * :code:`positional argument` Download database to given direcory.
+ * :code:`positional argument` Download database to given directory.
 
 ------------
 

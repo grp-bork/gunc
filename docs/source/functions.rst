@@ -26,7 +26,7 @@ gunc.py
 
 checkm_merge.py
 ---------------
-.. autofunction:: gunc.merge_checkm.merge_checkm_gunc
+.. autofunction:: gunc.checkm_merge.merge_checkm_gunc
 
 
 external_tools.py
