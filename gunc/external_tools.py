@@ -49,10 +49,10 @@ def get_record_count_in_fasta(fasta_file):
     Returns:
         str: count of records
     """
-    print('[INFO] Counting fasta records..')
-    return subprocess.check_output(f'zgrep -c ">" {fasta_file}',
-                                   shell=True,
-                                   universal_newlines=True).strip()
+    count = subprocess.check_output(f'zgrep -c ">" {fasta_file}',
+                                    shell=True,
+                                    universal_newlines=True).strip()
+    return int(count)
 
 
 def prodigal(input_file, out_file):
@@ -85,7 +85,6 @@ def diamond(input_file, threads, temp_dir, database_file, out_file):
         out_file (str): full path of output file
     """
     try:
-        print('[INFO] Running Diamond..', flush=True)
         subprocess.check_output(['diamond', 'blastp',
                                  '--query', input_file,
                                  '--threads', threads,
@@ -94,7 +93,8 @@ def diamond(input_file, threads, temp_dir, database_file, out_file):
                                  '--evalue', '1',
                                  '--tmpdir', temp_dir,
                                  '--db', database_file,
-                                 '--out', out_file],
+                                 '--out', out_file,
+                                 '--quiet'],
                                 universal_newlines=True)
     except subprocess.CalledProcessError:
         sys.exit('[ERROR] Failed to run Diamond')

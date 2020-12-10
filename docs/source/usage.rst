@@ -34,14 +34,15 @@ Required Flags
 
  * :code:`--db_file` Path to the GUNC database file. Can be set as environment variable GUNC_DB.
 
-One of the following it required. If contigs are supplied the gene calls will be done using prodigal with option "-p meta".
+One of the following is required. If contigs (fna) are supplied the gene calls will be done using prodigal with option "-p meta".
 
  * :code:`--input_dir` Input file in FASTA fna format.
  * :code:`--file_suffix` Only needed if suffix of files in :code:`--input_dir` is not the default .fa.
  * :code:`--input_file` Input file contining paths to FASTA fna format files.
  * :code:`--input_fna` Input file in FASTA fna format.
  * :code:`--gene_calls` Input genecalls FASTA faa format.
-
+ * :code:`--use_species_level` Allow species level to be picked as maxCSS. Default: False
+ * :code:`--min_mapped_genes` Dont calculate GUNC score if number of mapped genes is below this value. Default: 11
 Optional Flags
 ^^^^^^^^^^^^^^
 

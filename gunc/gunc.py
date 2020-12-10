@@ -5,9 +5,11 @@ import glob
 import json
 import argparse
 import pandas as pd
+import multiprocessing
 from . import checkm_merge
 from . import gunc_database
 from . import external_tools
+from datetime import datetime
 from . import visualisation as vis
 from .get_scores import chim_score
 from ._version import get_versions
@@ -26,12 +28,15 @@ def parse_args(args):
     """
     description = ('Tool for detection of chimerism and '
                    'contamination in prokaryotic genomes.\n')
-    parser = argparse.ArgumentParser(description=description)
+    formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50)
+    parser = argparse.ArgumentParser(description=description,
+                                     formatter_class=formatter)
     subparsers = parser.add_subparsers(title='GUNC subcommands',
                                        metavar='',
                                        dest='cmd')
     run = subparsers.add_parser('run',
-                                help='Run chimerism detection.')
+                                help='Run chimerism detection.',
+                                formatter_class=formatter)
     run_group = run.add_mutually_exclusive_group(required=True)
     download_db = subparsers.add_parser('download_db',
                                         help='Download GUNC db.')
@@ -39,9 +44,7 @@ def parse_args(args):
                                          help='Merge GUNC and CheckM outputs.')
     vis = subparsers.add_parser('plot',
                                 help='Create interactive visualisation.',
-                                formatter_class=lambda prog:
-                                    argparse.ArgumentDefaultsHelpFormatter(prog,
-                                                                           max_help_position=100))
+                                formatter_class=formatter)
 
     run.add_argument('-r', '--db_file',
                      help='DiamondDB reference file. Default: GUNC_DB envvar',
@@ -51,7 +54,7 @@ def parse_args(args):
                            help='Input file in FASTA fna format.',
                            metavar='')
     run_group.add_argument('-f', '--input_file',
-                           help='File with paths to files in FASTA fna format.',
+                           help='File with paths to FASTA fna format files.',
                            metavar='')
     run_group.add_argument('-d', '--input_dir',
                            help='Input dir with files in FASTA fna format.',
@@ -63,26 +66,37 @@ def parse_args(args):
     run_group.add_argument('-g', '--gene_calls',
                            help='Input genecalls FASTA faa format.',
                            metavar='')
-    run.add_argument('-p', '--threads',
+    run.add_argument('-t', '--threads',
                      help='number of CPU threads. Default: 4',
                      default='4',
-                     metavar='')
-    run.add_argument('-t', '--temp_dir',
-                     help='Directory to store temp files. Default: cwd',
-                     default=os.getcwd(),
                      metavar='')
     run.add_argument('-o', '--out_dir',
                      help='Output dir.  Default: cwd',
                      default=os.getcwd(),
                      metavar='')
-    run.add_argument('-s', '--sensitive',
+    run.add_argument('--temp_dir',
+                     help='Directory to store temp files. Default: cwd',
+                     default=os.getcwd(),
+                     metavar='')
+    run.add_argument('--sensitive',
                      help='Run with high sensitivity. Default: False',
                      action='store_true',
                      default=False)
-    run.add_argument('-b', '--detailed_output',
+    run.add_argument('--detailed_output',
                      help='Output scores for every taxlevel. Default: False',
                      action='store_true',
                      default=False)
+    run.add_argument('--use_species_level',
+                     help=('Allow species level to be picked as maxCSS. '
+                           'Default: False'),
+                     action='store_true',
+                     default=False)
+    run.add_argument('--min_mapped_genes',
+                     help=('Dont calculate GUNC score if number of mapped '
+                           'genes is below this value. Default: 11'),
+                     type=int,
+                     default=11,
+                     metavar='')
     vis.add_argument('-d', '--diamond_file',
                      help='GUNC diamond outputfile.',
                      required=True,
@@ -243,13 +257,14 @@ def run_from_gene_calls(gene_calls):
     return genes_called, gene_calls
 
 
-def run_from_fnas(fnas, out_dir, file_suffix):
+def run_from_fnas(fnas, out_dir, file_suffix, threads):
     """Call genes and prepare diamond input.
 
     Args:
         fnas (list): Of fasta files
         out_dir (str): Directory in which to put genecalls
         file_suffix (str): Suffix of input files
+        threads (int): Numper of parallel prodigal instances to run
 
     Returns:
         tuple:
@@ -257,18 +272,31 @@ def run_from_fnas(fnas, out_dir, file_suffix):
             - diamond_inputfile (str): merged input file for diamond
 
     """
+    print(f'[START] {datetime.now().strftime("%H:%M:%S")} Running Prodigal..',
+          flush=True)
     create_dir(out_dir)
     genecall_files = []
     genes_called = {}
-    for i, fna in enumerate(fnas):
-        print(f'[INFO] Running Prodigal {i}/{len(fnas)}', flush=True)
+    prodigal_info = []
+    for fna in fnas:
         basename = os.path.basename(fna).split(file_suffix)[0]
         prodigal_outfile = os.path.join(out_dir, f'{basename}.genecalls.faa')
-        external_tools.prodigal(fna, prodigal_outfile)
+        prodigal_info.append((fna, prodigal_outfile))
+    p = multiprocessing.Pool(threads)
+    p.map(run_prodigal, prodigal_info)
+    for fna, prodigal_outfile in prodigal_info:
+        basename = os.path.basename(fna).split(file_suffix)[0]
         genes_called[basename] = record_count(prodigal_outfile)
         genecall_files.append(prodigal_outfile)
     diamond_inputfile = merge_genecalls(genecall_files, out_dir)
+    print(f'[END]   {datetime.now().strftime("%H:%M:%S")} Finished Prodigal..',
+          flush=True)
     return genes_called, diamond_inputfile
+
+
+def run_prodigal(prodigal_info):
+    fna, prodigal_outfile = prodigal_info
+    external_tools.prodigal(fna, prodigal_outfile)
 
 
 def run_diamond(infile, threads, temp_dir, db_file, out_dir):
@@ -286,6 +314,8 @@ def run_diamond(infile, threads, temp_dir, db_file, out_dir):
     Returns:
         list: Of diamond output files.
     """
+    print(f'[START] {datetime.now().strftime("%H:%M:%S")} Running Diamond..',
+          flush=True)
     outfile = os.path.join(out_dir, f'{os.path.basename(infile)}.diamond.out')
     external_tools.diamond(infile, threads, temp_dir, db_file, outfile)
 
@@ -297,10 +327,13 @@ def run_diamond(infile, threads, temp_dir, db_file, out_dir):
         os.remove(infile)
     else:
         diamond_outfiles = [outfile]
+    print(f'[END]   {datetime.now().strftime("%H:%M:%S")} Finished Diamond..',
+          flush=True)
     return diamond_outfiles
 
 
-def run_gunc(diamond_outfiles, genes_called, out_dir, sensitive, detailed_output):
+def run_gunc(diamond_outfiles, genes_called, out_dir, sensitive,
+             detailed_output, min_mapped_genes, use_species_level):
     """Call GUNC scores on diamond output files.
 
     Outputs a pandas.DataFrame with one line per inputfile
@@ -313,16 +346,22 @@ def run_gunc(diamond_outfiles, genes_called, out_dir, sensitive, detailed_output
         out_dir (str): Path to output directory.
         sensitive (bool): Run with high sensitivity.
         detailed_output (bool): Output scores for every taxlevel.
+        min_mapped_genes (int): Minimum number of mapped genes
+                                at which to calculate scores
+        use_species_level (bool): Allow species level to be picked as maxCSS
 
     Returns:
         pandas.DataFrame: One line per inputfile Gunc scores
     """
+    print(f'[START] {datetime.now().strftime("%H:%M:%S")} Running scoring..',
+          flush=True)
     gunc_output = []
     for diamond_file in diamond_outfiles:
         basename = os.path.basename(diamond_file).replace('.diamond.out', '')
-        print(f'[INFO] Calculating GUNC scores for {basename}:')
         gene_call_count = genes_called[basename]
-        detailed, single = chim_score(diamond_file, gene_call_count, sensitive)
+        detailed, single = chim_score(diamond_file, gene_call_count,
+                                      sensitive, min_mapped_genes,
+                                      use_species_level)
         if detailed_output:
             detailed_gunc_out_dir = os.path.join(out_dir, 'gunc_output')
             detailed_gunc_out_file = os.path.join(detailed_gunc_out_dir,
@@ -330,7 +369,8 @@ def run_gunc(diamond_outfiles, genes_called, out_dir, sensitive, detailed_output
             create_dir(detailed_gunc_out_dir)
             detailed.to_csv(detailed_gunc_out_file, index=False, sep='\t')
         gunc_output.append(single)
-        print(single, gunc_output)
+    print(f'[END]   {datetime.now().strftime("%H:%M:%S")} Finished scoring..',
+          flush=True)
     return pd.concat(gunc_output)
 
 
@@ -350,7 +390,8 @@ def run(args):
         gene_calls_out_dir = os.path.join(args.out_dir, 'gene_calls')
         genes_called, diamond_input = run_from_fnas(fnas,
                                                     gene_calls_out_dir,
-                                                    args.file_suffix)
+                                                    args.file_suffix,
+                                                    args.threads)
 
     genes_called_outfile = os.path.join(gene_calls_out_dir, 'gene_counts.json')
     write_json(genes_called, genes_called_outfile)
@@ -359,9 +400,10 @@ def run(args):
                                    args.temp_dir, args.db_file, args.out_dir)
 
     gunc_output = run_gunc(diamond_outfiles, genes_called, args.out_dir,
-                           args.sensitive, args.detailed_output)
+                           args.sensitive, args.detailed_output,
+                           args.min_mapped_genes, args.use_species_level)
     gunc_out_file = os.path.join(args.out_dir, 'GUNC.maxCSS_level.tsv')
-    gunc_output.to_csv(gunc_out_file, index=False, sep='\t')
+    gunc_output.to_csv(gunc_out_file, index=False, sep='\t', na_rep='NA')
 
 
 def get_gene_count_file(args):
@@ -375,6 +417,7 @@ def get_gene_count_file(args):
             sys.exit('[ERROR] GUNC gene_counts.json file not found!')
     else:
         gene_counts_file = args.gunc_gene_count_file
+    return gene_counts_file
 
 
 def get_genecount_from_gunc_output(gene_counts_file, basename):
@@ -400,7 +443,7 @@ def plot(args):
 
 
 def merge_checkm(args):
-    """Merge gunc output with checkmoutput."""
+    """Merge gunc output with checkm output."""
     merged = checkm_merge.merge_checkm_gunc(args.checkm_file, args.gunc_file)
     outfile = os.path.join(args.out_dir, 'gunc_checkM.merged.tsv')
     merged.to_csv(outfile, sep='\t', index=False)
@@ -408,6 +451,8 @@ def merge_checkm(args):
 
 def main():
     args = parse_args(sys.argv[1:])
+    start_time = datetime.now()
+    print(f'[START] {start_time.strftime("%H:%M:%S %Y-%m-%d")}')
     if args.cmd == 'download_db':
         gunc_database.get_db(args.path)
     if args.cmd == 'run':
@@ -419,6 +464,10 @@ def main():
         plot(args)
     if args.cmd == 'merge_checkm':
         merge_checkm(args)
+    end_time = datetime.now()
+    run_time = str(end_time - start_time).split('.')[0]
+    print(f'[INFO]  {end_time.strftime("%H:%M:%S")} Runtime: {run_time}')
+    print(f'[END]   {end_time.strftime("%H:%M:%S %Y-%m-%d")}')
 
 
 if __name__ == "__main__":

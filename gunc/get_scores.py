@@ -1,36 +1,12 @@
 #!/usr/bin/env python3
 import os
 import sys
-import argparse
 import scipy
 import scipy.stats
 import numpy as np
 import pandas as pd
 from collections import OrderedDict
 from pkg_resources import resource_filename
-
-
-def parse_args(args):
-    """Parse Arguments
-
-    Arguments:
-        args (list): list of args supplied to script.
-
-    Returns:
-        Namespace: assigned args
-
-    """
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--diamond_file_path',
-                        help='diamond output',
-                        required=True,
-                        default=False)
-    parser.add_argument('-s', '--sensitive',
-                        help='Run with high sensitivity',
-                        action='store_true',
-                        default=False)
-    args = parser.parse_args(args)
-    return args
 
 
 def read_diamond_output(file_path):
@@ -80,7 +56,8 @@ def expected_entropy_estimate(probabilities, sample_count):
 
 
     Arguments:
-        probabilities (numpy.ndarray): probabilities (p) (assumed to sum to 1.0)
+        probabilities (numpy.ndarray): probabilities (p)
+                                       (assumed to sum to 1.0)
         sample_count (int): number of samples (N)
 
     Returns:
@@ -277,7 +254,8 @@ def calc_clade_separation_score(contamination_portion,
         contamination_portion (float): GUNC contamination portion,
             when equal to 0 means all genes map to the same taxonomic clade.
         conditional_entropy (float): H(T|C),
-            the entropy of taxonomic clade labels given their contig assignment.
+                                     the entropy of taxonomic clade
+                                     labels given their contig assignment.
         expected_conditional_entropy (float): H(T|R),
             the expected value of H(T|C) given identical contig size
             distribution and given there is no relationship between taxonomic
@@ -338,7 +316,7 @@ def is_chimeric(clade_separation_score_adjusted):
 
 def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
                             genome_name, genes_called, genes_mapped,
-                            contig_count):
+                            contig_count, min_mapped_genes):
     """Run chimerism check.
 
     Calculates the various scores needed to determine if genome ic chimeric.
@@ -352,12 +330,28 @@ def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
                             used by diamond for mapping to GUNC DB
         genes_mapped (int): Number of genes mapped to GUNC DB by diamond
         contig_count (int): Count of contigs
+        min_mapped_genes (int): Minimum number of mapped genes
+                                at which to calculate scores
 
     Returns:
         OrderedDict: scores for chosen taxlevel
     """
     tax_data = base_data.groupby(tax_level).filter(
         lambda x: len(x) > abundant_lineages_cutoff)
+    if len(tax_data) < min_mapped_genes:
+        return OrderedDict({'genome': genome_name,
+                            'n_genes_called': genes_called,
+                            'n_genes_mapped': genes_mapped,
+                            'n_contigs': contig_count,
+                            'taxonomic_level': tax_level,
+                            'proportion_genes_retained_in_major_clades': np.nan,
+                            'genes_retained_index': np.nan,
+                            'clade_separation_score': np.nan,
+                            'contamination_portion': np.nan,
+                            'n_effective_surplus_clades': np.nan,
+                            'mean_hit_identity': np.nan,
+                            'reference_representation_score': np.nan,
+                            'pass.GUNC': np.nan})
     counts = tax_data[tax_level].value_counts()
     contigs = tax_data['contig']
     taxons = tax_data[tax_level]
@@ -378,41 +372,54 @@ def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
     adjustment = determine_adjustment(genes_retained_index)
     clade_separation_score_adjusted = clade_separation_score * adjustment
     chimeric = is_chimeric(clade_separation_score_adjusted)
-    if len(tax_data) == 0:
-        chimeric = np.nan
-    return OrderedDict({'genome': genome_name,
-                        'n_genes_called': genes_called,
-                        'n_genes_mapped': genes_mapped,
-                        'n_contigs': contig_count,
-                        'taxonomic_level': tax_level,
-                        'proportion_genes_retained_in_major_clades': portion_genes_retained,
-                        'genes_retained_index': genes_retained_index,
-                        'clade_separation_score': clade_separation_score_adjusted,
-                        'contamination_portion': contamination_portion,
-                        'n_effective_surplus_clades': n_effective_surplus_clades,
-                        'mean_hit_identity': mean_hit_identity,
-                        'reference_representation_score': reference_representation_score,
-                        'pass.GUNC': chimeric})
+    passGUNC = not chimeric
+    return OrderedDict({'genome':
+                            genome_name,
+                        'n_genes_called':
+                            genes_called,
+                        'n_genes_mapped':
+                            genes_mapped,
+                        'n_contigs':
+                            contig_count,
+                        'taxonomic_level':
+                            tax_level,
+                        'proportion_genes_retained_in_major_clades':
+                            portion_genes_retained,
+                        'genes_retained_index':
+                            genes_retained_index,
+                        'clade_separation_score':
+                            clade_separation_score_adjusted,
+                        'contamination_portion':
+                            contamination_portion,
+                        'n_effective_surplus_clades':
+                            n_effective_surplus_clades,
+                        'mean_hit_identity':
+                            mean_hit_identity,
+                        'reference_representation_score':
+                            reference_representation_score,
+                        'pass.GUNC':
+                            passGUNC})
 
 
-def chim_score(diamond_file_path, genes_called=0, sensitive=False, plot=False):
+def chim_score(diamond_file_path, genes_called=0, sensitive=False,
+               min_mapped_genes=11, use_species_level=False, plot=False):
     """Get chimerism scores for a genome.
 
     Arguments:
         diamond_file_path (str): Full path to diamond output
 
     Keyword Arguments:
-        genes_called (int): Count of genes called by prodigal and used by
-                            diamond for mapping into the GUNC DB (default: ('0'))
+        genes_called (int):
         sensitive (bool): Run in sensitive mode (default: (False))
+        min_mapped_genes (int): Minimum number of mapped genes
+                                at which to calculate scores (default: (11)
+        use_species_level (bool): Allow species level to be selected for maxCSS
+                                  (default: (False))
+        plot (bool): Return data needed for plotting (default: (False))
 
     Returns:
         pandas.DataFrame: GUNC scores
     """
-    genes_called = int(genes_called)
-    if genes_called < 10:
-        sys.exit('[WARNING] Less than 10 genes called, exiting...')
-
     diamond_df = read_diamond_output(diamond_file_path)
     base_data = create_base_data(diamond_df)
     genes_mapped, contig_count = get_stats(diamond_df)
@@ -433,14 +440,12 @@ def chim_score(diamond_file_path, genes_called=0, sensitive=False, plot=False):
                                               genome_name,
                                               genes_called,
                                               genes_mapped,
-                                              contig_count))
+                                              contig_count,
+                                              min_mapped_genes))
     df = pd.DataFrame(scores).round(2)
-    return df, df.iloc[[df['clade_separation_score'].idxmax()]]
-
-
-if __name__ == "__main__":
-    args = parse_args(sys.argv[1:])
-    df = chim_score(args.diamond_file_path, args.sensitive)
-    df.to_csv(f'{args.diamond_file_path}.chimerism_scores',
-              index=False,
-              sep='\t')
+    if use_species_level:
+        max_CSSidx = df['clade_separation_score'].idxmax()
+    else:
+        max_CSSidx = df[:-1]['clade_separation_score'].idxmax()
+    max_CSS = df.iloc[[0] if pd.isna(max_CSSidx) else [max_CSSidx]]
+    return df, max_CSS
