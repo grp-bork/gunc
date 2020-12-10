@@ -109,8 +109,7 @@ todo_include_todos = False
 html_theme = 'sphinx_rtd_theme'
 import sphinx_rtd_theme
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-html_logo = '../../GUNC_LOGO.png'
-html_favicon = '../../GUNC_favicon.jpeg'
+html_favicon = '../../GUNC_favicon.svg'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
