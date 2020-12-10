@@ -78,7 +78,8 @@ def test_get_scores_for_taxlevel():
                                    'test',
                                    35,
                                    17,
-                                   15)
+                                   15,
+                                   11)
     assert data['genome'] == 'test'
     assert data['n_contigs'] == 15
     assert data['n_genes_called'] == 35
@@ -91,7 +92,7 @@ def test_get_scores_for_taxlevel():
     assert round(data['mean_hit_identity'], 2) == 0.92
     assert round(data['genes_retained_index'], 2) == 0.49
     assert round(data['reference_representation_score'], 2) == 0.45
-    assert data['pass.GUNC'] is False
+    assert data['pass.GUNC']
 
     # Test specI level
     data = get_scores_for_taxlevel(ref_base_data,
@@ -100,7 +101,8 @@ def test_get_scores_for_taxlevel():
                                    'test',
                                    35,
                                    17,
-                                   15)
+                                   15,
+                                   11)
     assert data['genome'] == 'test'
     assert data['n_contigs'] == 15
     assert data['n_genes_called'] == 35
@@ -113,7 +115,7 @@ def test_get_scores_for_taxlevel():
     assert round(data['mean_hit_identity'], 2) == 0.92
     assert round(data['genes_retained_index'], 2) == 0.49
     assert round(data['reference_representation_score'], 2) == 0.45
-    assert data['pass.GUNC']
+    assert data['pass.GUNC'] is False
 
     # Test case where nothing is left after minor clade filtering
     data = get_scores_for_taxlevel(ref_base_data,
@@ -122,7 +124,8 @@ def test_get_scores_for_taxlevel():
                                    'test',
                                    35,
                                    17,
-                                   15)
+                                   15,
+                                   11)
     assert data['genome'] == 'test'
     assert data['n_contigs'] == 15
     assert data['n_genes_called'] == 35
@@ -130,11 +133,11 @@ def test_get_scores_for_taxlevel():
     assert data['taxonomic_level'] == 'class'
     np.testing.assert_equal(data['clade_separation_score'], np.nan)
     np.testing.assert_equal(data['contamination_portion'], np.nan)
-    assert round(data['n_effective_surplus_clades'], 2) == 0
-    assert data['proportion_genes_retained_in_major_clades'] == 0
-    assert round(data['mean_hit_identity'], 2) == 0
-    assert round(data['genes_retained_index'], 2) == 0
-    assert round(data['reference_representation_score'], 2) == 0
+    np.testing.assert_equal(data['n_effective_surplus_clades'], np.nan)
+    np.testing.assert_equal(data['proportion_genes_retained_in_major_clades'], np.nan)
+    np.testing.assert_equal(data['mean_hit_identity'], np.nan)
+    np.testing.assert_equal(data['genes_retained_index'], np.nan)
+    np.testing.assert_equal(data['reference_representation_score'], np.nan)
     np.testing.assert_equal(data['pass.GUNC'], np.nan)
 
 
