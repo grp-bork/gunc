@@ -28,23 +28,20 @@ def parse_args(args):
     """
     description = ('Tool for detection of chimerism and '
                    'contamination in prokaryotic genomes.\n')
-    formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50)
-    parser = argparse.ArgumentParser(description=description,
-                                     formatter_class=formatter)
+
+    parser = argparse.ArgumentParser(description=description)
     subparsers = parser.add_subparsers(title='GUNC subcommands',
                                        metavar='',
                                        dest='cmd')
     run = subparsers.add_parser('run',
-                                help='Run chimerism detection.',
-                                formatter_class=formatter)
+                                help='Run chimerism detection.')
     run_group = run.add_mutually_exclusive_group(required=True)
     download_db = subparsers.add_parser('download_db',
                                         help='Download GUNC db.')
     merge_checkm = subparsers.add_parser('merge_checkm',
                                          help='Merge GUNC and CheckM outputs.')
     vis = subparsers.add_parser('plot',
-                                help='Create interactive visualisation.',
-                                formatter_class=formatter)
+                                help='Create interactive visualisation.')
 
     run.add_argument('-r', '--db_file',
                      help='DiamondDB reference file. Default: GUNC_DB envvar',
