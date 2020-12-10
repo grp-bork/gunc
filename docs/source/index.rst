@@ -1,5 +1,5 @@
 
-.. image:: GUNC_LOGO.png
+.. image:: GUNC_LOGO.svg
     :width: 400px
     :align: left
     :alt: GUNC
@@ -41,3 +41,9 @@ GUNC Documentation
 
 Genome UNClutterer (GUNC) is a tool for detection of chimerism and contamination in prokaryotic genomes resulting from mis-binning of genomic contigs from unrelated lineages. It does so by applying an entropy based score on taxonomic assignment and contig location of all genes in a genome.
 
+.. figure:: /_static/GUNC_PLOT_example.png
+  :width: 100%
+  :alt: Example of GUNC visualisation function.
+  :align: center
+
+  Example of GUNC visualisation.
