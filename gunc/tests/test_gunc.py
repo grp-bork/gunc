@@ -15,3 +15,13 @@ def test_get_genecount_from_gunc_output():
 def test_start_checks():
     with pytest.raises(SystemExit):
         start_checks()
+
+
+def test_parse_args():
+    with pytest.raises(SystemExit):
+        parse_args(['-h'])
+    with pytest.raises(SystemExit):
+        parse_args(['-f'])
+    parser = parse_args(['run', '-f', 'test_path'])
+    assert parser.input_file == 'test_path'
+    assert parser.sensitive is False
