@@ -43,7 +43,7 @@ about:
   license_family: GPL3
   license_file: LICENSE
   summary: "Python package for detection of chimerism and contamination in prokaryotic genomes."
-  doc_url: "https://grp-bork.embl-community.io/gunc/"
+  doc_url: "gunc.embl.de"
   dev_url: "https://github.com/grp-bork/gunc"
 
 extra:
