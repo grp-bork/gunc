@@ -6,4 +6,4 @@ fasta_file = resource_filename(__name__,
 
 
 def test_get_record_count_in_fasta():
-    assert get_record_count_in_fasta(fasta_file) == '35'
+    assert get_record_count_in_fasta(fasta_file) == 35
