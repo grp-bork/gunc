@@ -40,7 +40,12 @@ reference_representation_score
    ``genes_retained_index * mean_hit_identity``
    Estimates how well a genome is represented in the GUNC DB.
 pass.GUNC
-   True if clade_separation_score > 0.45, a cutoff benchmarked using simulated genomes. Otherwise, False.
+   If a genome passes GUNC analysis it means it is likely to not be chimeric (or that chimerism cannot be detected especially when its reference representation (RRS) is low).
+   A genome passes if clade_separation_score <= 0.45, a cutoff benchmarked using simulated genomes.
+
 
 .. note::
    Please note that most of genomes having reference_representation_score >0.5 (roughly) are labelled as passing GUNC filters not necessarily because they are non-chimeric but rather because they are so poorly represented in the reference that it is much more difficult to judge.
+
+.. note::
+   MIMAG_medium and MIMAG_high filters are incomplete; the MIMAG standard additionally requires data on rRNA and tRNA counts
