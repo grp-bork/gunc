@@ -12,16 +12,6 @@ ref_base_data_path = resource_filename(__name__,
 ref_base_data = pd.read_csv(ref_base_data_path)
 
 
-def test_parse_args():
-    with pytest.raises(SystemExit):
-        parse_args(['-h'])
-    with pytest.raises(SystemExit):
-        parse_args(['-f'])
-    parser = parse_args(['-f', 'test_path'])
-    assert parser.diamond_file_path == 'test_path'
-    assert parser.sensitive == False
-
-
 def test_read_diamond_output():
     empty_file = resource_filename(__name__, '__init__.py')
     with pytest.raises(SystemExit):
