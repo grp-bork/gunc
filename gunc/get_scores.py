@@ -374,7 +374,7 @@ def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
     chimeric = is_chimeric(clade_separation_score_adjusted)
     passGUNC = not chimeric
     return OrderedDict({'genome':
-                            genome_name,
+                        genome_name,
                         'n_genes_called':
                             genes_called,
                         'n_genes_mapped':
