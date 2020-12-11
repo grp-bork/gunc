@@ -279,7 +279,7 @@ def run_from_fnas(fnas, out_dir, file_suffix, threads):
         basename = os.path.basename(fna).split(file_suffix)[0]
         prodigal_outfile = os.path.join(out_dir, f'{basename}.genecalls.faa')
         prodigal_info.append((fna, prodigal_outfile))
-    p = multiprocessing.Pool(threads)
+    p = multiprocessing.Pool(int(threads))
     p.map(run_prodigal, prodigal_info)
     for fna, prodigal_outfile in prodigal_info:
         basename = os.path.basename(fna).split(file_suffix)[0]
