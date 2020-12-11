@@ -1,4 +1,4 @@
-.. image:: GUNC_LOGO.png
+.. image:: GUNC_LOGO.svg
     :width: 400px
     :align: left
     :alt: GUNC
