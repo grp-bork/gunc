@@ -49,9 +49,14 @@ def get_record_count_in_fasta(fasta_file):
     Returns:
         str: count of records
     """
-    count = subprocess.check_output(f'zgrep -c ">" {fasta_file}',
-                                    shell=True,
-                                    universal_newlines=True).strip()
+    try:
+        count = subprocess.check_output(f'zgrep -c ">" {fasta_file}',
+                                        shell=True,
+                                        universal_newlines=True).strip()
+    except subprocess.CalledProcessError as e:
+        count = 0
+        if e.returncode > 1:
+            print(f'[WARNING] Counting records failed {fasta_file}')
     return int(count)
 
 
@@ -63,15 +68,27 @@ def prodigal(input_file, out_file):
         out_file (str): fullpath of output file
     """
     try:
-        subprocess.check_output(['prodigal',
-                                 '-i', input_file,
-                                 '-a', out_file,
-                                 '-o', '/dev/null',
-                                 '-p', 'meta',
-                                 '-q'],
-                                universal_newlines=True)
+        if input_file.endswith('.gz'):
+            uncompressed = subprocess.Popen(('zcat', input_file),
+                                            stdout=subprocess.PIPE)
+            subprocess.check_output(['prodigal',
+                                     '-i', '/dev/stdin',
+                                     '-a', out_file,
+                                     '-o', '/dev/null',
+                                     '-p', 'meta',
+                                     '-q'],
+                                    stdin=uncompressed.stdout,
+                                    universal_newlines=True)
+        else:
+            subprocess.check_output(['prodigal',
+                                     '-i', input_file,
+                                     '-a', out_file,
+                                     '-o', '/dev/null',
+                                     '-p', 'meta',
+                                     '-q'],
+                                    universal_newlines=True)
     except subprocess.CalledProcessError:
-        sys.exit('[ERROR] Failed to run Prodigal')
+        print(f'[ERROR] Failed to run Prodigal {input_file}')
 
 
 def diamond(input_file, threads, temp_dir, database_file, out_file):
@@ -97,7 +114,7 @@ def diamond(input_file, threads, temp_dir, database_file, out_file):
                                  '--quiet'],
                                 universal_newlines=True)
     except subprocess.CalledProcessError:
-        sys.exit('[ERROR] Failed to run Diamond')
+        print(f'[ERROR] Failed to run Diamond {input_file}')
 
 
 def check_diamond_version():
