@@ -195,14 +195,15 @@ def merge_genecalls(genecall_files, out_dir):
     merged_outfile = os.path.join(out_dir, 'merged.genecalls.faa')
     with open(merged_outfile, 'w') as ofile:
         for file in genecall_files:
-            with open(file, 'r') as infile:
-                genome_name = os.path.basename(file).replace('.genecalls.faa',
-                                                             '')
-                for line in infile:
-                    if line.startswith('>'):
-                        contig_name = line.split(' ')[0]
-                        line = f'{contig_name}_-_{genome_name}\n'
-                    ofile.write(line)
+            if os.path.isfile(file):
+                with open(file, 'r') as infile:
+                    genome_name = os.path.basename(file).replace('.genecalls.faa',
+                                                                 '')
+                    for line in infile:
+                        if line.startswith('>'):
+                            contig_name = line.split(' ')[0]
+                            line = f'{contig_name}_-_{genome_name}\n'
+                        ofile.write(line)
     return merged_outfile
 
 
@@ -371,6 +372,22 @@ def run_gunc(diamond_outfiles, genes_called, out_dir, sensitive,
     return pd.concat(gunc_output)
 
 
+def check_for_duplicate_filenames(fnas, file_suffix):
+    """Check if there are duplicate filenames in fna list.
+
+    As the output files are based on the names of the input files, if
+    there are duplicate filenames the output files wil be overwritten.
+
+    Args:
+        fnas (list): fna file paths
+        file_suffix (str): File suffix
+    """
+    names = [os.path.basename(fna).split(file_suffix)[0] for fna in fnas]
+    duplicated_items = set([x for x in names if names.count(x) > 1])
+    if len(duplicated_items) > 0:
+        sys.exit(f'Filenames appear more than once: {duplicated_items}')
+
+
 def run(args):
     """Run entire GUNC workflow."""
     if args.input_dir:
@@ -379,6 +396,8 @@ def run(args):
         fnas = get_paths_from_file(args.input_file)
     elif args.input_fna:
         fnas = [args.input_fna]
+
+    check_for_duplicate_filenames(fnas, args.file_suffix)
 
     if args.gene_calls:
         gene_calls_out_dir = args.out_dir
