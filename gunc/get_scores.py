@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import os
-import sys
 import scipy
 import scipy.stats
 import numpy as np
@@ -24,7 +23,7 @@ def read_diamond_output(file_path):
                      usecols=[0, 1, 2],
                      names=['query', 'genome', 'id'])
     if len(df) == 0:
-        sys.exit('[ERROR] input data produced no alignments to reference.')
+        return(df)
     else:
         df['contig'] = df['query'].str.rpartition('_')[[0]]
         return df
@@ -156,6 +155,8 @@ def get_stats(diamond_df):
         (number of genes mapped to GUNC reference DB,
         number of contigs containing mapped genes)
     """
+    if len(diamond_df) == 0:
+        return (0, 0)
     genes_mapped = len(diamond_df)
     contig_count = diamond_df['contig'].nunique()
     return (genes_mapped, contig_count)
@@ -433,7 +434,7 @@ def chim_score(diamond_file_path, genes_called=0, sensitive=False,
 
     scores = []
     for tax_level in ['kingdom', 'phylum', 'class',
-                      'order', 'family', 'genus', 'specI']:
+                      'order', 'family', 'genus', 'species']:
         scores.append(get_scores_for_taxlevel(base_data,
                                               tax_level,
                                               abundant_lineages_cutoff,

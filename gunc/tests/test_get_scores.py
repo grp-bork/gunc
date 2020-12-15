@@ -14,8 +14,7 @@ ref_base_data = pd.read_csv(ref_base_data_path)
 
 def test_read_diamond_output():
     empty_file = resource_filename(__name__, '__init__.py')
-    with pytest.raises(SystemExit):
-        read_diamond_output(empty_file)
+    assert len(read_diamond_output(empty_file)) == 0
     diamond_df = read_diamond_output(diamond_output)
     assert len(diamond_df) == 17
     assert len(diamond_df.columns) == 4
@@ -94,9 +93,9 @@ def test_get_scores_for_taxlevel():
     assert round(data['reference_representation_score'], 2) == 0.45
     assert data['pass.GUNC']
 
-    # Test specI level
+    # Test species level
     data = get_scores_for_taxlevel(ref_base_data,
-                                   'specI',
+                                   'species',
                                    0.34,
                                    'test',
                                    35,
@@ -107,7 +106,7 @@ def test_get_scores_for_taxlevel():
     assert data['n_contigs'] == 15
     assert data['n_genes_called'] == 35
     assert data['n_genes_mapped'] == 17
-    assert data['taxonomic_level'] == 'specI'
+    assert data['taxonomic_level'] == 'species'
     assert round(data['clade_separation_score'], 2) == 1
     assert round(data['contamination_portion'], 2) == 0.35
     assert round(data['n_effective_surplus_clades'], 2) == 1.28

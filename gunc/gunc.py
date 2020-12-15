@@ -298,7 +298,7 @@ def run_prodigal(prodigal_info):
 
 
 def run_diamond(infile, threads, temp_dir, db_file, out_dir):
-    """Rundiamong and split ouput.
+    """Run diamond and split ouput.
 
     Runs diamond on infile and if needed splits the constitiuent samples.
 
@@ -365,7 +365,10 @@ def run_gunc(diamond_outfiles, genes_called, out_dir, sensitive,
             detailed_gunc_out_file = os.path.join(detailed_gunc_out_dir,
                                                   f'{basename}.all_levels.tsv')
             create_dir(detailed_gunc_out_dir)
-            detailed.to_csv(detailed_gunc_out_file, index=False, sep='\t')
+            detailed.to_csv(detailed_gunc_out_file,
+                            index=False,
+                            sep='\t',
+                            na_rep='NA')
         gunc_output.append(single)
     print(f'[END]   {datetime.now().strftime("%H:%M:%S")} Finished scoring..',
           flush=True)
@@ -414,12 +417,43 @@ def run(args):
 
     diamond_outfiles = run_diamond(diamond_input, args.threads,
                                    args.temp_dir, args.db_file, args.out_dir)
-
+    if len(diamond_outfiles) != len(fnas):
+        diamond_outfiles = add_empty_diamond_output(args.out_dir,
+                                                    fnas,
+                                                    args.file_suffix)
     gunc_output = run_gunc(diamond_outfiles, genes_called, args.out_dir,
                            args.sensitive, args.detailed_output,
                            args.min_mapped_genes, args.use_species_level)
     gunc_out_file = os.path.join(args.out_dir, 'GUNC.maxCSS_level.tsv')
     gunc_output.to_csv(gunc_out_file, index=False, sep='\t', na_rep='NA')
+
+
+def add_empty_diamond_output(diamond_outdir, fnas, file_suffix):
+    """Create placeholder file for missing diamond output.
+
+    If an input doesnt map to reference it is missing from the final ouput.
+    Creating a placeholder file means it is not silently lost.
+    TODO: There are better ways to do this
+
+    Args:
+        diamond_outdir (str): Path to dir containing diamond output.
+        fnas (list): All input file paths
+        file_suffix (str): suffix of the input files
+
+    Returns:
+        list: Paths of diamond output files incl. empty placeholders
+    """
+    expected_diamond_outfiles = []
+    for fna in fnas:
+        basename = os.path.basename(fna).split(file_suffix)[0]
+        diamond_outfile = os.path.join(diamond_outdir,
+                                       'diamond_output',
+                                       f'{basename}.diamond.out')
+        if not os.path.isfile(diamond_outfile):
+            print(f'[WARNING] no genes mapped to reference: {basename}')
+            open(diamond_outfile, 'a').close()
+        expected_diamond_outfiles.append(diamond_outfile)
+    return expected_diamond_outfiles
 
 
 def get_gene_count_file(args):
