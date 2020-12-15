@@ -122,7 +122,7 @@ def parse_args(args):
                              help='Download database to given direcory.',
                              metavar='dest_path')
     merge_checkm.add_argument('-g', '--gunc_file',
-                              help='Path of gunc_scores.tsv file.',
+                              help='Path of GUNC.maxCSS_level.tsv file.',
                               required=True,
                               metavar='')
     merge_checkm.add_argument('-c', '--checkm_file',
@@ -495,7 +495,7 @@ def plot(args):
 def merge_checkm(args):
     """Merge gunc output with checkm output."""
     merged = checkm_merge.merge_checkm_gunc(args.checkm_file, args.gunc_file)
-    outfile = os.path.join(args.out_dir, 'gunc_checkM.merged.tsv')
+    outfile = os.path.join(args.out_dir, 'GUNC_checkM.merged.tsv')
     merged.to_csv(outfile, sep='\t', index=False)
 
 

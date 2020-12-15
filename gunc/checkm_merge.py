@@ -29,7 +29,10 @@ def merge_checkm_gunc(checkm_file, gunc_file):
     gunc = read_tsv(gunc_file)
     output = []
     for guncdata in gunc.itertuples():
-        samplename = guncdata.genome
+        try:
+            samplename = guncdata.genome
+        except AttributeError:
+            sys.exit(f'[ERROR] Invalid input file: {gunc_file}')
         checkmdata = checkm[checkm['Bin Id'] == samplename]
         if len(checkmdata) == 1:
             checkmdata = checkmdata.to_dict(orient='records')[0]
@@ -43,17 +46,16 @@ def merge_checkm_gunc(checkm_file, gunc_file):
                         and checkmdata['Contamination'] < 10)
         MIMAG_high = (checkmdata['Completeness'] >= 90
                       and checkmdata['Contamination'] < 5)
-        passGUNC = guncdata.clade_separation_score_adjusted < 0.45
+        passGUNC = guncdata.clade_separation_score < 0.45
         line = {'genome': samplename,
                 'GUNC.n_contigs': guncdata.n_contigs,
                 'GUNC.n_genes_called': guncdata.n_genes_called,
                 'GUNC.n_genes_mapped': guncdata.n_genes_mapped,
                 'GUNC.divergence_level': guncdata.taxonomic_level,
-                'GUNC.CSS': guncdata.clade_separation_score,
-                'GUNC.CSS_adjusted': guncdata.clade_separation_score_adjusted,
                 'GUNC.contamination_portion': guncdata.contamination_portion,
                 'GUNC.n_effective_surplus_clades': guncdata.n_effective_surplus_clades,
                 'GUNC.RRS': guncdata.reference_representation_score,
+                'GUNC.CSS': guncdata.clade_separation_score,
                 'checkM.lineage': checkmdata['Marker lineage'],
                 'checkM.genome_size': checkmdata['Genome size (bp)'],
                 'checkM.GC': checkmdata['GC'],
