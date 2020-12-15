@@ -25,6 +25,7 @@ Bugfixes
  - genome2taxonomy was not included in pip package
  - GUNC failed if nothing left after minor clade filtering
  - If duplicate filenames were in input, output files were overwritten
+ - Inputs that dont map any genes to GUNC_DB were silently missing in output
 
 Other
 ^^^^^
