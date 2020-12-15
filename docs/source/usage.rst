@@ -43,6 +43,7 @@ One of the following is required. If contigs (fna) are supplied the gene calls w
  * :code:`--gene_calls` Input genecalls FASTA faa format.
  * :code:`--use_species_level` Allow species level to be picked as maxCSS. Default: False
  * :code:`--min_mapped_genes` Dont calculate GUNC score if number of mapped genes is below this value. Default: 11
+
 Optional Flags
 ^^^^^^^^^^^^^^
 
