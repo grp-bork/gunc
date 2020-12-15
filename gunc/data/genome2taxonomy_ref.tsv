@@ -1,4 +1,4 @@
-genome	kingdom	phylum	class	order	family	genus	specI
+genome	kingdom	phylum	class	order	family	genus	species
 100053.SAMN02947772	2 Bacteria	203691 Spirochaetes	203692 Spirochaetia	1643688 Leptospirales	170 Leptospiraceae	171 Leptospira	specI_v3_00001
 1000565.SAMN02471991	2 Bacteria	1224 Proteobacteria	28216 Betaproteobacteria	32003 Nitrosomonadales	2008793 Sterolibacteriaceae	378210 Methyloversatilis	specI_v3_00371
 1001240.SAMN02863076	2 Bacteria	201174 Actinobacteria	1760 Actinobacteria	85006 Micrococcales	85023 Microbacteriaceae	69578 Cryobacterium	specI_v3_06490

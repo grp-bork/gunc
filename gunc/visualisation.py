@@ -96,7 +96,7 @@ def extract_node_data(base_data, cat_codes):
                     'phylum': '#f25f5c',
                     'family': '#ffe066',
                     'genus': '#92AE83',
-                    'specI': '#78A1BB',
+                    'species': '#78A1BB',
                     'contig': '#86BBBD'}
     nodes = list(cat_codes.keys())
     colour_dict = {}
@@ -130,13 +130,13 @@ def prepare_data(tax_data, tax_levels):
                     'phylum': '#f25f5c',
                     'family': '#ffe066',
                     'genus': '#92AE83',
-                    'specI': '#78A1BB',
+                    'species': '#78A1BB',
                     'contig': '#86BBBD'}
     link_colours = {'kingdom': 'rgba(80,81,79,0.4)',
                     'phylum': 'rgba(242,95,92,0.4)',
                     'family': 'rgba(255,224,102,0.4)',
                     'genus': 'rgba(146,174,131,0.4)',
-                    'specI': 'rgba(120,161,187,0.4)',
+                    'species': 'rgba(120,161,187,0.4)',
                     'contig': 'rgba(134,187,189,0.4'}
     base_data = reshape_tax_levels(tax_data, tax_levels)
     cat_codes = create_cat_codes_from_df(base_data)
@@ -247,7 +247,7 @@ def parse_tax_levels_arg(tax_levels):
         list: tax levels to be used in plot
     """
     tax_levels = [x.strip() for x in tax_levels.split(',')]
-    allowed = ['kingdom', 'phylum', 'family', 'genus', 'specI', 'contig']
+    allowed = ['kingdom', 'phylum', 'family', 'genus', 'species', 'contig']
     if len(tax_levels) < 2:
         sys.exit('[Error] Need to provide at least 2 tax_levels.')
     for tax_level in tax_levels:

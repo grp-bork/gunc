@@ -5,4 +5,4 @@ test_genome.fa	1832	1752	510	class	0.97	0.93	0.89	0.22	0.56	0.89	0.83	FALSE
 test_genome.fa	1832	1752	510	order	0.97	0.93	0.89	0.33	1.05	0.89	0.83	FALSE
 test_genome.fa	1832	1752	510	family	0.93	0.89	0.97	0.31	0.94	0.91	0.8	FALSE
 test_genome.fa	1832	1752	510	genus	0.88	0.84	0.98	0.28	0.78	0.92	0.77	FALSE
-test_genome.fa	1832	1752	510	specI	0.7	0.67	0.6	0.19	0.52	0.95	0.64	FALSE
+test_genome.fa	1832	1752	510	species	0.7	0.67	0.6	0.19	0.52	0.95	0.64	FALSE

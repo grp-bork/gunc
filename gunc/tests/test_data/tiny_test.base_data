@@ -1,4 +1,4 @@
-query,genome,id,contig,kingdom,phylum,class,order,family,genus,specI
+query,genome,id,contig,kingdom,phylum,class,order,family,genus,species
 k115_6143_1,1747.SAMN03982942,98.6,k115_6143,2 Bacteria,201174 Actinobacteria,1760 Actinobacteria,85009 Propionibacteriales,31957 Propionibacteriaceae,1912216 Cutibacterium,specI_v3_00800
 k115_4699_1,1747.SAMN03982942,100.0,k115_4699,2 Bacteria,201174 Actinobacteria,1760 Actinobacteria,85009 Propionibacteriales,31957 Propionibacteriaceae,1912216 Cutibacterium,specI_v3_00800
 k115_6505_1,1747.SAMN03982942,100.0,k115_6505,2 Bacteria,201174 Actinobacteria,1760 Actinobacteria,85009 Propionibacteriales,31957 Propionibacteriaceae,1912216 Cutibacterium,specI_v3_00800
