@@ -22,7 +22,9 @@ GUNC Documentation
    functions
    changelog
    contributing
+   datasets
    authors
+   citations
 
 .. image:: https://img.shields.io/pypi/v/gunc.svg
         :target: https://pypi.python.org/pypi/gunc
