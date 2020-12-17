@@ -148,4 +148,5 @@ def test_chim_score():
     expected_data_path = resource_filename(__name__,
                                            'test_data/test_genome.fa.diamond.out.chimerism_scores')
     expected_data = pd.read_csv(expected_data_path, sep='\t')
+    expected_data['pass.GUNC'] = expected_data['pass.GUNC'].astype(str)
     pd.testing.assert_frame_equal(data, expected_data)
