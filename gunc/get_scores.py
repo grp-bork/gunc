@@ -444,6 +444,7 @@ def chim_score(diamond_file_path, genes_called=0, sensitive=False,
                                               contig_count,
                                               min_mapped_genes))
     df = pd.DataFrame(scores).round(2)
+    df['pass.GUNC'] = df['pass.GUNC'].astype(str)
     if use_species_level:
         max_CSSidx = df['clade_separation_score'].idxmax()
     else:
