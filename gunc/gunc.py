@@ -368,7 +368,7 @@ def run_gunc(diamond_outfiles, genes_called, out_dir, sensitive,
             detailed.to_csv(detailed_gunc_out_file,
                             index=False,
                             sep='\t',
-                            na_rep='NA')
+                            na_rep='nan')
         gunc_output.append(single)
     print(f'[END]   {datetime.now().strftime("%H:%M:%S")} Finished scoring..',
           flush=True)
@@ -425,7 +425,7 @@ def run(args):
                            args.sensitive, args.detailed_output,
                            args.min_mapped_genes, args.use_species_level)
     gunc_out_file = os.path.join(args.out_dir, 'GUNC.maxCSS_level.tsv')
-    gunc_output.to_csv(gunc_out_file, index=False, sep='\t', na_rep='NA')
+    gunc_output.to_csv(gunc_out_file, index=False, sep='\t', na_rep='nan')
 
 
 def add_empty_diamond_output(diamond_outdir, fnas, file_suffix):
