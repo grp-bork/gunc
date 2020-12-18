@@ -390,13 +390,14 @@ def check_for_duplicate_filenames(fnas, file_suffix):
     if len(duplicated_items) > 0:
         sys.exit(f'Filenames appear more than once: {duplicated_items}')
 
+
 def remove_missing_fnas(fnas):
     existing_fnas = []
     for fna in fnas:
-      if os.path.isfile(fna):
-        existing_fnas.append(fna)
-      else:
-        print(f'[WARNING] {fna} not found')
+        if os.path.isfile(fna):
+            existing_fnas.append(fna)
+        else:
+            print(f'[WARNING] {fna} not found')
     return existing_fnas
 
 
