@@ -2,7 +2,23 @@
 Changelog
 =========
 
-v0.1.3
+
+v1.0.1
+------
+
+Bugfixes
+^^^^^^^^
+ - Running from genecounts failed
+ - Fixed case where pass.GUNC output was converted to ints
+ - Fixed silently ignoring input samples that did not map to reference
+
+Other
+^^^^^
+ - Better error message if ouput_dir doesnt exist
+ - Documentation updates
+
+
+v1.0.0
 ------
 
 Features
