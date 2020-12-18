@@ -393,6 +393,9 @@ def check_for_duplicate_filenames(fnas, file_suffix):
 
 def run(args):
     """Run entire GUNC workflow."""
+    if not os.path.isdir(args.out_dir):
+        sys.exit(f'[ERROR] Output Directory {args.out_dir} doesnt exist.')
+
     if args.input_dir:
         fnas = get_files_in_dir_with_suffix(args.input_dir, args.file_suffix)
     elif args.input_file:

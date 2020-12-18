@@ -96,6 +96,9 @@ def get_db(base_dir):
     file_url = gz_file_url.replace('.gz', '')
     out_file = gz_file_path.replace('.gz', '')
 
+    if not os.path.isdir(base_dir):
+        sys.exit(f'[ERROR] Output Directory {base_dir} doesnt exist.')
+
     print('[INFO] DB downloading...')
 
     download_file(gz_file_url, gz_file_path)
