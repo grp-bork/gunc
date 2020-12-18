@@ -15,11 +15,15 @@ flake8:
   #allow_failure: true
   script:
   - python3 -m flake8 gunc/*.py
+  except:
+    docs
 
 unit_test:
   stage: Unit Test
   script:
   - python -m pytest
+  except:
+    docs
 
 coverage:
   stage: Unit Test
@@ -31,6 +35,8 @@ coverage:
     reports:
         cobertura: coverage.xml
     expire_in: 1 week
+  except:
+    docs
 
 pages:
   stage: Documentation

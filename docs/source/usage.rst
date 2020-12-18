@@ -37,7 +37,7 @@ Required Flags
 One of the following is required. If contigs (fna) are supplied the gene calls will be done using prodigal with option "-p meta".
 
  * :code:`--input_dir` Input dir with files in FASTA fna format.
- * :code:`--file_suffix` Only needed if suffix of files in :code:`--input_dir` is not the default .fa.
+ * :code:`--file_suffix` Only needed if suffix of files in :code:`--input_dir` or :code:`--input_file` is not the default .fa.
  * :code:`--input_file` Input file containing paths to FASTA fna format files.
  * :code:`--input_fna` Input file in FASTA fna format.
  * :code:`--gene_calls` Input genecalls FASTA faa format.
