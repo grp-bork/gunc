@@ -400,12 +400,11 @@ def run(args):
     elif args.input_fna:
         fnas = [args.input_fna]
 
-    check_for_duplicate_filenames(fnas, args.file_suffix)
-
     if args.gene_calls:
         gene_calls_out_dir = args.out_dir
         genes_called, diamond_input = run_from_gene_calls(args.gene_calls)
     else:
+        check_for_duplicate_filenames(fnas, args.file_suffix)
         gene_calls_out_dir = os.path.join(args.out_dir, 'gene_calls')
         genes_called, diamond_input = run_from_fnas(fnas,
                                                     gene_calls_out_dir,
@@ -417,7 +416,7 @@ def run(args):
 
     diamond_outfiles = run_diamond(diamond_input, args.threads,
                                    args.temp_dir, args.db_file, args.out_dir)
-    if len(diamond_outfiles) != len(fnas):
+    if not args.gene_calls and len(diamond_outfiles) != len(fnas):
         diamond_outfiles = add_empty_diamond_output(args.out_dir,
                                                     fnas,
                                                     args.file_suffix)
