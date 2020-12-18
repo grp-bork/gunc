@@ -390,6 +390,15 @@ def check_for_duplicate_filenames(fnas, file_suffix):
     if len(duplicated_items) > 0:
         sys.exit(f'Filenames appear more than once: {duplicated_items}')
 
+def remove_missing_fnas(fnas):
+    existing_fnas = []
+    for fna in fnas:
+      if os.path.isfile(fna):
+        existing_fnas.append(fna)
+      else:
+        print(f'[WARNING] {fna} not found')
+    return existing_fnas
+
 
 def run(args):
     """Run entire GUNC workflow."""
@@ -400,6 +409,7 @@ def run(args):
         fnas = get_files_in_dir_with_suffix(args.input_dir, args.file_suffix)
     elif args.input_file:
         fnas = get_paths_from_file(args.input_file)
+        fnas = remove_missing_fnas(fnas)
     elif args.input_fna:
         fnas = [args.input_fna]
 
