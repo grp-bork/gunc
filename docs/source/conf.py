@@ -78,7 +78,7 @@ author = 'Anthony Fullam'
 #
 import gunc
 # The short X.Y version.
-version = gunc.__version__
+version = gunc.__docs_version__
 # The full version, including alpha/beta/rc tags.
 release = gunc.__version__
 
