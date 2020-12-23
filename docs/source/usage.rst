@@ -80,13 +80,13 @@ Optional Flags
 GUNC MERGE_CHECKM
 -----------------
 
-Merge outputs of GUNC and checkM. Both should have been run on the same input files.
+Merge outputs of GUNC and checkM. Both should have been run on the same input files. CheckM qa should be run with `-o 2 --tab_table` parameters.
 
 Required Flags
 ^^^^^^^^^^^^^^
 
  * :code:`--gunc_file` Path of gunc_scores.tsv file.
- * :code:`--checkm_file` CheckM output (qa.tsv)  file.
+ * :code:`--checkm_file` CheckM output (qa.tsv) file (run `checkm qa` with `-o 2 --tab_table` parameters).
 
 Optional Flags
 ^^^^^^^^^^^^^^
