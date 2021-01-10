@@ -7,7 +7,7 @@ Quickstart
 
 .. code-block:: shell
 
-    gunc run -i genome.fa -d /path/to/db
+    gunc run -i genome.fa -r /path/to/db
 
 This will run gunc on genome.fa with outputs going to the current working directory.
 
