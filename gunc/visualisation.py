@@ -1,5 +1,5 @@
 import sys
-import plotly
+import plotly.graph_objects
 import pandas as pd
 from ._version import get_versions
 from .get_scores import chim_score
