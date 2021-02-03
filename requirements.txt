@@ -3,4 +3,4 @@ numpy
 scipy
 pandas
 plotly
-requests
+requests>=2.22.0
