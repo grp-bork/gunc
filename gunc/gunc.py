@@ -47,22 +47,23 @@ def parse_args(args):
                      help='DiamondDB reference file. Default: GUNC_DB envvar',
                      default=os.environ.get('GUNC_DB'),
                      metavar='')
-    run_group.add_argument('-i', '--input_fna',
-                           help='Input file in FASTA fna format.',
+    run_group.add_argument('-i', '--input_fasta',
+                           help='Input file in FASTA format.',
                            metavar='')
     run_group.add_argument('-f', '--input_file',
-                           help='File with paths to FASTA fna format files.',
+                           help='File with paths to FASTA format files.',
                            metavar='')
     run_group.add_argument('-d', '--input_dir',
-                           help='Input dir with files in FASTA fna format.',
+                           help='Input dir with files in FASTA format.',
                            metavar='')
     run.add_argument('-e', '--file_suffix',
                      help='Suffix of files in input_dir. Default: .fa',
                      default='.fa',
                      metavar='')
-    run_group.add_argument('-g', '--gene_calls',
-                           help='Input genecalls FASTA faa format.',
-                           metavar='')
+    run.add_argument('-g', '--gene_calls',
+                     help='Input files are FASTA faa format. Default: False',
+                     action='store_true',
+                     default=False)
     run.add_argument('-t', '--threads',
                      help='number of CPU threads. Default: 4',
                      default='4',
@@ -203,7 +204,7 @@ def merge_genecalls(genecall_files, out_dir):
                         if line.startswith('>'):
                             contig_name = line.split(' ')[0]
                             line = f'{contig_name}_-_{genome_name}\n'
-                        ofile.write(line)
+                        ofile.write(f'{line.strip()}\n')
     return merged_outfile
 
 
@@ -252,11 +253,20 @@ def get_paths_from_file(input_file):
     return [path.strip() for path in paths]
 
 
-def run_from_gene_calls(gene_calls):
-    """Get genecalls and genecount from gene fasta."""
-    input_basename = os.path.basename(gene_calls)
-    genes_called = {input_basename: record_count(gene_calls)}
-    return genes_called, gene_calls
+def run_from_gene_calls(faas, out_dir, file_suffix):
+    """Prepare genecalls for running diamond."""
+    print(f'[START] {datetime.now().strftime("%H:%M:%S")} Merging genecalls..',
+          flush=True)
+    genes_called = {}
+    for faa in faas:
+        basename = os.path.basename(faa).split(file_suffix)[0]
+        if basename.endswith('.genecalls'):
+            basename = basename.split('.genecalls')[0]
+        genes_called[basename] = record_count(faa)
+    diamond_inputfile = merge_genecalls(faas, out_dir)
+    print(f'[END]   {datetime.now().strftime("%H:%M:%S")} Finished Merging..',
+          flush=True)
+    return genes_called, diamond_inputfile
 
 
 def run_from_fnas(fnas, out_dir, file_suffix, threads):
@@ -325,8 +335,8 @@ def run_diamond(infile, threads, temp_dir, db_file, out_dir):
         out_dir = os.path.join(out_dir, 'diamond_output')
         create_dir(out_dir)
         diamond_outfiles = split_diamond_output(outfile, out_dir)
-        os.remove(outfile)
-        os.remove(infile)
+        #os.remove(outfile)
+        #os.remove(infile)
     else:
         diamond_outfiles = [outfile]
     print(f'[END]   {datetime.now().strftime("%H:%M:%S")} Finished Diamond..',
@@ -411,20 +421,23 @@ def run(args):
         sys.exit(f'[ERROR] Output Directory {args.out_dir} doesnt exist.')
 
     if args.input_dir:
-        fnas = get_files_in_dir_with_suffix(args.input_dir, args.file_suffix)
+        fastas = get_files_in_dir_with_suffix(args.input_dir, args.file_suffix)
     elif args.input_file:
-        fnas = get_paths_from_file(args.input_file)
-        fnas = remove_missing_fnas(fnas)
-    elif args.input_fna:
-        fnas = [args.input_fna]
+        fastas = get_paths_from_file(args.input_file)
+        fastas = remove_missing_fnas(fastas)
+    elif args.input_fasta:
+        fastas = [args.input_fasta]
+
+    check_for_duplicate_filenames(fastas, args.file_suffix)
 
     if args.gene_calls:
         gene_calls_out_dir = args.out_dir
-        genes_called, diamond_input = run_from_gene_calls(args.gene_calls)
+        genes_called, diamond_input = run_from_gene_calls(fastas,
+                                                          gene_calls_out_dir,
+                                                          args.file_suffix)
     else:
-        check_for_duplicate_filenames(fnas, args.file_suffix)
         gene_calls_out_dir = os.path.join(args.out_dir, 'gene_calls')
-        genes_called, diamond_input = run_from_fnas(fnas,
+        genes_called, diamond_input = run_from_fnas(fastas,
                                                     gene_calls_out_dir,
                                                     args.file_suffix,
                                                     args.threads)
@@ -434,9 +447,9 @@ def run(args):
 
     diamond_outfiles = run_diamond(diamond_input, args.threads,
                                    args.temp_dir, args.db_file, args.out_dir)
-    if not args.gene_calls and len(diamond_outfiles) != len(fnas):
+    if not args.gene_calls and len(diamond_outfiles) != len(fastas):
         diamond_outfiles = add_empty_diamond_output(args.out_dir,
-                                                    fnas,
+                                                    fastas,
                                                     args.file_suffix)
     gunc_output = run_gunc(diamond_outfiles, genes_called, args.out_dir,
                            args.sensitive, args.detailed_output,
