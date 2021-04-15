@@ -180,7 +180,7 @@ def get_files_in_dir_with_suffix(directory, suffix):
     return files
 
 
-def openfile(file):
+def openfile(filename):
     """Open file whether gzipped or not."""
     if filename.endswith('.gz'):
         return gzip.open(filename, 'r')
