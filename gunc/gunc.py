@@ -522,6 +522,10 @@ def main():
         start_checks()
         if not args.db_file:
             sys.exit('[WARNING] database_file argument missing.')
+        else:
+            if not os.path.isfile(args.db_file):
+                sys.exit('[WARNING] database_file not found.')
+
         run(args)
     if args.cmd == 'plot':
         plot(args)
