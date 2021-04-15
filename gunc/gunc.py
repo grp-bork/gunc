@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import sys
+import gzip
 import glob
 import json
 import argparse
@@ -179,6 +180,14 @@ def get_files_in_dir_with_suffix(directory, suffix):
     return files
 
 
+def openfile(file):
+    """Open file whether gzipped or not."""
+    if filename.endswith('.gz'):
+        return gzip.open(filename, 'r')
+    else:
+        return open(filename, 'r')
+
+
 def merge_genecalls(genecall_files, out_dir):
     """Merge genecall files.
 
@@ -197,7 +206,7 @@ def merge_genecalls(genecall_files, out_dir):
     with open(merged_outfile, 'w') as ofile:
         for file in genecall_files:
             if os.path.isfile(file):
-                with open(file, 'r') as infile:
+                with openfile(file) as infile:
                     genome_name = os.path.basename(file).replace('.genecalls.faa',
                                                                  '')
                     for line in infile:
@@ -335,8 +344,8 @@ def run_diamond(infile, threads, temp_dir, db_file, out_dir):
         out_dir = os.path.join(out_dir, 'diamond_output')
         create_dir(out_dir)
         diamond_outfiles = split_diamond_output(outfile, out_dir)
-        #os.remove(outfile)
-        #os.remove(infile)
+        os.remove(outfile)
+        os.remove(infile)
     else:
         diamond_outfiles = [outfile]
     print(f'[END]   {datetime.now().strftime("%H:%M:%S")} Finished Diamond..',
