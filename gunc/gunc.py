@@ -372,7 +372,7 @@ def run_gunc(diamond_outfiles, genes_called, out_dir, sensitive,
         gunc_output.append(single)
     print(f'[END]   {datetime.now().strftime("%H:%M:%S")} Finished scoring..',
           flush=True)
-    return pd.concat(gunc_output)
+    return pd.concat(gunc_output).sort_values('genome')
 
 
 def check_for_duplicate_filenames(fnas, file_suffix):
