@@ -243,8 +243,12 @@ def write_json(data, filename):
 
 def get_paths_from_file(input_file):
     """Extract paths from a text file."""
+    if input_file.endswith('.gz'):
+        sys.exit('[ERROR] Input should be list of filepaths: use -i instead?.')
     with open(input_file, 'r') as f:
         paths = f.readlines()
+    if paths[0].startswith('>'):
+        sys.exit('[ERROR] Input should be list of filepaths: use -i instead?.')
     return [path.strip() for path in paths]
 
 
