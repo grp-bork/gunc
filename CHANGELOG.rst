@@ -3,6 +3,35 @@ Changelog
 =========
 
 
+v1.0.2
+------
+
+
+Features
+^^^^^^^^
+ - GUNC can now be run with GTDB database
+ - Added option to download GTDB_GUNC database
+ - Input file options can be gene_calls (faa) instead of fna if `--gene_calls` flag is set
+ - Input genecalls can be gzipped
+ - Output maxCSS file is now sorted
+
+
+Bugfixes
+^^^^^^^^
+ - Fix version of dependancy: requests>=2.22.0 (older versions not compatable)
+ - Better error message if gunc_db does not exist
+ - `checkm_merge` didnt work with unless checkm qa was run with `-o 2`
+
+Other
+^^^^^
+ - Documentation updates
+    - Links to synthetic datasets added
+    - Citations for diamond and prodigal added
+    - Clarified how checkM should be run for `checkm_merge`
+    - Corrected command for `download_db`
+ - Check if fasta is given with `-f` option instead of list of filepaths
+
+
 v1.0.1
 ------
 

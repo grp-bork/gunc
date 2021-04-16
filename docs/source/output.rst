@@ -6,7 +6,7 @@ Output files
 ------------
 
 Normal Output
-   *GUNC.maxCSS_level.tsv* - output file with scores for a taxonomic level with the highest CSS score (or the level closest to kingdom if multiple maxima).
+   *GUNC.{DB version}maxCSS_level.tsv* - output file with scores for a taxonomic level with the highest CSS score (or the level closest to kingdom if multiple maxima).
 
 Detailed Output
    *{PREFIX}.all_levels.tsv* - output file with results for each taxonomic level.

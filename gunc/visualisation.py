@@ -1,7 +1,7 @@
 import os
 import sys
-import plotly
 import pandas as pd
+import plotly.graph_objects
 from ._version import get_versions
 from .get_scores import chim_score
 from pkg_resources import resource_filename

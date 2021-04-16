@@ -23,6 +23,8 @@ Any of the above commands can be run with :code:`-h` to get function specific in
 
 ------------
 
+GUNC accepts either a progenomes or GTDB based reference database via the :code:`--db_file` option. Both can be downladed using the :code:`gunc download_db` command (see below). Note that using GTDB will lead to higher resource requirements and longer run times; in accuracy benchmarks, the performance of GTDB and the default proGenome-derived GUNC database performed very similarly.
+
 
 GUNC RUN
 --------
@@ -34,19 +36,19 @@ Required Flags
 
  * :code:`--db_file` Path to the GUNC database file. Can be set as environment variable GUNC_DB.
 
-One of the following is required. If contigs (fna) are supplied the gene calls will be done using prodigal with option "-p meta".
+One of the following is required. If flad :code:`--gene_calls` is not set gene calling will be done using prodigal with option "-p meta".
 
- * :code:`--input_dir` Input dir with files in FASTA fna format.
- * :code:`--file_suffix` Only needed if suffix of files in :code:`--input_dir` or :code:`--input_file` is not the default .fa.
- * :code:`--input_file` Input file containing paths to FASTA fna format files.
- * :code:`--input_fna` Input file in FASTA fna format.
- * :code:`--gene_calls` Input genecalls FASTA faa format.
- * :code:`--use_species_level` Allow species level to be picked as maxCSS. Default: False
- * :code:`--min_mapped_genes` Dont calculate GUNC score if number of mapped genes is below this value. Default: 11
+ * :code:`--input_dir` Input dir with files in FASTA format.
+ * :code:`--input_file` Input file containing paths to FASTA format files.
+ * :code:`--file_suffix` Only needed if suffix of input files is not the default .fa.
+ * :code:`--input_fasta` Input file in FASTA format.
 
 Optional Flags
 ^^^^^^^^^^^^^^
 
+ * :code:`--gene_calls` Input is FASTA faa format genecalls.
+ * :code:`--use_species_level` Allow species level to be picked as maxCSS. Default: False
+ * :code:`--min_mapped_genes` Dont calculate GUNC score if number of mapped genes is below this value. Default: 11
  * :code:`--threads` Number of CPU threads.
  * :code:`--temp_dir` Directory to store temporary files. Default: Current working directory.
  * :code:`--out_dir` Directory in which to put output. Default: Current working directory.
@@ -103,6 +105,11 @@ Required Flags
 ^^^^^^^^^^^^^^
 
  * :code:`positional argument` Download database to given directory.
+
+Optional Flags
+^^^^^^^^^^^^^^
+
+ * :code:`--db` Which db to download (progenomes or gtdb). Default: progenomes
 
 ------------
 
