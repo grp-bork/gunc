@@ -347,7 +347,7 @@ def run_diamond(infile, threads, temp_dir, db_file, out_dir, db):
     external_tools.diamond(infile, threads, temp_dir, db_file, outfile)
 
     if infile.endswith('merged.genecalls.faa'):
-        out_dir = os.path.join(out_dir, f'diamond_output')
+        out_dir = os.path.join(out_dir, 'diamond_output')
         create_dir(out_dir)
         diamond_outfiles = split_diamond_output(outfile, out_dir, db)
         os.remove(outfile)

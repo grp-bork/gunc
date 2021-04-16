@@ -414,7 +414,7 @@ def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
 
 
 def chim_score(diamond_file_path, genes_called=0, sensitive=False,
-               min_mapped_genes=11, use_species_level=False, db='progenomes',
+               min_mapped_genes=11, use_species_level=False, db='progenomes_2.1',
                plot=False):
     """Get chimerism scores for a genome.
 
