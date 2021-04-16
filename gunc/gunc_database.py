@@ -82,15 +82,19 @@ def check_md5(file_url, file_path):
         sys.exit(f'[ERROR] MD5 check failed, removing {file_path}.')
 
 
-def get_db(base_dir):
+def get_db(base_dir, db='progenomes'):
     """Download GUNC DB.
 
     Arguments:
         base_dir (str): Path of output directory
     """
-
     base_url = 'https://swifter.embl.de/~fullam/gunc/'
-    file_name = 'gunc_db_2.0.4.dmnd.gz'
+    if db == 'progenomes':
+        file_name = 'gunc_db_progenomes2.1.dmnd.gz'
+    elif db == 'gtdb':
+        file_name = 'gunc_db_gtdb95.dmnd.gz'
+    else:
+        sys.exit(f'[ERROR] DB {db} unknown. Allowed: progenomes, gtdb')
     gz_file_url = f'{base_url}{file_name}'
     gz_file_path = os.path.join(base_dir, file_name)
     file_url = gz_file_url.replace('.gz', '')

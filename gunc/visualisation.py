@@ -1,3 +1,4 @@
+import os
 import sys
 import plotly
 import pandas as pd
@@ -273,8 +274,13 @@ def create_viz_from_diamond_file(diamond_file, gene_count, tax_levels,
     Returns:
         str: HTML to write to disk
     """
+    if 'gtdb' in os.path.basename(diamond_file):
+        db = 'gtdb_95'
+    else:
+        db = 'progenomes_2.1'
     tax_data, genome_name, cutoff = chim_score(diamond_file,
                                                gene_count,
+                                               db=db,
                                                plot=True)
     total_contigs = len(tax_data)
     if total_contigs > contig_display_num:

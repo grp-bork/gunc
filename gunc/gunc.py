@@ -123,6 +123,10 @@ def parse_args(args):
     download_db.add_argument('path',
                              help='Download database to given direcory.',
                              metavar='dest_path')
+    download_db.add_argument('-db', '--database',
+                             help='Which db to download. Default: progenomes',
+                             default='progenomes',
+                             metavar='')
     merge_checkm.add_argument('-g', '--gunc_file',
                               help='Path of GUNC.maxCSS_level.tsv file.',
                               required=True,
@@ -217,7 +221,7 @@ def merge_genecalls(genecall_files, out_dir):
     return merged_outfile
 
 
-def split_diamond_output(diamond_outfile, out_dir):
+def split_diamond_output(diamond_outfile, out_dir, db):
     """Split diamond output into per-sample files.
 
     Separate diamond output file into the constituent sample files.
@@ -226,6 +230,7 @@ def split_diamond_output(diamond_outfile, out_dir):
     Arguments:
         diamond_outfile (str): path to the diamond file to be split
         out_dir (str): Directory in which to put the split files.
+        db (str): Which db is used: progenomes or gtdb
 
     Returns:
         list: Of the split file paths
@@ -238,7 +243,7 @@ def split_diamond_output(diamond_outfile, out_dir):
             line = line.replace(f'_-_{genome_name}', '')
             output[genome_name] = output.get(genome_name, '') + line
     for genome_name in output:
-        outfile = os.path.join(out_dir, f'{genome_name}.diamond.out')
+        outfile = os.path.join(out_dir, f'{genome_name}.diamond.{db}.out')
         outfiles.append(outfile)
         with open(outfile, 'w') as ofile:
             ofile.write(output[genome_name])
@@ -320,7 +325,7 @@ def run_prodigal(prodigal_info):
     external_tools.prodigal(fna, prodigal_outfile)
 
 
-def run_diamond(infile, threads, temp_dir, db_file, out_dir):
+def run_diamond(infile, threads, temp_dir, db_file, out_dir, db):
     """Run diamond and split ouput.
 
     Runs diamond on infile and if needed splits the constitiuent samples.
@@ -331,19 +336,20 @@ def run_diamond(infile, threads, temp_dir, db_file, out_dir):
         temp_dir (str): Path of tempdir for diamond running.
         db_file (str): Path to diamond database file (GUNC_DB).
         out_dir (str): Path of directory in which to put the output files.
+        db (str): Which db is used: progenomes or gtdb
 
     Returns:
         list: Of diamond output files.
     """
     print(f'[START] {datetime.now().strftime("%H:%M:%S")} Running Diamond..',
           flush=True)
-    outfile = os.path.join(out_dir, f'{os.path.basename(infile)}.diamond.out')
+    outfile = os.path.join(out_dir, f'{os.path.basename(infile)}.diamond.{db}.out')
     external_tools.diamond(infile, threads, temp_dir, db_file, outfile)
 
     if infile.endswith('merged.genecalls.faa'):
-        out_dir = os.path.join(out_dir, 'diamond_output')
+        out_dir = os.path.join(out_dir, f'diamond_output')
         create_dir(out_dir)
-        diamond_outfiles = split_diamond_output(outfile, out_dir)
+        diamond_outfiles = split_diamond_output(outfile, out_dir, db)
         os.remove(outfile)
         os.remove(infile)
     else:
@@ -354,7 +360,7 @@ def run_diamond(infile, threads, temp_dir, db_file, out_dir):
 
 
 def run_gunc(diamond_outfiles, genes_called, out_dir, sensitive,
-             detailed_output, min_mapped_genes, use_species_level):
+             detailed_output, db, min_mapped_genes, use_species_level):
     """Call GUNC scores on diamond output files.
 
     Outputs a pandas.DataFrame with one line per inputfile
@@ -367,6 +373,7 @@ def run_gunc(diamond_outfiles, genes_called, out_dir, sensitive,
         out_dir (str): Path to output directory.
         sensitive (bool): Run with high sensitivity.
         detailed_output (bool): Output scores for every taxlevel.
+        db (str): Which db to use: progenomes or gtdb
         min_mapped_genes (int): Minimum number of mapped genes
                                 at which to calculate scores
         use_species_level (bool): Allow species level to be picked as maxCSS
@@ -378,15 +385,15 @@ def run_gunc(diamond_outfiles, genes_called, out_dir, sensitive,
           flush=True)
     gunc_output = []
     for diamond_file in diamond_outfiles:
-        basename = os.path.basename(diamond_file).replace('.diamond.out', '')
+        basename = os.path.basename(diamond_file).split('.diamond.')[0]
         gene_call_count = genes_called[basename]
         detailed, single = chim_score(diamond_file, gene_call_count,
                                       sensitive, min_mapped_genes,
-                                      use_species_level)
+                                      use_species_level, db)
         if detailed_output:
             detailed_gunc_out_dir = os.path.join(out_dir, 'gunc_output')
             detailed_gunc_out_file = os.path.join(detailed_gunc_out_dir,
-                                                  f'{basename}.all_levels.tsv')
+                                                  f'{basename}.{db}.all_levels.tsv')
             create_dir(detailed_gunc_out_dir)
             detailed.to_csv(detailed_gunc_out_file,
                             index=False,
@@ -454,16 +461,21 @@ def run(args):
     genes_called_outfile = os.path.join(gene_calls_out_dir, 'gene_counts.json')
     write_json(genes_called, genes_called_outfile)
 
-    diamond_outfiles = run_diamond(diamond_input, args.threads,
-                                   args.temp_dir, args.db_file, args.out_dir)
+    if 'gtdb' in os.path.basename(args.db_file):
+        db = 'gtdb_95'
+    else:
+        db = 'progenomes_2.1'
+
+    diamond_outfiles = run_diamond(diamond_input, args.threads, args.temp_dir,
+                                   args.db_file, args.out_dir, db)
     if not args.gene_calls and len(diamond_outfiles) != len(fastas):
         diamond_outfiles = add_empty_diamond_output(args.out_dir,
                                                     fastas,
                                                     args.file_suffix)
     gunc_output = run_gunc(diamond_outfiles, genes_called, args.out_dir,
-                           args.sensitive, args.detailed_output,
+                           args.sensitive, args.detailed_output, db,
                            args.min_mapped_genes, args.use_species_level)
-    gunc_out_file = os.path.join(args.out_dir, 'GUNC.maxCSS_level.tsv')
+    gunc_out_file = os.path.join(args.out_dir, f'GUNC.{db}.maxCSS_level.tsv')
     gunc_output.to_csv(gunc_out_file, index=False, sep='\t', na_rep='nan')
 
 
@@ -518,7 +530,7 @@ def get_genecount_from_gunc_output(gene_counts_file, basename):
 
 def plot(args):
     """Run visualisation function."""
-    basename = os.path.basename(args.diamond_file).replace('.diamond.out', '')
+    basename = os.path.basename(args.diamond_file).split('.diamond.')[0]
     genes_called = get_genecount_from_gunc_output(get_gene_count_file(args),
                                                   basename)
     viz_html = vis.create_viz_from_diamond_file(args.diamond_file,
@@ -543,7 +555,7 @@ def main():
     start_time = datetime.now()
     print(f'[START] {start_time.strftime("%H:%M:%S %Y-%m-%d")}')
     if args.cmd == 'download_db':
-        gunc_database.get_db(args.path)
+        gunc_database.get_db(args.path, args.database)
     if args.cmd == 'run':
         start_checks()
         if not args.db_file:
