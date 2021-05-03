@@ -438,8 +438,7 @@ def chim_score(diamond_file_path, genes_called=0, sensitive=False,
     base_data = create_base_data(diamond_df, db)
     genes_mapped, contig_count = get_stats(diamond_df)
 
-    genome_name = os.path.basename(diamond_file_path).replace('.diamond.out',
-                                                              '')
+    genome_name = os.path.basename(diamond_file_path).split('.diamond.')[0]
     abundant_lineages_cutoff = get_abundant_lineages_cutoff(sensitive,
                                                             genes_mapped)
     if plot:
