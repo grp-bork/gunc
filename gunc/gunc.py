@@ -124,7 +124,7 @@ def parse_args(args):
                              help='Download database to given direcory.',
                              metavar='dest_path')
     download_db.add_argument('-db', '--database',
-                             help='Which db to download. Default: progenomes',
+                             help='Which db to download. progenomes,gtdb Default: progenomes',
                              default='progenomes',
                              metavar='')
     merge_checkm.add_argument('-g', '--gunc_file',
@@ -132,7 +132,7 @@ def parse_args(args):
                               required=True,
                               metavar='')
     merge_checkm.add_argument('-c', '--checkm_file',
-                              help='CheckM output file',
+                              help='CheckM qa output file',
                               required=True,
                               metavar='')
     merge_checkm.add_argument('-o', '--out_dir',

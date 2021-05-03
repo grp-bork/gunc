@@ -82,7 +82,7 @@ Optional Flags
 GUNC MERGE_CHECKM
 -----------------
 
-Merge outputs of GUNC and checkM. Both should have been run on the same input files. CheckM qa should be run with `-o 2 --tab_table` parameters. If run without `-o 2` the extra columns will be empty.
+Merge outputs of GUNC and checkM. Both should have been run on the same input files. CheckM qa should be run with `-f qa.tsv -o 2 --tab_table` parameters. If run without `-o 2` the extra columns will be empty.
 
 Required Flags
 ^^^^^^^^^^^^^^
