@@ -192,7 +192,7 @@ def openfile(filename):
         return open(filename, 'r')
 
 
-def merge_genecalls(genecall_files, out_dir):
+def merge_genecalls(genecall_files, out_dir, file_suffix):
     """Merge genecall files.
 
     Merges fastas together to run diamond more efficiently.
@@ -202,6 +202,7 @@ def merge_genecalls(genecall_files, out_dir):
     Arguments:
         genecall_files (list): Paths of genecall fastas to merge
         out_dir (str): Directory to put the merged file
+        file_suffix (str): Suffix of input files
 
     Returns:
         str: path of the merged file
@@ -213,6 +214,8 @@ def merge_genecalls(genecall_files, out_dir):
                 with openfile(file) as infile:
                     genome_name = os.path.basename(file).replace('.genecalls.faa',
                                                                  '')
+                    if genome_name.endswith(file_suffix):
+                        genome_name = genome_name[:-len(file_suffix)]
                     for line in infile:
                         if line.startswith('>'):
                             contig_name = line.split(' ')[0]
@@ -277,7 +280,7 @@ def run_from_gene_calls(faas, out_dir, file_suffix):
         if basename.endswith('.genecalls'):
             basename = basename.split('.genecalls')[0]
         genes_called[basename] = record_count(faa)
-    diamond_inputfile = merge_genecalls(faas, out_dir)
+    diamond_inputfile = merge_genecalls(faas, out_dir, file_suffix)
     print(f'[END]   {datetime.now().strftime("%H:%M:%S")} Finished Merging..',
           flush=True)
     return genes_called, diamond_inputfile
@@ -314,7 +317,7 @@ def run_from_fnas(fnas, out_dir, file_suffix, threads):
         basename = os.path.basename(fna).split(file_suffix)[0]
         genes_called[basename] = record_count(prodigal_outfile)
         genecall_files.append(prodigal_outfile)
-    diamond_inputfile = merge_genecalls(genecall_files, out_dir)
+    diamond_inputfile = merge_genecalls(genecall_files, out_dir, file_suffix)
     print(f'[END]   {datetime.now().strftime("%H:%M:%S")} Finished Prodigal..',
           flush=True)
     return genes_called, diamond_inputfile
