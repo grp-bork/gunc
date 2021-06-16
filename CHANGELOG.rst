@@ -2,6 +2,15 @@
 Changelog
 =========
 
+v1.0.3
+------
+
+
+Bugfixes
+^^^^^^^^
+ - Running with genecalls as iput failed
+ - GUNC plot contig_display_num displayed a defined number of genes instead of contigs
+
 
 v1.0.2
 ------

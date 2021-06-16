@@ -282,11 +282,13 @@ def create_viz_from_diamond_file(diamond_file, gene_count, tax_levels,
                                                gene_count,
                                                db=db,
                                                plot=True)
-    total_contigs = len(tax_data)
+    total_contigs = len(tax_data['contig'].unique())
     if total_contigs > contig_display_num:
         print(f'[INFO] Subsampling data to display {contig_display_num} contigs.')
         tax_data = tax_data.groupby(remove_minor_clade_level).filter(
-            lambda x: len(x) > cutoff).sample(contig_display_num, random_state=1)
+            lambda x: len(x) > cutoff)
+        top_contigs = tax_data['contig'].value_counts().head(contig_display_num).index
+        tax_data = tax_data[tax_data['contig'].isin(top_contigs)]
     tax_levels = parse_tax_levels_arg(tax_levels)
     node_data, link_data = prepare_data(tax_data, tax_levels)
     viz_data = prepare_plot_data(node_data, link_data)
