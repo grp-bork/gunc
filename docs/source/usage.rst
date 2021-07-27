@@ -65,12 +65,12 @@ Create interactive plot to visualise chimerism.
 Required Flags
 ^^^^^^^^^^^^^^
 
- * :code:`--diamond_file` GUNC diamond outputfile. (one of the output files in `diamond_output` produced by :code:`gunc run`)
+ * :code:`--diamond_file` GUNC diamond outputfile. (one of the output files in :code:`diamond_output` produced by :code:`gunc run`)
 
 Optional Flags
 ^^^^^^^^^^^^^^
 
- * :code:`--gunc_gene_count_file` GUNC gene_counts.json file. (Not needed if `--diamond` file is in the file structure made by :code:`gunc run`)
+ * :code:`--gunc_gene_count_file` GUNC gene_counts.json file. (Not needed if :code:`--diamond` file is in the file structure made by :code:`gunc run`)
  * :code:`--out_dir` Output directory.  Default: Current working directory.
  * :code:`--tax_levels` Tax levels to display (comma-seperated). (default: kingdom,phylum,family,genus,contig)
  * :code:`--remove_minor_clade_level` Tax level at which to remove minor clades. (default: kingdom)
@@ -82,13 +82,13 @@ Optional Flags
 GUNC MERGE_CHECKM
 -----------------
 
-Merge outputs of GUNC and checkM. Both should have been run on the same input files. CheckM qa should be run with `-f qa.tsv -o 2 --tab_table` parameters. If run without `-o 2` the extra columns will be empty.
+Merge outputs of GUNC and checkM. Both should have been run on the same input files. CheckM qa should be run with :code:`-f qa.tsv -o 2 --tab_table` parameters. If run without :code:`-o 2` the extra columns will be empty.
 
 Required Flags
 ^^^^^^^^^^^^^^
 
  * :code:`--gunc_file` Path of gunc_scores.tsv file.
- * :code:`--checkm_file` CheckM output (qa.tsv) file (run `checkm qa` with `-o 2 --tab_table` parameters).
+ * :code:`--checkm_file` CheckM output (qa.tsv) file (run :code:`checkm qa` with :code:`-o 2 --tab_table` parameters).
 
 Optional Flags
 ^^^^^^^^^^^^^^
