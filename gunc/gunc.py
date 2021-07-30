@@ -28,7 +28,7 @@ def parse_args(args):
 
     """
     description = (
-        "Tool for detection of chimerism and " "contamination in prokaryotic genomes.\n"
+        "Tool for detection of chimerism and contamination in prokaryotic genomes.\n"
     )
 
     parser = argparse.ArgumentParser(description=description)
@@ -104,8 +104,14 @@ def parse_args(args):
         default=False,
     )
     run.add_argument(
+        "--contig_taxonomy_output",
+        help="Output assignments for each contig. Default: False",
+        action="store_true",
+        default=False,
+    )
+    run.add_argument(
         "--use_species_level",
-        help=("Allow species level to be picked as maxCSS. " "Default: False"),
+        help="Allow species level to be picked as maxCSS. Default: False",
         action="store_true",
         default=False,
     )
@@ -421,6 +427,7 @@ def run_gunc(
     db,
     min_mapped_genes,
     use_species_level,
+    contig_taxonomy_output,
 ):
     """Call GUNC scores on diamond output files.
 
@@ -438,6 +445,7 @@ def run_gunc(
         min_mapped_genes (int): Minimum number of mapped genes
                                 at which to calculate scores
         use_species_level (bool): Allow species level to be picked as maxCSS
+        contig_taxonomy_output (bool): Output contig assignments file
 
     Returns:
         pandas.DataFrame: One line per inputfile Gunc scores
@@ -457,13 +465,24 @@ def run_gunc(
             use_species_level,
             db,
         )
-        if detailed_output:
+        if detailed_output or contig_taxonomy_output:
             detailed_gunc_out_dir = os.path.join(out_dir, "gunc_output")
+            create_dir(detailed_gunc_out_dir)
+        if detailed_output:
             detailed_gunc_out_file = os.path.join(
                 detailed_gunc_out_dir, f"{basename}.{db}.all_levels.tsv"
             )
-            create_dir(detailed_gunc_out_dir)
             detailed.to_csv(detailed_gunc_out_file, index=False, sep="\t", na_rep="nan")
+        if contig_taxonomy_output:
+            contig_assignments_out_file = os.path.join(
+                detailed_gunc_out_dir, f"{basename}.contig_assignments.tsv"
+            )
+            contig_assignments = create_contig_assignments(
+                diamond_file, gene_call_count
+            )
+            contig_assignments.to_csv(
+                contig_assignments_out_file, index=False, sep="\t"
+            )
         gunc_output.append(single)
     print(
         f'[END]   {datetime.now().strftime("%H:%M:%S")} Finished scoring..', flush=True
@@ -495,6 +514,43 @@ def remove_missing_fnas(fnas):
         else:
             print(f"[WARNING] {fna} not found")
     return existing_fnas
+
+
+def create_contig_assignments(diamond_file, gene_count):
+    """Create contig gene assignment dataframe.
+
+    Arguments:
+        diamond_file (str): GUNC diamond output file path
+        gene_count (int): Count of genes in original fasta
+
+    Returns:
+        pandas.DataFrame: with contig,
+                               tax_level,
+                               assignment,
+                               count_of_genes_assigned columns
+    """
+    if "gtdb" in os.path.basename(diamond_file):
+        db = "gtdb_95"
+    else:
+        db = "progenomes_2.1"
+    tax_data, genome_name, cutoff = chim_score(
+        diamond_file, gene_count, db=db, plot=True
+    )
+    assignments = []
+    for contig in tax_data["contig"].unique():
+        contig_data = tax_data[tax_data["contig"] == contig]
+        for tax_level in ["kingdom", "phylum", "family", "genus", "species"]:
+            counts = contig_data[tax_level].value_counts().to_dict()
+            for assignment in counts:
+                assignments.append(
+                    {
+                        "contig": contig,
+                        "tax_level": tax_level,
+                        "assignment": assignment,
+                        "count_of_genes_assigned": counts[assignment],
+                    }
+                )
+    return pd.DataFrame(assignments)
 
 
 def run(args):
@@ -547,6 +603,7 @@ def run(args):
         db,
         args.min_mapped_genes,
         args.use_species_level,
+        args.contig_taxonomy_output,
     )
     gunc_out_file = os.path.join(args.out_dir, f"GUNC.{db}.maxCSS_level.tsv")
     gunc_output.to_csv(gunc_out_file, index=False, sep="\t", na_rep="nan")
@@ -611,6 +668,7 @@ def plot(args):
         args.contig_display_num,
         args.remove_minor_clade_level,
     )
+
     viz_html_path = os.path.join(args.out_dir, f"{basename}.viz.html")
     with open(viz_html_path, "w") as f:
         f.write(viz_html)
