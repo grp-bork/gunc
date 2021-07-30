@@ -54,6 +54,7 @@ Optional Flags
  * :code:`--out_dir` Directory in which to put output. Default: Current working directory.
  * :code:`--sensitive` Run with high sensitivity. (Uses a different cutoff to determine an abundant lineage)
  * :code:`--detailed_output` Output scores for every tax_level.
+ * :code:`--contig_taxonomy_output` Output taxonomic assignment for each contig.
 
 ------------
 
