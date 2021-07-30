@@ -18,15 +18,17 @@ def read_diamond_output(file_path):
     Returns:
         pandas.DataFrame: diamond output
     """
-    df = pd.read_csv(file_path,
-                     sep='\t',
-                     header=None,
-                     usecols=[0, 1, 2],
-                     names=['query', 'genome', 'id'])
+    df = pd.read_csv(
+        file_path,
+        sep="\t",
+        header=None,
+        usecols=[0, 1, 2],
+        names=["query", "genome", "id"],
+    )
     if len(df) == 0:
-        return(df)
+        return df
     else:
-        df['contig'] = df['query'].str.rpartition('_')[[0]]
+        df["contig"] = df["query"].str.rpartition("_")[[0]]
         return df
 
 
@@ -66,14 +68,15 @@ def expected_entropy_estimate(probabilities, sample_count):
     entropy = 0.0
     for probability in probabilities:
         sample_array = np.arange(1, sample_count)
-        entropy += np.sum(scipy.special.comb(sample_count, sample_array)
-                          * np.power(probability, sample_array)
-                          * np.power(1 - probability,
-                                     sample_count - sample_array)
-                          # should be sample_array/sample_count
-                          # but we moved the 1/sample_count out:
-                          * sample_array
-                          * np.log(sample_array / sample_count))
+        entropy += np.sum(
+            scipy.special.comb(sample_count, sample_array)
+            * np.power(probability, sample_array)
+            * np.power(1 - probability, sample_count - sample_array)
+            # should be sample_array/sample_count
+            # but we moved the 1/sample_count out:
+            * sample_array
+            * np.log(sample_array / sample_count)
+        )
     return -entropy / sample_count
 
 
@@ -101,7 +104,7 @@ def calc_expected_conditional_entropy(contigs, taxons):
         return 0.0
 
     bucket_sizes = contigs.value_counts().value_counts()
-    nr_elements = (bucket_sizes * bucket_sizes.index)
+    nr_elements = bucket_sizes * bucket_sizes.index
     contribution = nr_elements / nr_elements.sum()
 
     taxon_probability = counts / counts.sum()
@@ -110,9 +113,9 @@ def calc_expected_conditional_entropy(contigs, taxons):
     total_entropy = 0.0
     for bucket_size, contig_count in contribution.iteritems():
         if bucket_size <= MAX_BUCKET_SIZE:
-            total_entropy += (contig_count
-                              * expected_entropy_estimate(taxon_probability,
-                                                          bucket_size))
+            total_entropy += contig_count * expected_entropy_estimate(
+                taxon_probability, bucket_size
+            )
         else:
             total_entropy += contig_count * taxon_entropy
     return total_entropy
@@ -130,15 +133,15 @@ def read_genome2taxonomy_reference(db):
     Returns:
         pandas.DataFrame: genome2taxonomy reference
     """
-    if db == 'progenomes_2.1':
-        genome2taxonomy = resource_filename(__name__,
-                                            'data/genome2taxonomy_ref.tsv')
-    elif db == 'gtdb_95':
-        genome2taxonomy = resource_filename(__name__,
-                                            'data/genome2taxonomy_gtdbref.tsv')
+    if db == "progenomes_2.1":
+        genome2taxonomy = resource_filename(__name__, "data/genome2taxonomy_ref.tsv")
+    elif db == "gtdb_95":
+        genome2taxonomy = resource_filename(
+            __name__, "data/genome2taxonomy_gtdbref.tsv"
+        )
     else:
-        sys.exit(f'[ERROR] {db} unknown. Allowed: progenomes_2.1, gtdb_95')
-    return pd.read_csv(genome2taxonomy, sep='\t')
+        sys.exit(f"[ERROR] {db} unknown. Allowed: progenomes_2.1, gtdb_95")
+    return pd.read_csv(genome2taxonomy, sep="\t")
 
 
 def create_base_data(diamond_df, db):
@@ -152,7 +155,7 @@ def create_base_data(diamond_df, db):
         pandas.DataFrame: merged dataframe
     """
     genome2taxonomy_df = read_genome2taxonomy_reference(db)
-    return pd.merge(diamond_df, genome2taxonomy_df, on='genome', how="inner")
+    return pd.merge(diamond_df, genome2taxonomy_df, on="genome", how="inner")
 
 
 def get_stats(diamond_df):
@@ -169,7 +172,7 @@ def get_stats(diamond_df):
     if len(diamond_df) == 0:
         return (0, 0)
     genes_mapped = len(diamond_df)
-    contig_count = diamond_df['contig'].nunique()
+    contig_count = diamond_df["contig"].nunique()
     return (genes_mapped, contig_count)
 
 
@@ -248,15 +251,16 @@ def calc_conditional_entropy(contigs, taxons):
         float: measured conditional entropy
     """
     cross = pd.crosstab(contigs, taxons)
-    MI = scipy.stats.entropy(cross.values.ravel(),
-                             np.outer(cross.sum(1), cross.sum()).ravel())
+    MI = scipy.stats.entropy(
+        cross.values.ravel(), np.outer(cross.sum(1), cross.sum()).ravel()
+    )
     H_t = scipy.stats.entropy(taxons.value_counts())
     return H_t - MI
 
 
-def calc_clade_separation_score(contamination_portion,
-                                conditional_entropy,
-                                expected_conditional_entropy):
+def calc_clade_separation_score(
+    contamination_portion, conditional_entropy, expected_conditional_entropy
+):
     """Get clade separation score (CSS).
 
     CSS = 0, if contamination_portion = 0 or H(T|C) <= H(T|R)
@@ -283,9 +287,11 @@ def calc_clade_separation_score(contamination_portion,
     elif expected_conditional_entropy == 0:
         return np.nan
     else:
-        return (1 - conditional_entropy / expected_conditional_entropy
-                if conditional_entropy <= expected_conditional_entropy
-                else 0)
+        return (
+            1 - conditional_entropy / expected_conditional_entropy
+            if conditional_entropy <= expected_conditional_entropy
+            else 0
+        )
 
 
 def determine_adjustment(genes_retained_index):
@@ -326,9 +332,16 @@ def is_chimeric(clade_separation_score_adjusted):
         return False
 
 
-def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
-                            genome_name, genes_called, genes_mapped,
-                            contig_count, min_mapped_genes):
+def get_scores_for_taxlevel(
+    base_data,
+    tax_level,
+    abundant_lineages_cutoff,
+    genome_name,
+    genes_called,
+    genes_mapped,
+    contig_count,
+    min_mapped_genes,
+):
     """Run chimerism check.
 
     Calculates the various scores needed to determine if genome ic chimeric.
@@ -349,34 +362,38 @@ def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
         OrderedDict: scores for chosen taxlevel
     """
     tax_data = base_data.groupby(tax_level).filter(
-        lambda x: len(x) > abundant_lineages_cutoff)
+        lambda x: len(x) > abundant_lineages_cutoff
+    )
     if len(tax_data) < min_mapped_genes:
-        return OrderedDict({'genome': genome_name,
-                            'n_genes_called': genes_called,
-                            'n_genes_mapped': genes_mapped,
-                            'n_contigs': contig_count,
-                            'taxonomic_level': tax_level,
-                            'proportion_genes_retained_in_major_clades': np.nan,
-                            'genes_retained_index': np.nan,
-                            'clade_separation_score': np.nan,
-                            'contamination_portion': np.nan,
-                            'n_effective_surplus_clades': np.nan,
-                            'mean_hit_identity': np.nan,
-                            'reference_representation_score': np.nan,
-                            'pass.GUNC': np.nan})
+        return OrderedDict(
+            {
+                "genome": genome_name,
+                "n_genes_called": genes_called,
+                "n_genes_mapped": genes_mapped,
+                "n_contigs": contig_count,
+                "taxonomic_level": tax_level,
+                "proportion_genes_retained_in_major_clades": np.nan,
+                "genes_retained_index": np.nan,
+                "clade_separation_score": np.nan,
+                "contamination_portion": np.nan,
+                "n_effective_surplus_clades": np.nan,
+                "mean_hit_identity": np.nan,
+                "reference_representation_score": np.nan,
+                "pass.GUNC": np.nan,
+            }
+        )
     counts = tax_data[tax_level].value_counts()
-    contigs = tax_data['contig']
+    contigs = tax_data["contig"]
     taxons = tax_data[tax_level]
 
     n_effective_surplus_clades = get_n_effective_surplus_clades(counts)
     contamination_portion = calc_contamination_portion(counts)
-    mean_hit_identity = calc_mean_hit_identity(tax_data['id'].tolist())
-    expected_conditional_entropy = calc_expected_conditional_entropy(contigs,
-                                                                     taxons)
+    mean_hit_identity = calc_mean_hit_identity(tax_data["id"].tolist())
+    expected_conditional_entropy = calc_expected_conditional_entropy(contigs, taxons)
     conditional_entropy = calc_conditional_entropy(contigs, taxons)
-    clade_separation_score = calc_clade_separation_score(contamination_portion,
-                                                         conditional_entropy,
-                                                         expected_conditional_entropy)
+    clade_separation_score = calc_clade_separation_score(
+        contamination_portion, conditional_entropy, expected_conditional_entropy
+    )
 
     portion_genes_retained = len(tax_data) / genes_mapped
     genes_retained_index = genes_mapped / genes_called * portion_genes_retained
@@ -385,37 +402,34 @@ def get_scores_for_taxlevel(base_data, tax_level, abundant_lineages_cutoff,
     clade_separation_score_adjusted = clade_separation_score * adjustment
     chimeric = is_chimeric(clade_separation_score_adjusted)
     passGUNC = not chimeric
-    return OrderedDict({'genome':
-                        genome_name,
-                        'n_genes_called':
-                            genes_called,
-                        'n_genes_mapped':
-                            genes_mapped,
-                        'n_contigs':
-                            contig_count,
-                        'taxonomic_level':
-                            tax_level,
-                        'proportion_genes_retained_in_major_clades':
-                            portion_genes_retained,
-                        'genes_retained_index':
-                            genes_retained_index,
-                        'clade_separation_score':
-                            clade_separation_score_adjusted,
-                        'contamination_portion':
-                            contamination_portion,
-                        'n_effective_surplus_clades':
-                            n_effective_surplus_clades,
-                        'mean_hit_identity':
-                            mean_hit_identity,
-                        'reference_representation_score':
-                            reference_representation_score,
-                        'pass.GUNC':
-                            passGUNC})
+    return OrderedDict(
+        {
+            "genome": genome_name,
+            "n_genes_called": genes_called,
+            "n_genes_mapped": genes_mapped,
+            "n_contigs": contig_count,
+            "taxonomic_level": tax_level,
+            "proportion_genes_retained_in_major_clades": portion_genes_retained,
+            "genes_retained_index": genes_retained_index,
+            "clade_separation_score": clade_separation_score_adjusted,
+            "contamination_portion": contamination_portion,
+            "n_effective_surplus_clades": n_effective_surplus_clades,
+            "mean_hit_identity": mean_hit_identity,
+            "reference_representation_score": reference_representation_score,
+            "pass.GUNC": passGUNC,
+        }
+    )
 
 
-def chim_score(diamond_file_path, genes_called=0, sensitive=False,
-               min_mapped_genes=11, use_species_level=False, db='progenomes_2.1',
-               plot=False):
+def chim_score(
+    diamond_file_path,
+    genes_called=0,
+    sensitive=False,
+    min_mapped_genes=11,
+    use_species_level=False,
+    db="progenomes_2.1",
+    plot=False,
+):
     """Get chimerism scores for a genome.
 
     Arguments:
@@ -438,28 +452,38 @@ def chim_score(diamond_file_path, genes_called=0, sensitive=False,
     base_data = create_base_data(diamond_df, db)
     genes_mapped, contig_count = get_stats(diamond_df)
 
-    genome_name = os.path.basename(diamond_file_path).split('.diamond.')[0]
-    abundant_lineages_cutoff = get_abundant_lineages_cutoff(sensitive,
-                                                            genes_mapped)
+    genome_name = os.path.basename(diamond_file_path).split(".diamond.")[0]
+    abundant_lineages_cutoff = get_abundant_lineages_cutoff(sensitive, genes_mapped)
     if plot:
         return base_data, genome_name, abundant_lineages_cutoff
 
     scores = []
-    for tax_level in ['kingdom', 'phylum', 'class',
-                      'order', 'family', 'genus', 'species']:
-        scores.append(get_scores_for_taxlevel(base_data,
-                                              tax_level,
-                                              abundant_lineages_cutoff,
-                                              genome_name,
-                                              genes_called,
-                                              genes_mapped,
-                                              contig_count,
-                                              min_mapped_genes))
+    for tax_level in [
+        "kingdom",
+        "phylum",
+        "class",
+        "order",
+        "family",
+        "genus",
+        "species",
+    ]:
+        scores.append(
+            get_scores_for_taxlevel(
+                base_data,
+                tax_level,
+                abundant_lineages_cutoff,
+                genome_name,
+                genes_called,
+                genes_mapped,
+                contig_count,
+                min_mapped_genes,
+            )
+        )
     df = pd.DataFrame(scores).round(2)
-    df['pass.GUNC'] = df['pass.GUNC'].astype(str)
+    df["pass.GUNC"] = df["pass.GUNC"].astype(str)
     if use_species_level:
-        max_CSSidx = df['clade_separation_score'].idxmax()
+        max_CSSidx = df["clade_separation_score"].idxmax()
     else:
-        max_CSSidx = df[:-1]['clade_separation_score'].idxmax()
+        max_CSSidx = df[:-1]["clade_separation_score"].idxmax()
     max_CSS = df.iloc[[0] if pd.isna(max_CSSidx) else [max_CSSidx]]
     return df, max_CSS

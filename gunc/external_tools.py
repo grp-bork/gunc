@@ -16,26 +16,37 @@ def parse_args(args):
 
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--database_file',
-                        help='Diamond database reference file.',
-                        required=True,
-                        metavar='')
-    parser.add_argument('-i', '--input_file',
-                        help='Input file in FASTA format..',
-                        required=True,
-                        metavar='')
-    parser.add_argument('-p', '--diamond_threads',
-                        help='number of CPU threads used for diamond search.',
-                        default='10',
-                        metavar='')
-    parser.add_argument('-t', '--temp_dir',
-                        help='Directory to store temporary files.',
-                        required=True,
-                        metavar='')
-    parser.add_argument('-o', '--out_file',
-                        help='Output file.',
-                        required=True,
-                        metavar='')
+    parser.add_argument(
+        "-d",
+        "--database_file",
+        help="Diamond database reference file.",
+        required=True,
+        metavar="",
+    )
+    parser.add_argument(
+        "-i",
+        "--input_file",
+        help="Input file in FASTA format..",
+        required=True,
+        metavar="",
+    )
+    parser.add_argument(
+        "-p",
+        "--diamond_threads",
+        help="number of CPU threads used for diamond search.",
+        default="10",
+        metavar="",
+    )
+    parser.add_argument(
+        "-t",
+        "--temp_dir",
+        help="Directory to store temporary files.",
+        required=True,
+        metavar="",
+    )
+    parser.add_argument(
+        "-o", "--out_file", help="Output file.", required=True, metavar=""
+    )
     args = parser.parse_args()
     return args
 
@@ -50,13 +61,13 @@ def get_record_count_in_fasta(fasta_file):
         str: count of records
     """
     try:
-        count = subprocess.check_output(f'zgrep -c ">" {fasta_file}',
-                                        shell=True,
-                                        universal_newlines=True).strip()
+        count = subprocess.check_output(
+            f'zgrep -c ">" {fasta_file}', shell=True, universal_newlines=True
+        ).strip()
     except subprocess.CalledProcessError as e:
         count = 0
         if e.returncode > 1:
-            print(f'[WARNING] Counting records failed {fasta_file}')
+            print(f"[WARNING] Counting records failed {fasta_file}")
     return int(count)
 
 
@@ -68,27 +79,44 @@ def prodigal(input_file, out_file):
         out_file (str): fullpath of output file
     """
     try:
-        if input_file.endswith('.gz'):
-            uncompressed = subprocess.Popen(('zcat', input_file),
-                                            stdout=subprocess.PIPE)
-            subprocess.check_output(['prodigal',
-                                     '-i', '/dev/stdin',
-                                     '-a', out_file,
-                                     '-o', '/dev/null',
-                                     '-p', 'meta',
-                                     '-q'],
-                                    stdin=uncompressed.stdout,
-                                    universal_newlines=True)
+        if input_file.endswith(".gz"):
+            uncompressed = subprocess.Popen(
+                ("zcat", input_file), stdout=subprocess.PIPE
+            )
+            subprocess.check_output(
+                [
+                    "prodigal",
+                    "-i",
+                    "/dev/stdin",
+                    "-a",
+                    out_file,
+                    "-o",
+                    "/dev/null",
+                    "-p",
+                    "meta",
+                    "-q",
+                ],
+                stdin=uncompressed.stdout,
+                universal_newlines=True,
+            )
         else:
-            subprocess.check_output(['prodigal',
-                                     '-i', input_file,
-                                     '-a', out_file,
-                                     '-o', '/dev/null',
-                                     '-p', 'meta',
-                                     '-q'],
-                                    universal_newlines=True)
+            subprocess.check_output(
+                [
+                    "prodigal",
+                    "-i",
+                    input_file,
+                    "-a",
+                    out_file,
+                    "-o",
+                    "/dev/null",
+                    "-p",
+                    "meta",
+                    "-q",
+                ],
+                universal_newlines=True,
+            )
     except subprocess.CalledProcessError:
-        print(f'[ERROR] Failed to run Prodigal {input_file}')
+        print(f"[ERROR] Failed to run Prodigal {input_file}")
 
 
 def diamond(input_file, threads, temp_dir, database_file, out_file):
@@ -102,26 +130,43 @@ def diamond(input_file, threads, temp_dir, database_file, out_file):
         out_file (str): full path of output file
     """
     try:
-        subprocess.check_output(['diamond', 'blastp',
-                                 '--query', input_file,
-                                 '--threads', threads,
-                                 '--max-target-seqs', '1',
-                                 '--masking', '0',
-                                 '--evalue', '1',
-                                 '--tmpdir', temp_dir,
-                                 '--db', database_file,
-                                 '--out', out_file,
-                                 '--quiet'],
-                                universal_newlines=True)
+        subprocess.check_output(
+            [
+                "diamond",
+                "blastp",
+                "--query",
+                input_file,
+                "--threads",
+                threads,
+                "--max-target-seqs",
+                "1",
+                "--masking",
+                "0",
+                "--evalue",
+                "1",
+                "--tmpdir",
+                temp_dir,
+                "--db",
+                database_file,
+                "--out",
+                out_file,
+                "--quiet",
+            ],
+            universal_newlines=True,
+        )
     except subprocess.CalledProcessError:
-        print(f'[ERROR] Failed to run Diamond {input_file}')
+        print(f"[ERROR] Failed to run Diamond {input_file}")
 
 
 def check_diamond_version():
     """Return version of diamond found."""
-    return subprocess.check_output('diamond --version',
-                                   shell=True,
-                                   universal_newlines=True).strip().split()[2]
+    return (
+        subprocess.check_output(
+            "diamond --version", shell=True, universal_newlines=True
+        )
+        .strip()
+        .split()[2]
+    )
 
 
 def check_if_tool_exists(tool_name):
@@ -131,8 +176,6 @@ def check_if_tool_exists(tool_name):
 
 if __name__ == "__main__":
     args = parse_args(sys.argv[1:])
-    diamond(args.input_file,
-            args.threads,
-            args.temp_dir,
-            args.database_file,
-            args.out_file)
+    diamond(
+        args.input_file, args.threads, args.temp_dir, args.database_file, args.out_file
+    )
