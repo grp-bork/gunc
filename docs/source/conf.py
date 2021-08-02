@@ -43,7 +43,7 @@ extensions = [
     'matplotlib.sphinxext.plot_directive',
     'numpydoc',
     'sphinx_copybutton',
-    'sphinx.ext.napoleon'
+    'sphinx.ext.napoleon',
 ]
 
 # Configuration options for plot_directive. See:
@@ -77,6 +77,7 @@ author = 'Anthony Fullam'
 # built documents.
 #
 import gunc
+
 # The short X.Y version.
 version = gunc.__docs_version__
 # The full version, including alpha/beta/rc tags.
@@ -108,6 +109,7 @@ todo_include_todos = False
 #
 html_theme = 'sphinx_rtd_theme'
 import sphinx_rtd_theme
+
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 html_favicon = '../../GUNC_favicon.svg'
 
@@ -147,15 +149,12 @@ latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
     #
     # 'papersize': 'letterpaper',
-
     # The font size ('10pt', '11pt' or '12pt').
     #
     # 'pointsize': '10pt',
-
     # Additional stuff for the LaTeX preamble.
     #
     # 'preamble': '',
-
     # Latex figure (float) alignment
     #
     # 'figure_align': 'htbp',
@@ -165,8 +164,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'gunc.tex', 'GUNC Documentation',
-     'Contributors', 'manual'),
+    (master_doc, 'gunc.tex', 'GUNC Documentation', 'Contributors', 'manual')
 ]
 
 
@@ -174,10 +172,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, 'gunc', 'GUNC Documentation',
-     [author], 1)
-]
+man_pages = [(master_doc, 'gunc', 'GUNC Documentation', [author], 1)]
 
 
 # -- Options for Texinfo output -------------------------------------------
@@ -186,16 +181,23 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'gunc', 'GUNC Documentation',
-     author, 'gunc', 'Python package for detection of chimerism and contamination in prokaryotic genomes.',
-     'Miscellaneous'),
+    (
+        master_doc,
+        'gunc',
+        'GUNC Documentation',
+        author,
+        'gunc',
+        'Python package for detection of chimerism and contamination in prokaryotic'
+        ' genomes.',
+        'Miscellaneous',
+    )
 ]
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
     'numpy': ('https://numpy.org/doc/stable/', None),
-    'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
+    #'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
     'pandas': ('https://pandas.pydata.org/pandas-docs/stable', None),
     'matplotlib': ('https://matplotlib.org', None),
 }
