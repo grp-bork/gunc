@@ -369,12 +369,19 @@ def run_from_fnas(fnas, out_dir, file_suffix, threads):
     for fna, prodigal_outfile in prodigal_info:
         basename = os.path.basename(fna).split(file_suffix)[0]
         genes_called[basename] = record_count(prodigal_outfile)
-        genecall_files.append(prodigal_outfile)
-    diamond_inputfile = merge_genecalls(genecall_files, out_dir, file_suffix)
-    print(
-        f'[END]   {datetime.now().strftime("%H:%M:%S")} Finished Prodigal..', flush=True
-    )
-    return genes_called, diamond_inputfile
+        if os.path.isfile(prodigal_outfile) and os.path.getsize(prodigal_outfile) > 0:
+            genecall_files.append(prodigal_outfile)
+        else:
+            print(f'[WARNING] Prodigal failed for {fna}')
+    if genecall_files:
+        diamond_inputfile = merge_genecalls(genecall_files, out_dir, file_suffix)
+        print(
+            f'[END]   {datetime.now().strftime("%H:%M:%S")} Finished Prodigal..',
+            flush=True,
+        )
+        return genes_called, diamond_inputfile
+    else:
+        sys.exit('[ERROR] No genecalls to run.')
 
 
 def run_prodigal(prodigal_info):
@@ -562,10 +569,12 @@ def run(args):
         fastas = get_files_in_dir_with_suffix(args.input_dir, args.file_suffix)
     elif args.input_file:
         fastas = get_paths_from_file(args.input_file)
-        fastas = remove_missing_fnas(fastas)
     elif args.input_fasta:
         fastas = [args.input_fasta]
 
+    fastas = remove_missing_fnas(fastas)
+    if not fastas:
+        sys.exit('[ERROR] No input files found.')
     check_for_duplicate_filenames(fastas, args.file_suffix)
 
     if args.gene_calls:
