@@ -2,6 +2,17 @@
 Changelog
 =========
 
+v1.0.4
+------
+
+Features
+^^^^^^^^
+ - Added `contig_taxonomy_output` option to output detailed taxonomy assignment count per contig.
+
+Bugfixes
+^^^^^^^^
+ - Fix version of dependancy in conda recipe: requests>=2.22.0
+
 v1.0.3
 ------
 
