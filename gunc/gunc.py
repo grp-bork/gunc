@@ -566,6 +566,8 @@ def run(args):
     """Run entire GUNC workflow."""
     if not os.path.isdir(args.out_dir):
         sys.exit(f"[ERROR] Output Directory {args.out_dir} doesnt exist.")
+    if not os.path.isdir(args.temp_dir):
+        sys.exit(f"[ERROR] Temporary Directory {args.temp_dir} doesnt exist.")
 
     if args.input_dir:
         fastas = get_files_in_dir_with_suffix(args.input_dir, args.file_suffix)
