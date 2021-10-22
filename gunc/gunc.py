@@ -223,8 +223,10 @@ def start_checks():
             sys.exit(f"[ERROR] Diamond version is {diamond_ver}, not 2.0.4")
     if not external_tools.check_if_tool_exists("prodigal"):
         sys.exit("[ERROR] Prodigal not found..")
-    if not external_tools.check_if_tool_exists("zgrep"):
-        sys.exit("[ERROR] zgrep not found..")
+    if not external_tools.check_if_tool_exists("grep"):
+        sys.exit("[ERROR] grep not found..")
+    if not external_tools.check_if_tool_exists("zcat"):
+        sys.exit("[ERROR] zcat not found..")
 
 
 def get_files_in_dir_with_suffix(directory, suffix):
