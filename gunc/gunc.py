@@ -160,6 +160,13 @@ def parse_args(args):
         type=int,
         metavar="",
     )
+    vis.add_argument(
+        "-l",
+        "--contig_display_list",
+        help="Comma seperated list of contig names to plot",
+        default=None,
+        metavar="",
+    )
     download_db.add_argument(
         "path", help="Download database to given direcory.", metavar="dest_path"
     )
@@ -679,6 +686,7 @@ def plot(args):
         genes_called,
         args.tax_levels,
         args.contig_display_num,
+        args.contig_display_list,
         args.remove_minor_clade_level,
     )
 

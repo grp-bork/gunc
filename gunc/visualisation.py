@@ -264,7 +264,12 @@ def parse_tax_levels_arg(tax_levels):
 
 
 def create_viz_from_diamond_file(
-    diamond_file, gene_count, tax_levels, contig_display_num, remove_minor_clade_level
+    diamond_file,
+    gene_count,
+    tax_levels,
+    contig_display_num,
+    contig_display_list,
+    remove_minor_clade_level,
 ):
     """Create sankey plot.
 
@@ -275,6 +280,7 @@ def create_viz_from_diamond_file(
         gene_count (int): Count of genes in original fasta
         tax_levels (str): Commaseperated taxlevels to consider in plot
         contig_display_num (int): Number of contigs to use for plot
+        contig_display_list (list): List of contig names to plot.
         remove_minor_clade_level (str): Tax level at which to remove minor clades
 
     Returns:
@@ -288,6 +294,9 @@ def create_viz_from_diamond_file(
         diamond_file, gene_count, db=db, plot=True
     )
     total_contigs = len(tax_data["contig"].unique())
+    if contig_display_list:
+        contigs = contig_display_list.split(',')
+        tax_data = tax_data[tax_data['query'].str.startswith(tuple(contigs))]
     if total_contigs > contig_display_num:
         print(f"[INFO] Subsampling data to display {contig_display_num} contigs.")
         tax_data = tax_data.groupby(remove_minor_clade_level).filter(
