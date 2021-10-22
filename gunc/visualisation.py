@@ -298,7 +298,7 @@ def create_viz_from_diamond_file(
     tax_levels = parse_tax_levels_arg(tax_levels)
     node_data, link_data = prepare_data(tax_data, tax_levels)
     viz_data = prepare_plot_data(node_data, link_data)
-    if contig_display_num > total_contigs:
+    if contig_display_num > total_contigs or contig_display_num == 0:
         contig_display_num = total_contigs
     display_info = f"Displaying data from {contig_display_num}/{total_contigs} contigs."
     levels_info = f'{" > ".join(tax_levels)}'

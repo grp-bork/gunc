@@ -155,7 +155,7 @@ def parse_args(args):
     vis.add_argument(
         "-c",
         "--contig_display_num",
-        help="Number of contigs to visualise.",
+        help="Number of contigs to visualise. [0 plots all contigs]",
         default=1000,
         type=int,
         metavar="",
