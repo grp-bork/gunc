@@ -75,7 +75,8 @@ Optional Flags
  * :code:`--out_dir` Output directory.  Default: Current working directory.
  * :code:`--tax_levels` Tax levels to display (comma-seperated). (default: kingdom,phylum,family,genus,contig)
  * :code:`--remove_minor_clade_level` Tax level at which to remove minor clades. (default: kingdom)
- * :code:`--contig_display_num` Number of contigs to visualise. (default: 1000)
+ * :code:`--contig_display_num` Number of contigs to visualise. (default: 1000, 0 plots all contigs)
+ * :code:`--contig_display_list` Comma seperated list of contig names to plot.
 
 ------------
 

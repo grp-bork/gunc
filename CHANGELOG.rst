@@ -2,6 +2,23 @@
 Changelog
 =========
 
+v1.0.5
+------
+
+Features
+^^^^^^^^
+ - Added option to plot specific contigs
+ - Added option to plot ALL contigs
+
+Bugfixes
+^^^^^^^^
+ - Handle cases in which no genes are called with a more useful error message.
+ - Added check if temp_dir exists before starting analysis.
+
+Other
+^^^^^
+ - Removed dependency on `zgrep` (for compatability with nf-core tests)
+
 v1.0.4
 ------
 
