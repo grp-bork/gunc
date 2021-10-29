@@ -61,9 +61,14 @@ def get_record_count_in_fasta(fasta_file):
         str: count of records
     """
     try:
-        count = subprocess.check_output(
-            f'zgrep -c ">" {fasta_file}', shell=True, universal_newlines=True
-        ).strip()
+        if fasta_file.endswith(".gz"):
+            count = subprocess.check_output(
+                f'zcat {fasta_file} | grep -c ">"', shell=True, universal_newlines=True
+            ).strip()
+        else:
+            count = subprocess.check_output(
+                f'grep -c ">" {fasta_file}', shell=True, universal_newlines=True
+            ).strip()
     except subprocess.CalledProcessError as e:
         count = 0
         if e.returncode > 1:

@@ -155,9 +155,16 @@ def parse_args(args):
     vis.add_argument(
         "-c",
         "--contig_display_num",
-        help="Number of contigs to visualise.",
+        help="Number of contigs to visualise. [0 plots all contigs]",
         default=1000,
         type=int,
+        metavar="",
+    )
+    vis.add_argument(
+        "-l",
+        "--contig_display_list",
+        help="Comma seperated list of contig names to plot",
+        default=None,
         metavar="",
     )
     download_db.add_argument(
@@ -223,8 +230,10 @@ def start_checks():
             sys.exit(f"[ERROR] Diamond version is {diamond_ver}, not 2.0.4")
     if not external_tools.check_if_tool_exists("prodigal"):
         sys.exit("[ERROR] Prodigal not found..")
-    if not external_tools.check_if_tool_exists("zgrep"):
-        sys.exit("[ERROR] zgrep not found..")
+    if not external_tools.check_if_tool_exists("grep"):
+        sys.exit("[ERROR] grep not found..")
+    if not external_tools.check_if_tool_exists("zcat"):
+        sys.exit("[ERROR] zcat not found..")
 
 
 def get_files_in_dir_with_suffix(directory, suffix):
@@ -369,12 +378,19 @@ def run_from_fnas(fnas, out_dir, file_suffix, threads):
     for fna, prodigal_outfile in prodigal_info:
         basename = os.path.basename(fna).split(file_suffix)[0]
         genes_called[basename] = record_count(prodigal_outfile)
-        genecall_files.append(prodigal_outfile)
-    diamond_inputfile = merge_genecalls(genecall_files, out_dir, file_suffix)
-    print(
-        f'[END]   {datetime.now().strftime("%H:%M:%S")} Finished Prodigal..', flush=True
-    )
-    return genes_called, diamond_inputfile
+        if os.path.isfile(prodigal_outfile) and os.path.getsize(prodigal_outfile) > 0:
+            genecall_files.append(prodigal_outfile)
+        else:
+            print(f'[WARNING] Prodigal failed for {fna}')
+    if genecall_files:
+        diamond_inputfile = merge_genecalls(genecall_files, out_dir, file_suffix)
+        print(
+            f'[END]   {datetime.now().strftime("%H:%M:%S")} Finished Prodigal..',
+            flush=True,
+        )
+        return genes_called, diamond_inputfile
+    else:
+        sys.exit('[ERROR] No genecalls to run.')
 
 
 def run_prodigal(prodigal_info):
@@ -557,15 +573,19 @@ def run(args):
     """Run entire GUNC workflow."""
     if not os.path.isdir(args.out_dir):
         sys.exit(f"[ERROR] Output Directory {args.out_dir} doesnt exist.")
+    if not os.path.isdir(args.temp_dir):
+        sys.exit(f"[ERROR] Temporary Directory {args.temp_dir} doesnt exist.")
 
     if args.input_dir:
         fastas = get_files_in_dir_with_suffix(args.input_dir, args.file_suffix)
     elif args.input_file:
         fastas = get_paths_from_file(args.input_file)
-        fastas = remove_missing_fnas(fastas)
     elif args.input_fasta:
         fastas = [args.input_fasta]
 
+    fastas = remove_missing_fnas(fastas)
+    if not fastas:
+        sys.exit('[ERROR] No input files found.')
     check_for_duplicate_filenames(fastas, args.file_suffix)
 
     if args.gene_calls:
@@ -666,6 +686,7 @@ def plot(args):
         genes_called,
         args.tax_levels,
         args.contig_display_num,
+        args.contig_display_list,
         args.remove_minor_clade_level,
     )
 
