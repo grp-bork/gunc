@@ -555,7 +555,7 @@ def create_contig_assignments(diamond_file, gene_count):
     assignments = []
     for contig in tax_data["contig"].unique():
         contig_data = tax_data[tax_data["contig"] == contig]
-        for tax_level in ["kingdom", "phylum", "family", "genus", "species"]:
+        for tax_level in ["kingdom", "phylum", "class", "order", "family", "genus", "species"]:
             counts = contig_data[tax_level].value_counts().to_dict()
             for assignment in counts:
                 assignments.append(
