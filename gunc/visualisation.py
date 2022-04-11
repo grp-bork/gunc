@@ -144,7 +144,7 @@ def prepare_data(tax_data, tax_levels):
         "family": "rgba(255,224,102,0.4)",
         "genus": "rgba(146,174,131,0.4)",
         "species": "rgba(120,161,187,0.4)",
-        "contig": "rgba(134,187,189,0.4",
+        "contig": "rgba(134,187,189,0.4)",
     }
     base_data = reshape_tax_levels(tax_data, tax_levels)
     cat_codes = create_cat_codes_from_df(base_data)
@@ -298,8 +298,8 @@ def create_viz_from_diamond_file(
         contig_display_num = total_contigs
     if contig_display_list:
         print(f"[INFO] Subsampling data to display only {contig_display_list}.")
-        contigs = contig_display_list.split(',')
-        tax_data = tax_data[tax_data['query'].str.startswith(tuple(contigs))]
+        contigs = contig_display_list.split(",")
+        tax_data = tax_data[tax_data["query"].str.startswith(tuple(contigs))]
         contig_display_num = len(contigs)
     elif total_contigs > contig_display_num:
         print(f"[INFO] Subsampling data to display {contig_display_num} contigs.")
@@ -309,7 +309,7 @@ def create_viz_from_diamond_file(
         top_contigs = tax_data["contig"].value_counts().head(contig_display_num).index
         tax_data = tax_data[tax_data["contig"].isin(top_contigs)]
     if len(tax_data) == 0:
-        sys.exit('[WARNING] No Data to plot.')
+        sys.exit("[WARNING] No Data to plot.")
     tax_levels = parse_tax_levels_arg(tax_levels)
     node_data, link_data = prepare_data(tax_data, tax_levels)
     viz_data = prepare_plot_data(node_data, link_data)
