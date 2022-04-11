@@ -658,7 +658,7 @@ def add_empty_diamond_output(diamond_outdir, fnas, file_suffix):
             count_existing_diamond_files += 1
         expected_diamond_outfiles.append(diamond_outfile)
     if count_existing_diamond_files == 0:
-        sys.exit(f"[ERROR] No diamond output files.")
+        sys.exit("[ERROR] No diamond output files.")
     else:
         print(
             f"[INFO] {count_existing_diamond_files}/{len(fnas)} run successfully with diamond"
