@@ -159,8 +159,8 @@ def diamond(input_file, threads, temp_dir, database_file, out_file):
             ],
             universal_newlines=True,
         )
-    except subprocess.CalledProcessError:
-        print(f"[ERROR] Failed to run Diamond {input_file}")
+    except subprocess.CalledProcessError as e:
+        sys.exit(f"[ERROR] Failed to run Diamond on {input_file} \n {e.output}")
 
 
 def check_diamond_version():
