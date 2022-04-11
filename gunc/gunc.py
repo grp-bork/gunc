@@ -381,7 +381,7 @@ def run_from_fnas(fnas, out_dir, file_suffix, threads):
         if os.path.isfile(prodigal_outfile) and os.path.getsize(prodigal_outfile) > 0:
             genecall_files.append(prodigal_outfile)
         else:
-            print(f'[WARNING] Prodigal failed for {fna}')
+            print(f"[WARNING] Prodigal failed for {fna}")
     if genecall_files:
         diamond_inputfile = merge_genecalls(genecall_files, out_dir, file_suffix)
         print(
@@ -390,7 +390,7 @@ def run_from_fnas(fnas, out_dir, file_suffix, threads):
         )
         return genes_called, diamond_inputfile
     else:
-        sys.exit('[ERROR] No genecalls to run.')
+        sys.exit("[ERROR] No genecalls to run.")
 
 
 def run_prodigal(prodigal_info):
@@ -585,7 +585,7 @@ def run(args):
 
     fastas = remove_missing_fnas(fastas)
     if not fastas:
-        sys.exit('[ERROR] No input files found.')
+        sys.exit("[ERROR] No input files found.")
     check_for_duplicate_filenames(fastas, args.file_suffix)
 
     if args.gene_calls:
@@ -644,6 +644,7 @@ def add_empty_diamond_output(diamond_outdir, fnas, file_suffix):
     Returns:
         list: Paths of diamond output files incl. empty placeholders
     """
+    count_existing_diamond_files = 0
     expected_diamond_outfiles = []
     for fna in fnas:
         basename = os.path.basename(fna).split(file_suffix)[0]
@@ -653,7 +654,15 @@ def add_empty_diamond_output(diamond_outdir, fnas, file_suffix):
         if not os.path.isfile(diamond_outfile):
             print(f"[WARNING] no genes mapped to reference: {basename}")
             open(diamond_outfile, "a").close()
+        else:
+            count_existing_diamond_files += 1
         expected_diamond_outfiles.append(diamond_outfile)
+    if count_existing_diamond_files == 0:
+        sys.exit(f"[ERROR] No diamond output files.")
+    else:
+        print(
+            f"[INFO] {count_existing_diamond_files}/{len(fnas)} run successfully with diamond"
+        )
     return expected_diamond_outfiles
 
 
