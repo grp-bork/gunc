@@ -259,8 +259,12 @@ def parse_tax_levels_arg(tax_levels):
         sys.exit("[Error] Need to provide at least 2 tax_levels.")
     for tax_level in tax_levels:
         if tax_level not in allowed:
-            sys.exit(f'[Error] {tax_level} not known.Allowed: {",".join(allowed)}')
-    return tax_levels
+            sys.exit(f'[Error] {tax_level} not known. Allowed: {",".join(allowed)}')
+    sorted_tax_levels = []
+    for tax_level in allowed:
+        if tax_level in tax_levels:
+            sorted_tax_levels.append(tax_level)
+    return sorted_tax_levels
 
 
 def create_viz_from_diamond_file(
