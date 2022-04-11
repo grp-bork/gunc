@@ -133,6 +133,8 @@ def prepare_data(tax_data, tax_levels):
     node_colours = {
         "kingdom": "#50514f",
         "phylum": "#f25f5c",
+        "class": "#e39939",
+        "order": "#a44ee6",
         "family": "#ffe066",
         "genus": "#92AE83",
         "species": "#78A1BB",
@@ -141,6 +143,8 @@ def prepare_data(tax_data, tax_levels):
     link_colours = {
         "kingdom": "rgba(80,81,79,0.4)",
         "phylum": "rgba(242,95,92,0.4)",
+        "class": "rgba(227, 153, 57,0.4)",
+        "order": "rgba(164, 78, 230,0.4)",
         "family": "rgba(255,224,102,0.4)",
         "genus": "rgba(146,174,131,0.4)",
         "species": "rgba(120,161,187,0.4)",
@@ -254,7 +258,16 @@ def parse_tax_levels_arg(tax_levels):
         list: tax levels to be used in plot
     """
     tax_levels = [x.strip() for x in tax_levels.split(",")]
-    allowed = ["kingdom", "phylum", "family", "genus", "species", "contig"]
+    allowed = [
+        "kingdom",
+        "phylum",
+        "class",
+        "order",
+        "family",
+        "genus",
+        "species",
+        "contig",
+    ]
     if len(tax_levels) < 2:
         sys.exit("[Error] Need to provide at least 2 tax_levels.")
     for tax_level in tax_levels:
