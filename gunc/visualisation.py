@@ -297,6 +297,8 @@ def create_viz_from_diamond_file(
     tax_data, genome_name, cutoff = chim_score(
         diamond_file, gene_count, db=db, plot=True
     )
+    if len(tax_data) == 0:
+        sys.exit(f"[ERROR] Diamond output file is empty: {diamond_file}")
     total_contigs = len(tax_data["contig"].unique())
     if contig_display_num > total_contigs or contig_display_num == 0:
         contig_display_num = total_contigs
