@@ -17,6 +17,8 @@ from .get_scores import chim_score
 from ._version import get_versions
 from .external_tools import get_record_count_in_fasta as record_count
 
+logger = logging.getLogger("gunc.py")
+
 
 def parse_args(args):
     """Parse Arguments
@@ -823,7 +825,6 @@ def main():
             datefmt="%H:%M:%S",
             level=logging.INFO,
         )
-    global logger
     logger = logging.getLogger("gunc.py")
     logger.debug(args)
     start_time = datetime.now()
