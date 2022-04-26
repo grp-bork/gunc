@@ -393,7 +393,7 @@ def get_paths_from_file(input_file):
 
 def run_from_gene_calls(faas, out_dir, file_suffix):
     """Prepare genecalls for running diamond."""
-    logger.info(f"START Merging genecalls")
+    logger.info("START Merging genecalls")
     genes_called = {}
     for faa in faas:
         basename = os.path.basename(faa).split(file_suffix)[0]
@@ -401,7 +401,7 @@ def run_from_gene_calls(faas, out_dir, file_suffix):
             basename = basename.split(".genecalls")[0]
         genes_called[basename] = record_count(faa)
     diamond_inputfile = merge_genecalls(faas, out_dir, file_suffix)
-    logger.info(f"END  Merging genecalls")
+    logger.info("END  Merging genecalls")
     return genes_called, diamond_inputfile
 
 
@@ -420,7 +420,7 @@ def run_from_fnas(fnas, out_dir, file_suffix, threads):
             - diamond_inputfile (str): merged input file for diamond
 
     """
-    logger.info(f"START Prodigal")
+    logger.info("START Prodigal")
     create_dir(out_dir)
     genecall_files = []
     genes_called = {}
@@ -440,7 +440,7 @@ def run_from_fnas(fnas, out_dir, file_suffix, threads):
             logger.warning(f"Prodigal failed for {fna}")
     if genecall_files:
         diamond_inputfile = merge_genecalls(genecall_files, out_dir, file_suffix)
-        logger.info(f"END   Prodigal")
+        logger.info("END   Prodigal")
         return genes_called, diamond_inputfile
     else:
         logger.error("No genecalls to run.")
@@ -468,7 +468,7 @@ def run_diamond(infile, threads, temp_dir, db_file, out_dir, db):
     Returns:
         list: Of diamond output files.
     """
-    logger.info(f"START Diamond")
+    logger.info("START Diamond")
     outfile = os.path.join(out_dir, f"{os.path.basename(infile)}.diamond.{db}.out")
     external_tools.diamond(infile, threads, temp_dir, db_file, outfile)
 
@@ -480,7 +480,7 @@ def run_diamond(infile, threads, temp_dir, db_file, out_dir, db):
         os.remove(infile)
     else:
         diamond_outfiles = [outfile]
-    logger.info(f"END   Diamond")
+    logger.info("END   Diamond")
     return diamond_outfiles
 
 
@@ -516,7 +516,7 @@ def run_gunc(
     Returns:
         pandas.DataFrame: One line per inputfile Gunc scores
     """
-    logger.info(f"START Scoring")
+    logger.info("START Scoring")
     gunc_output = []
     for diamond_file in diamond_outfiles:
         basename = os.path.basename(diamond_file).split(".diamond.")[0]
@@ -548,7 +548,7 @@ def run_gunc(
                 contig_assignments_out_file, index=False, sep="\t"
             )
         gunc_output.append(single)
-    logger.info(f"END   Scoring")
+    logger.info("END   Scoring")
     return pd.concat(gunc_output).sort_values("genome")
 
 
@@ -854,4 +854,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
