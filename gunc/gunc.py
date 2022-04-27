@@ -218,14 +218,14 @@ def parse_args(args):
     summarise.add_argument(
         "-m",
         "--max_csslevel_file",
-        help="MaxCSS output file from GUNC.",
+        help="MaxCSS output file from GUNC (e.g. GUNC.progenomes_2.1.maxCSS_level.tsv).",
         required=True,
         metavar="\b",
     )
     summarise.add_argument(
         "-d",
         "--gunc_detailed_output_dir",
-        help="GUNC detailed output dir.",
+        help="GUNC detailed output dir (e.g. gunc_output).",
         required=True,
         metavar="\b",
     )
@@ -521,41 +521,38 @@ def run_gunc(
     logger.info("START Scoring")
     gunc_output = []
     for diamond_file in diamond_outfiles:
-        try:
-            basename = os.path.basename(diamond_file).split(".diamond.")[0]
-            gene_call_count = genes_called[basename]
-            detailed, single = chim_score(
-                diamond_file,
-                gene_call_count,
-                sensitive,
-                min_mapped_genes,
-                use_species_level,
-                db,
+        basename = os.path.basename(diamond_file).split(".diamond.")[0]
+        gene_call_count = genes_called[basename]
+        detailed, single = chim_score(
+            diamond_file,
+            gene_call_count,
+            sensitive,
+            min_mapped_genes,
+            use_species_level,
+            db,
+        )
+        if detailed_output or contig_taxonomy_output:
+            detailed_gunc_out_dir = os.path.join(out_dir, "gunc_output")
+            create_dir(detailed_gunc_out_dir)
+        if detailed_output:
+            detailed_gunc_out_file = os.path.join(
+                detailed_gunc_out_dir, f"{basename}.{db}.all_levels.tsv"
             )
-            if detailed_output or contig_taxonomy_output:
-                detailed_gunc_out_dir = os.path.join(out_dir, "gunc_output")
-                create_dir(detailed_gunc_out_dir)
-            if detailed_output:
-                detailed_gunc_out_file = os.path.join(
-                    detailed_gunc_out_dir, f"{basename}.{db}.all_levels.tsv"
-                )
-                detailed.to_csv(
-                    detailed_gunc_out_file, index=False, sep="\t", na_rep="nan"
-                )
-            if contig_taxonomy_output:
-                contig_assignments_out_file = os.path.join(
-                    detailed_gunc_out_dir, f"{basename}.contig_assignments.tsv"
-                )
-                contig_assignments = create_contig_assignments(
-                    diamond_file, gene_call_count
-                )
+            detailed.to_csv(detailed_gunc_out_file, index=False, sep="\t", na_rep="nan")
+        if contig_taxonomy_output:
+            contig_assignments_out_file = os.path.join(
+                detailed_gunc_out_dir, f"{basename}.contig_assignments.tsv"
+            )
+            contig_assignments = create_contig_assignments(
+                diamond_file, gene_call_count
+            )
+            if contig_assignments is not None:
                 contig_assignments.to_csv(
                     contig_assignments_out_file, index=False, sep="\t"
                 )
-            gunc_output.append(single)
-        except Exception as e:
-            logger.warning(f"Failed to parse {diamond_file}")
-            logger.debug(f"{e}")
+            else:
+                logger.warning(f"Failed to parse {diamond_file}")
+        gunc_output.append(single)
     logger.info("END   Scoring")
     return pd.concat(gunc_output).sort_values("genome")
 
@@ -608,6 +605,8 @@ def create_contig_assignments(diamond_file, gene_count):
         diamond_file, gene_count, db=db, plot=True
     )
     assignments = []
+    if len(tax_data) == 0:
+        return None
     for contig in tax_data["contig"].unique():
         contig_data = tax_data[tax_data["contig"] == contig]
         for tax_level in [
