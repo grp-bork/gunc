@@ -111,7 +111,7 @@ Required Flags
 Optional Flags
 ^^^^^^^^^^^^^^
 
- * :code:`--db` Which db to download (progenomes or gtdb). Default: progenomes
+ * :code:`-db` Which db to download (progenomes or gtdb). Default: progenomes
 
 ------------
 
