@@ -33,7 +33,9 @@ coverage:
     - coverage xml -o coverage.xml
   artifacts:
     reports:
-        cobertura: coverage.xml
+    coverage_report:
+        coverage_format: cobertura
+        path: python_app/coverage.xml
     expire_in: 1 week
   except:
     - docs
