@@ -149,6 +149,8 @@ def diamond(input_file, threads, temp_dir, database_file, out_file):
                 "0",
                 "--evalue",
                 "1",
+                "--algo",
+                "0",
                 "--tmpdir",
                 temp_dir,
                 "--db",
