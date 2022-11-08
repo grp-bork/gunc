@@ -234,6 +234,7 @@ def parse_args(args):
         "--contamination_cutoff",
         help="Alternatite cutoff to use.",
         default=0.05,
+        type=float,
         metavar="\b",
     )
     summarise.add_argument(
@@ -318,7 +319,7 @@ def merge_genecalls(genecall_files, out_dir, file_suffix):
     """Merge genecall files.
 
     Merges fastas together to run diamond more efficiently.
-    Adds the name of the file to each record (delimiter '_-_')
+    Adds the name of the file to each record (delimiter '/')
     so they can be separated after diamond mapping.
 
     Arguments:
@@ -340,7 +341,7 @@ def merge_genecalls(genecall_files, out_dir, file_suffix):
                     for line in infile:
                         if line.startswith(">"):
                             contig_name = line.split(" ")[0]
-                            line = f"{contig_name}_-_{genome_name}\n"
+                            line = f"{contig_name}/{genome_name}\n"
                         ofile.write(f"{line.strip()}\n")
     return merged_outfile
 
@@ -363,8 +364,8 @@ def split_diamond_output(diamond_outfile, out_dir, db):
     output = {}
     with open(diamond_outfile, "r") as f:
         for line in f:
-            genome_name = line.split("\t")[0].split("_-_")[1]
-            line = line.replace(f"_-_{genome_name}", "")
+            genome_name = line.split("\t")[0].split("/")[1]
+            line = line.replace(f"/{genome_name}", "")
             output[genome_name] = output.get(genome_name, "") + line
     for genome_name in output:
         outfile = os.path.join(out_dir, f"{genome_name}.diamond.{db}.out")
@@ -789,18 +790,19 @@ def get_scores_using_supplied_cont_cutoff(detail_file, cutoff=0.05):
         if not pd.isna(max_CSSidx):
             max_CSS = df.loc[[max_CSSidx]].to_dict("records")[0]
             if max_CSS["clade_separation_score"] > 0.45:
-                max_CSS["pass.GUNC5"] = False
+                max_CSS[f"pass.GUNC_{cutoff}"] = False
                 return max_CSS
-    max_CSS["pass.GUNC5"] = True
+    max_CSS[f"pass.GUNC_{cutoff}"] = True
     return max_CSS
 
 
 def summarise(args):
     max_csslevel_file = pd.read_csv(args.max_csslevel_file, sep="\t", header=0)
     max_csslevel_file = max_csslevel_file.to_dict("index")
-
+    logger.debug(max_csslevel_file)
     for row in max_csslevel_file:
         pass_gunc = max_csslevel_file[row]["pass.GUNC"]
+        logger.debug(pass_gunc)
         if pass_gunc or pd.isna(pass_gunc):
             max_csslevel_file[row][f"pass.GUNC_{args.contamination_cutoff}"] = True
         elif not pass_gunc:
@@ -813,6 +815,7 @@ def summarise(args):
             )
             max_csslevel_file[row] = new_row
     out_df = pd.DataFrame.from_dict(max_csslevel_file, orient="index")
+    logger.debug(out_df)
     out_df.to_csv(args.output_file, index=False, sep="\t", na_rep="nan")
 
 
