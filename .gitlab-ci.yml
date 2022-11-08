@@ -32,7 +32,8 @@ coverage:
     - coverage report -m
     - coverage xml -o coverage.xml
   artifacts:
-    coverage_report:
+    reports:
+      coverage_report:
         coverage_format: cobertura
         path: coverage.xml
     expire_in: 1 week
