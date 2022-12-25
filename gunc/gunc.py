@@ -5,14 +5,10 @@ import gzip
 import glob
 import json
 import argparse
-import pandas as pd
 import multiprocessing
-from . import checkm_merge
-from . import gunc_database
-from . import external_tools
 from datetime import datetime
-from . import visualisation as vis
-from .get_scores import chim_score
+
+from . import external_tools
 from ._version import get_versions
 from .external_tools import get_record_count_in_fasta as record_count
 
@@ -466,6 +462,8 @@ def run_gunc(
     Returns:
         pandas.DataFrame: One line per inputfile Gunc scores
     """
+    import pandas as pd
+    from .get_scores import chim_score
     print(
         f'[START] {datetime.now().strftime("%H:%M:%S")} Running scoring..', flush=True
     )
@@ -545,6 +543,8 @@ def create_contig_assignments(diamond_file, gene_count):
                                assignment,
                                count_of_genes_assigned columns
     """
+    import pandas as pd
+    from .get_scores import chim_score
     if "gtdb" in os.path.basename(diamond_file):
         db = "gtdb_95"
     else:
@@ -679,6 +679,7 @@ def get_genecount_from_gunc_output(gene_counts_file, basename):
 
 def plot(args):
     """Run visualisation function."""
+    from . import visualisation as vis
     basename = os.path.basename(args.diamond_file).split(".diamond.")[0]
     genes_called = get_genecount_from_gunc_output(get_gene_count_file(args), basename)
     viz_html = vis.create_viz_from_diamond_file(
@@ -697,6 +698,7 @@ def plot(args):
 
 def merge_checkm(args):
     """Merge gunc output with checkm output."""
+    from . import checkm_merge
     merged = checkm_merge.merge_checkm_gunc(args.checkm_file, args.gunc_file)
     outfile = os.path.join(args.out_dir, "GUNC_checkM.merged.tsv")
     merged.to_csv(outfile, sep="\t", index=False)
@@ -707,6 +709,7 @@ def main():
     start_time = datetime.now()
     print(f'[START] {start_time.strftime("%H:%M:%S %Y-%m-%d")}')
     if args.cmd == "download_db":
+        from . import gunc_database
         gunc_database.get_db(args.path, args.database)
     if args.cmd == "run":
         start_checks()
