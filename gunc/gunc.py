@@ -7,12 +7,13 @@ import json
 import argparse
 import pandas as pd
 import multiprocessing
+from . import get_scores
 from . import checkm_merge
+from . import decontaminate
 from . import gunc_database
 from . import external_tools
 from datetime import datetime
 from . import visualisation as vis
-from .get_scores import chim_score
 from ._version import get_versions
 from .external_tools import get_record_count_in_fasta as record_count
 
@@ -111,7 +112,7 @@ def parse_args(args):
     )
     run.add_argument(
         "--use_species_level",
-        help="Allow species level to be picked as maxCSS. Default: False",
+        help="Allow species level to be picked as maxCSS and/or decontamination. Default: False",
         action="store_true",
         default=False,
     )
@@ -123,6 +124,19 @@ def parse_args(args):
         ),
         type=int,
         default=11,
+        metavar="",
+    )
+    run.add_argument(
+        "--decontaminate",
+        help="Attempt to decontaminate the query genome.. Default: True",
+        action="store_true",
+        default=True,
+    )
+    run.add_argument(
+        "--min_genes_for_decontamination",
+        help=("Minimum number of genes per decontaminated bin. Default: 200"),
+        type=int,
+        default=200,
         metavar="",
     )
     vis.add_argument(
@@ -381,7 +395,7 @@ def run_from_fnas(fnas, out_dir, file_suffix, threads):
         if os.path.isfile(prodigal_outfile) and os.path.getsize(prodigal_outfile) > 0:
             genecall_files.append(prodigal_outfile)
         else:
-            print(f'[WARNING] Prodigal failed for {fna}')
+            print(f"[WARNING] Prodigal failed for {fna}")
     if genecall_files:
         diamond_inputfile = merge_genecalls(genecall_files, out_dir, file_suffix)
         print(
@@ -390,7 +404,7 @@ def run_from_fnas(fnas, out_dir, file_suffix, threads):
         )
         return genes_called, diamond_inputfile
     else:
-        sys.exit('[ERROR] No genecalls to run.')
+        sys.exit("[ERROR] No genecalls to run.")
 
 
 def run_prodigal(prodigal_info):
@@ -470,10 +484,11 @@ def run_gunc(
         f'[START] {datetime.now().strftime("%H:%M:%S")} Running scoring..', flush=True
     )
     gunc_output = []
+    all_detailed_output = {}
     for diamond_file in diamond_outfiles:
         basename = os.path.basename(diamond_file).split(".diamond.")[0]
         gene_call_count = genes_called[basename]
-        detailed, single = chim_score(
+        detailed, single, base_data = get_scores.chim_score(
             diamond_file,
             gene_call_count,
             sensitive,
@@ -500,10 +515,12 @@ def run_gunc(
                 contig_assignments_out_file, index=False, sep="\t"
             )
         gunc_output.append(single)
+        all_detailed_output[basename] = detailed
+
     print(
         f'[END]   {datetime.now().strftime("%H:%M:%S")} Finished scoring..', flush=True
     )
-    return pd.concat(gunc_output).sort_values("genome")
+    return pd.concat(gunc_output).sort_values("genome"), all_detailed_output
 
 
 def check_for_duplicate_filenames(fnas, file_suffix):
@@ -549,7 +566,7 @@ def create_contig_assignments(diamond_file, gene_count):
         db = "gtdb_95"
     else:
         db = "progenomes_2.1"
-    tax_data, genome_name, cutoff = chim_score(
+    tax_data, genome_name, cutoff = get_scores.chim_score(
         diamond_file, gene_count, db=db, plot=True
     )
     assignments = []
@@ -585,7 +602,7 @@ def run(args):
 
     fastas = remove_missing_fnas(fastas)
     if not fastas:
-        sys.exit('[ERROR] No input files found.')
+        sys.exit("[ERROR] No input files found.")
     check_for_duplicate_filenames(fastas, args.file_suffix)
 
     if args.gene_calls:
@@ -614,7 +631,7 @@ def run(args):
         diamond_outfiles = add_empty_diamond_output(
             args.out_dir, fastas, args.file_suffix
         )
-    gunc_output = run_gunc(
+    gunc_output, all_detailed_output = run_gunc(
         diamond_outfiles,
         genes_called,
         args.out_dir,
@@ -627,6 +644,87 @@ def run(args):
     )
     gunc_out_file = os.path.join(args.out_dir, f"GUNC.{db}.maxCSS_level.tsv")
     gunc_output.to_csv(gunc_out_file, index=False, sep="\t", na_rep="nan")
+
+    if args.decontaminate and not args.gene_calls:
+        decontamination_output = run_decontaminate(
+            fastas,
+            db,
+            args,
+            all_detailed_output,
+        )
+    decontaminated_gunc_out_dir = os.path.join(args.out_dir, "gunc_decontaminate_out")
+    decontaminated_gunc_out_file = os.path.join(
+        decontaminated_gunc_out_dir, f"GUNC.{db}.maxCSS_level.tsv"
+    )
+    decontamination_output.to_csv(
+        decontaminated_gunc_out_file, index=False, sep="\t", na_rep="nan"
+    )
+
+
+def run_decontaminate(fastas, db, args, all_detailed_output):
+    decontamination_output = []
+    decontaminated_gunc_out_dir = os.path.join(args.out_dir, "gunc_decontaminate_out")
+    create_dir(decontaminated_gunc_out_dir)
+
+    for fna in fastas:
+        basename = os.path.basename(fna).split(args.file_suffix)[0]
+        diamond_file = os.path.join(
+            args.out_dir, "diamond_output", f"{basename}.diamond.{db}.out"
+        )
+        gene_calls = os.path.join(
+            args.out_dir, "gene_calls", f"{basename}.genecalls.faa"
+        )
+
+        diamond_df = get_scores.read_diamond_output(diamond_file)
+        base_data = get_scores.create_base_data(diamond_df, db)
+        decon_level = decontaminate.choose_decontamination_level(
+            all_detailed_output[basename], args.use_species_level
+        )
+
+        while decon_level[0]:
+            decontaminated_clade_contigs = decontaminate.transform_base_data(
+                base_data, decon_level[1], args.min_genes_for_decontamination
+            )
+            for clade in decontaminated_clade_contigs:
+                detailed_output, max_CSS, base_data = get_scores.chim_score(
+                    diamond_file,
+                    genes_called=decontaminate.get_gene_count(
+                        gene_calls, decontaminated_clade_contigs[clade]
+                    ),
+                    sensitive=args.sensitive,
+                    min_mapped_genes=args.min_mapped_genes,
+                    use_species_level=args.use_species_level,
+                    db=db,
+                    decontaminated_clade_contig_list=decontaminated_clade_contigs[
+                        clade
+                    ],
+                )
+
+                deconted_bin_name = f'{basename}.decontaminated_at_{decon_level[1]}_level.{clade.replace(" ", "_")}'
+                decon_level = decontaminate.choose_decontamination_level(
+                    detailed_output, args.use_species_level
+                )
+                if not decon_level[0]:
+                    deconted_bin_path = os.path.join(
+                        decontaminated_gunc_out_dir, f"{deconted_bin_name}.fa"
+                    )
+                    decontaminate.create_decontaminated_bin_fasta(
+                        fna, deconted_bin_path, decontaminated_clade_contigs[clade]
+                    )
+
+                    if args.detailed_output:
+                        deconted_bins_detailed_gunc_out_file = os.path.join(
+                            decontaminated_gunc_out_dir,
+                            f"{deconted_bin_name}.{db}.all_levels.tsv",
+                        )
+                        detailed_output.to_csv(
+                            deconted_bins_detailed_gunc_out_file,
+                            index=False,
+                            sep="\t",
+                            na_rep="nan",
+                        )
+                    decontamination_output.append(max_CSS)
+    return pd.concat(decontamination_output).sort_values("genome")
 
 
 def add_empty_diamond_output(diamond_outdir, fnas, file_suffix):
