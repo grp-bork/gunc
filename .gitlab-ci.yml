@@ -35,7 +35,7 @@ coverage:
     reports:
       coverage_report:
         coverage_format: cobertura
-        path: coverage.xml
+        path: cobertura-coverage.xml
     expire_in: 1 week
   except:
     - docs
