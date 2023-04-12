@@ -139,7 +139,7 @@ def parse_args(args):
         help="Verbose output for debugging",
         action="store_true",
         default=False,
-)
+    )
     run.add_argument(
         "--decontaminate",
         help="Attempt to decontaminate the query genome. Default: True",
