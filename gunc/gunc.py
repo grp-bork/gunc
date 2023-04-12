@@ -704,26 +704,26 @@ def run_decontaminate(fastas, db, args, all_detailed_output):
                 decon_level = decontaminate.choose_decontamination_level(
                     detailed_output, args.use_species_level
                 )
-                if not decon_level[0]:
-                    deconted_bin_path = os.path.join(
-                        decontaminated_gunc_out_dir, f"{deconted_bin_name}.fa"
-                    )
-                    decontaminate.create_decontaminated_bin_fasta(
-                        fna, deconted_bin_path, decontaminated_clade_contigs[clade]
-                    )
 
-                    if args.detailed_output:
-                        deconted_bins_detailed_gunc_out_file = os.path.join(
-                            decontaminated_gunc_out_dir,
-                            f"{deconted_bin_name}.{db}.all_levels.tsv",
-                        )
-                        detailed_output.to_csv(
-                            deconted_bins_detailed_gunc_out_file,
-                            index=False,
-                            sep="\t",
-                            na_rep="nan",
-                        )
-                    decontamination_output.append(max_CSS)
+        deconted_bin_path = os.path.join(
+            decontaminated_gunc_out_dir, f"{deconted_bin_name}.fa"
+        )
+        decontaminate.create_decontaminated_bin_fasta(
+            fna, deconted_bin_path, decontaminated_clade_contigs[clade]
+        )
+
+        if args.detailed_output:
+            deconted_bins_detailed_gunc_out_file = os.path.join(
+                decontaminated_gunc_out_dir,
+                f"{deconted_bin_name}.{db}.all_levels.tsv",
+            )
+            detailed_output.to_csv(
+                deconted_bins_detailed_gunc_out_file,
+                index=False,
+                sep="\t",
+                na_rep="nan",
+            )
+        decontamination_output.append(max_CSS)
     return pd.concat(decontamination_output).sort_values("genome")
 
 
