@@ -54,7 +54,9 @@ def get_contig_gene_counts(base_data, decontamination_level, min_contig_gene_per
                             counts[counts == most_gene_count].index.to_list()
                         )
                     ]
-                    mean_id = group.groupby(decontamination_level).mean()
+                    mean_id = group.groupby(decontamination_level).mean(
+                        numeric_only=True
+                    )
                     max_mean_id = mean_id.iloc[0][0]
                     second_max_id = mean_id.iloc[1][0]
                     if max_mean_id != second_max_id:

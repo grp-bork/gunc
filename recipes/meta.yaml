@@ -24,7 +24,7 @@ requirements:
     - prodigal
     - diamond 2.0.4
     - numpy
-    - pandas
+    - pandas >= 2.0.0
     - python >=3.6
     - scipy
     - requests >=2.22.0

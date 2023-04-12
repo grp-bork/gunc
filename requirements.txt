@@ -1,6 +1,6 @@
 # List required packages in this file, one per line.
 numpy
 scipy
-pandas
+pandas>=2.0.0
 plotly
 requests>=2.22.0
