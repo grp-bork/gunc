@@ -49,7 +49,7 @@ def get_n_effective_surplus_clades(counts):
         return 0
     else:
         denom = sum(counts) ** 2
-        return 1 / sum([x ** 2 / denom for x in counts]) - 1
+        return 1 / sum([x**2 / denom for x in counts]) - 1
 
 
 def expected_entropy_estimate(probabilities, sample_count):
@@ -111,7 +111,7 @@ def calc_expected_conditional_entropy(contigs, taxons):
     taxon_probability = taxon_probability.values
 
     total_entropy = 0.0
-    for bucket_size, contig_count in contribution.iteritems():
+    for bucket_size, contig_count in contribution.items():
         if bucket_size <= MAX_BUCKET_SIZE:
             total_entropy += contig_count * expected_entropy_estimate(
                 taxon_probability, bucket_size
@@ -429,6 +429,7 @@ def chim_score(
     use_species_level=False,
     db="progenomes_2.1",
     plot=False,
+    decontaminated_clade_contig_list=False,
 ):
     """Get chimerism scores for a genome.
 
@@ -449,6 +450,10 @@ def chim_score(
         pandas.DataFrame: GUNC scores
     """
     diamond_df = read_diamond_output(diamond_file_path)
+    if decontaminated_clade_contig_list:
+        diamond_df = diamond_df[
+            diamond_df["contig"].isin(decontaminated_clade_contig_list)
+        ]
     base_data = create_base_data(diamond_df, db)
     genes_mapped, contig_count = get_stats(diamond_df)
 
@@ -486,4 +491,4 @@ def chim_score(
     else:
         max_CSSidx = df[:-1]["clade_separation_score"].idxmax()
     max_CSS = df.iloc[[0] if pd.isna(max_CSSidx) else [max_CSSidx]]
-    return df, max_CSS
+    return df, max_CSS, base_data
