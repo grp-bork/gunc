@@ -111,7 +111,7 @@ def calc_expected_conditional_entropy(contigs, taxons):
     taxon_probability = taxon_probability.values
 
     total_entropy = 0.0
-    for bucket_size, contig_count in contribution.iteritems():
+    for bucket_size, contig_count in contribution.items():
         if bucket_size <= MAX_BUCKET_SIZE:
             total_entropy += contig_count * expected_entropy_estimate(
                 taxon_probability, bucket_size
