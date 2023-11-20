@@ -516,6 +516,7 @@ def run_gunc(
         pandas.DataFrame: One line per inputfile Gunc scores
     """
     import pandas as pd
+
     logger.info("START Scoring")
     gunc_output = []
     for diamond_file in diamond_outfiles:
@@ -596,6 +597,7 @@ def create_contig_assignments(diamond_file, gene_count):
                                count_of_genes_assigned columns
     """
     import pandas as pd
+
     if "gtdb" in os.path.basename(diamond_file):
         db = "gtdb_95"
     else:
@@ -755,6 +757,7 @@ def get_genecount_from_gunc_output(gene_counts_file, basename):
 def plot(args):
     """Run visualisation function."""
     from . import visualisation as vis
+
     basename = os.path.basename(args.diamond_file).split(".diamond.")[0]
     genes_called = get_genecount_from_gunc_output(get_gene_count_file(args), basename)
     viz_html = vis.create_viz_from_diamond_file(
@@ -774,6 +777,7 @@ def plot(args):
 def merge_checkm(args):
     """Merge gunc output with checkm output."""
     from . import checkm_merge
+
     merged = checkm_merge.merge_checkm_gunc(args.checkm_file, args.gunc_file)
     outfile = os.path.join(args.out_dir, "GUNC_checkM.merged.tsv")
     merged.to_csv(outfile, sep="\t", index=False)
@@ -781,6 +785,7 @@ def merge_checkm(args):
 
 def get_scores_using_supplied_cont_cutoff(detail_file, cutoff=0.05):
     import pandas as pd
+
     df = pd.read_csv(detail_file, sep="\t", header=0)
     df = df.drop(["pass.GUNC"], axis=1)
     max_CSS = df.iloc[[0]].to_dict("records")[0]
@@ -799,6 +804,7 @@ def get_scores_using_supplied_cont_cutoff(detail_file, cutoff=0.05):
 
 def summarise(args):
     import pandas as pd
+
     max_csslevel_file = pd.read_csv(args.max_csslevel_file, sep="\t", header=0)
     max_csslevel_file = max_csslevel_file.to_dict("index")
     logger.debug(max_csslevel_file)
@@ -841,6 +847,7 @@ def main():
     logger.info(f'START {start_time.strftime("%Y-%m-%d")}')
     if args.cmd == "download_db":
         from . import gunc_database
+
         gunc_database.get_db(args.path, args.database)
     if args.cmd == "run":
         start_checks()
