@@ -340,7 +340,7 @@ def merge_genecalls(genecall_files, out_dir, file_suffix):
     Returns:
         str: path of the merged file
     """
-    merged_outfile = os.path.join(out_dir, "merged.genecalls.faa")
+    merged_outfile = os.path.join(out_dir, "genecalls.merged.faa")
     with open(merged_outfile, "w") as ofile:
         for file in genecall_files:
             if os.path.isfile(file):
@@ -530,7 +530,6 @@ def run_gunc(
         pandas.DataFrame: One line per inputfile Gunc scores
     """
     import pandas as pd
-    from .get_scores import chim_score
     logger.info("START Scoring")
     gunc_output = []
     all_detailed_output = {}
@@ -613,7 +612,6 @@ def create_contig_assignments(diamond_file, gene_count):
                                count_of_genes_assigned columns
     """
     import pandas as pd
-    from .get_scores import chim_score
     if "gtdb" in os.path.basename(diamond_file):
         db = "gtdb_95"
     else:
@@ -727,6 +725,7 @@ def run(args):
 
 
 def run_decontaminate(fastas, db, args, all_detailed_output):
+    import pandas as pd
     decontamination_output = []
     decontaminated_gunc_out_dir = os.path.join(args.out_dir, "gunc_decontaminate_out")
     create_dir(decontaminated_gunc_out_dir)
@@ -879,6 +878,7 @@ def merge_checkm(args):
 
 
 def get_scores_using_supplied_cont_cutoff(detail_file, cutoff=0.05):
+    import pandas as pd
     df = pd.read_csv(detail_file, sep="\t", header=0)
     df = df.drop(["pass.GUNC"], axis=1)
     max_CSS = df.iloc[[0]].to_dict("records")[0]
@@ -896,6 +896,7 @@ def get_scores_using_supplied_cont_cutoff(detail_file, cutoff=0.05):
 
 
 def summarise(args):
+    import pandas as pd
     max_csslevel_file = pd.read_csv(args.max_csslevel_file, sep="\t", header=0)
     max_csslevel_file = max_csslevel_file.to_dict("index")
     logger.debug(max_csslevel_file)
