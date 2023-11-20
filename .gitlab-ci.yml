@@ -1,4 +1,4 @@
-image: "python:3.7"
+image: "python:3.11.3"
 
 before_script:
   - python --version
@@ -35,7 +35,7 @@ coverage:
     reports:
       coverage_report:
         coverage_format: cobertura
-        path: coverage.xml
+        path: cobertura-coverage.xml
     expire_in: 1 week
   except:
     - docs

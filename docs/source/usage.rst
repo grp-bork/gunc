@@ -23,7 +23,7 @@ Any of the above commands can be run with :code:`-h` to get function specific in
 
 ------------
 
-GUNC accepts either a progenomes or GTDB based reference database via the :code:`--db_file` option. Both can be downladed using the :code:`gunc download_db` command (see below). Note that using GTDB will lead to higher resource requirements and longer run times; in accuracy benchmarks, the performance of GTDB and the default proGenome-derived GUNC database performed very similarly.
+GUNC accepts either a progenomes or GTDB based reference database via the :code:`--db_file` option. Both can be downloaded using the :code:`gunc download_db` command (see below). Note that using GTDB will lead to higher resource requirements and longer run times; in accuracy benchmarks, the performance of GTDB and the default proGenome-derived GUNC database performed very similarly.
 
 
 GUNC RUN
@@ -36,7 +36,7 @@ Required Flags
 
  * :code:`--db_file` Path to the GUNC database file. Can be set as environment variable GUNC_DB.
 
-One of the following is required. If flad :code:`--gene_calls` is not set gene calling will be done using prodigal with option "-p meta".
+One of the following is required. If flag :code:`--gene_calls` is not set gene calling will be done using prodigal with option "-p meta".
 
  * :code:`--input_dir` Input dir with files in FASTA format.
  * :code:`--input_file` Input file containing paths to FASTA format files.

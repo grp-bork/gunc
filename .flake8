@@ -7,4 +7,4 @@ exclude =
     versioneer.py,
     gunc/_version.py,
     docs/source/conf.py
-max-line-length = 115
+max-line-length = 150
