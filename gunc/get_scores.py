@@ -429,7 +429,6 @@ def chim_score(
     use_species_level=False,
     db="progenomes_2.1",
     plot=False,
-    decontaminated_clade_contig_list=False,
 ):
     """Get chimerism scores for a genome.
 
@@ -450,10 +449,6 @@ def chim_score(
         pandas.DataFrame: GUNC scores
     """
     diamond_df = read_diamond_output(diamond_file_path)
-    if decontaminated_clade_contig_list:
-        diamond_df = diamond_df[
-            diamond_df["contig"].isin(decontaminated_clade_contig_list)
-        ]
     base_data = create_base_data(diamond_df, db)
     genes_mapped, contig_count = get_stats(diamond_df)
 
@@ -491,4 +486,4 @@ def chim_score(
     else:
         max_CSSidx = df[:-1]["clade_separation_score"].idxmax()
     max_CSS = df.iloc[[0] if pd.isna(max_CSSidx) else [max_CSSidx]]
-    return df, max_CSS, base_data
+    return df, max_CSS
