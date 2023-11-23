@@ -194,6 +194,13 @@ def parse_args(args):
         default="progenomes",
         metavar="",
     )
+    download_db.add_argument(
+        "-v",
+        "--verbose",
+        help="Verbose output for debugging",
+        action="store_true",
+        default=False,
+    )
     merge_checkm.add_argument(
         "-g",
         "--gunc_file",
@@ -210,6 +217,13 @@ def parse_args(args):
         help="Output directory for merged file",
         default=os.getcwd(),
         metavar="",
+    )
+    merge_checkm.add_argument(
+        "-v",
+        "--verbose",
+        help="Verbose output for debugging",
+        action="store_true",
+        default=False,
     )
     summarise.add_argument(
         "-m",
@@ -471,7 +485,7 @@ def run_diamond(infile, threads, temp_dir, db_file, out_dir, db):
     outfile = os.path.join(out_dir, f"{os.path.basename(infile)}.diamond.{db}.out")
     external_tools.diamond(infile, threads, temp_dir, db_file, outfile)
 
-    if infile.endswith("merged.genecalls.faa"):
+    if infile.endswith("genecalls.merged.faa"):
         out_dir = os.path.join(out_dir, "diamond_output")
         create_dir(out_dir)
         diamond_outfiles = split_diamond_output(outfile, out_dir, db)
