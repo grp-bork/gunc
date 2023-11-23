@@ -7,6 +7,9 @@ import numpy as np
 import pandas as pd
 from collections import OrderedDict
 from pkg_resources import resource_filename
+import warnings
+
+warnings.simplefilter(action="ignore", category=FutureWarning)
 
 
 def read_diamond_output(file_path):
@@ -481,7 +484,9 @@ def chim_score(
         )
     df = pd.DataFrame(scores).round(2)
     df["pass.GUNC"] = df["pass.GUNC"].astype(str)
-    if use_species_level:
+    if df["clade_separation_score"].isnull().all():
+        max_CSSidx = 0
+    elif use_species_level:
         max_CSSidx = df["clade_separation_score"].idxmax()
     else:
         max_CSSidx = df[:-1]["clade_separation_score"].idxmax()
