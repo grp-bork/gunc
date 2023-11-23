@@ -11,17 +11,19 @@ Features
 
 Bugfixes
 ^^^^^^^^
-- Fixed cases where number of mapped genes might be different when running smaller genomes individually vs grouped.
-- Fixed cases where gunc would fail if _-_ was in a sequence identifier.
-- Fixed cases where contig colour in visualisation was incorrect.
-- Fixed incorrect ordering of taxonomic levels in plot if user supplies them in an incorrect order.
-- Allow GUNC to continue if some genomes fail diamond mapping.
-- Fixed crash if diamond fails to map anything to GUNC reference.
+ - Fixed cases where number of mapped genes might be different when running smaller genomes individually vs grouped.
+ - Fixed cases where gunc would fail if _-_ was in a sequence identifier.
+ - Fixed cases where contig colour in visualisation was incorrect.
+ - Fixed incorrect ordering of taxonomic levels in plot if user supplies them in an incorrect order.
+ - Allow GUNC to continue if some genomes fail diamond mapping.
+ - Fixed crash if diamond fails to map anything to GUNC reference.
+ - Fixed bug where GUNC goes into infinite loop if an input filename is merged.fa
 
 Other
 ^^^^^
  - class and order are now included in contig assignment output file (@aaronmussig)
  - Fix pandas deprecation waring (@tmaklin)
+ - Added fixes for pandas FutureWarning (changing behaviour of Series.idxmax)
 
 
 v1.0.5
