@@ -90,9 +90,9 @@ def get_db(base_dir, db="progenomes"):
     """
     base_url = "https://swifter.embl.de/~fullam/gunc/"
     if db == "progenomes":
-        file_name = "gunc_db_progenomes2.1.dmnd.gz"
+        file_name = "gunc_db_progenomes3.dmnd.gz"
     elif db == "gtdb":
-        file_name = "gunc_db_gtdb95.dmnd.gz"
+        file_name = "gunc_db_gtdb214.dmnd.gz"
     else:
         sys.exit(f"[ERROR] DB {db} unknown. Allowed: progenomes, gtdb")
     gz_file_url = f"{base_url}{file_name}"
