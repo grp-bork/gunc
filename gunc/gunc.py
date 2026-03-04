@@ -692,7 +692,7 @@ def run(args):
     )
     if not args.gene_calls and len(diamond_outfiles) != len(fastas):
         diamond_outfiles = add_empty_diamond_output(
-            args.out_dir, fastas, args.file_suffix
+            args.out_dir, fastas, args.file_suffix, db
         )
     gunc_output = run_gunc(
         diamond_outfiles,
@@ -709,7 +709,7 @@ def run(args):
     gunc_output.to_csv(gunc_out_file, index=False, sep="\t", na_rep="nan")
 
 
-def add_empty_diamond_output(diamond_outdir, fnas, file_suffix):
+def add_empty_diamond_output(diamond_outdir, fnas, file_suffix, db):
     """Create placeholder file for missing diamond output.
 
     If an input doesnt map to reference it is missing from the final ouput.
@@ -729,7 +729,7 @@ def add_empty_diamond_output(diamond_outdir, fnas, file_suffix):
     for fna in fnas:
         basename = os.path.basename(fna).split(file_suffix)[0]
         diamond_outfile = os.path.join(
-            diamond_outdir, "diamond_output", f"{basename}.diamond.out"
+            diamond_outdir, "diamond_output", f"{basename}.diamond.{db}.out"
         )
         if not os.path.isfile(diamond_outfile):
             logger.warning(f"No genes mapped to reference: {basename}")
