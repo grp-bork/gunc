@@ -51,6 +51,12 @@ def parse_args(args):
         default=os.environ.get("GUNC_DB"),
         metavar="",
     )
+    run.add_argument(
+        "--custom_genome2taxonomy",
+        help="If using a custom DB, Use this to provide taxonomy of genomes in the custom DB",
+        default=False,
+        metavar=""
+    )
     run_group.add_argument(
         "-i", "--input_fasta", help="Input file in FASTA format.", metavar=""
     )
@@ -190,8 +196,8 @@ def parse_args(args):
     download_db.add_argument(
         "-db",
         "--database",
-        help="Which db to download. progenomes,gtdb Default: progenomes",
-        default="progenomes",
+        help="Which db to download. progenomes2.1, progenomes3, gtdb95, gtdb214 Default: progenomes2.1",
+        default="progenomes2.1",
         metavar="",
     )
     download_db.add_argument(
@@ -290,12 +296,12 @@ def create_dir(path):
 def start_checks():
     """Checks if tool dependencies are available."""
     if not external_tools.check_if_tool_exists("diamond"):
-        logger.error("Diamond 2.0.4 not found.")
+        logger.error("Diamond 2.1.4 not found.")
         sys.exit(1)
     else:
         diamond_ver = external_tools.check_diamond_version()
-        if diamond_ver != "2.0.4":
-            logger.error(f"Diamond version is {diamond_ver}, not 2.0.4")
+        if diamond_ver != "2.1.4":
+            logger.error(f"Diamond version is {diamond_ver}, not 2.1.4")
             sys.exit(1)
     if not external_tools.check_if_tool_exists("prodigal"):
         logger.error("Prodigal not found.")
@@ -507,6 +513,7 @@ def run_gunc(
     min_mapped_genes,
     use_species_level,
     contig_taxonomy_output,
+    custom_genome2taxonomy,
 ):
     """Call GUNC scores on diamond output files.
 
@@ -525,6 +532,7 @@ def run_gunc(
                                 at which to calculate scores
         use_species_level (bool): Allow species level to be picked as maxCSS
         contig_taxonomy_output (bool): Output contig assignments file
+        custom_genome2taxonomy (str): genome2taxonomy tsv if using custom db
 
     Returns:
         pandas.DataFrame: One line per inputfile Gunc scores
@@ -543,6 +551,7 @@ def run_gunc(
             min_mapped_genes,
             use_species_level,
             db,
+            custom_genome2taxonomy,
         )
         if detailed_output or contig_taxonomy_output:
             detailed_gunc_out_dir = os.path.join(out_dir, "gunc_output")
@@ -612,10 +621,15 @@ def create_contig_assignments(diamond_file, gene_count):
     """
     import pandas as pd
 
-    if "gtdb" in os.path.basename(diamond_file):
-        db = "gtdb_95"
+    diamond_basename = os.path.basename(diamond_file)
+    if "gtdb95" in diamond_basename:
+        db = "gtdb95"
+    elif "gtdb214" in diamond_basename:
+        db = "gtdb214"
+    elif "progenomes3" in diamond_basename:
+        db = "progenomes3"
     else:
-        db = "progenomes_2.1"
+        db = "progenomes2.1"
     tax_data, genome_name, cutoff = get_scores.chim_score(
         diamond_file, gene_count, db=db, plot=True
     )
@@ -682,10 +696,17 @@ def run(args):
     genes_called_outfile = os.path.join(gene_calls_out_dir, "gene_counts.json")
     write_json(genes_called, genes_called_outfile)
 
-    if "gtdb" in os.path.basename(args.db_file):
-        db = "gtdb_95"
+    db_file = os.path.basename(args.db_file)
+    if args.custom_genome2taxonomy:
+        db = os.path.splitext(db_file)[0]	
+    elif "gtdb95" in db_file:
+        db = "gtdb95"
+    elif "gtdb214" in db_file:
+        db = "gtdb214"
+    elif "progenomes3" in db_file:
+        db = "progenomes3"
     else:
-        db = "progenomes_2.1"
+        db = "progenomes2.1"
 
     diamond_outfiles = run_diamond(
         diamond_input, args.threads, args.temp_dir, args.db_file, args.out_dir, db
@@ -704,6 +725,7 @@ def run(args):
         args.min_mapped_genes,
         args.use_species_level,
         args.contig_taxonomy_output,
+        args.custom_genome2taxonomy,
     )
     gunc_out_file = os.path.join(args.out_dir, f"GUNC.{db}.maxCSS_level.tsv")
     gunc_output.to_csv(gunc_out_file, index=False, sep="\t", na_rep="nan")
@@ -821,6 +843,7 @@ def summarise(args):
 
     max_csslevel_file = pd.read_csv(args.max_csslevel_file, sep="\t", header=0)
     max_csslevel_file = max_csslevel_file.to_dict("index")
+    db = os.path.basename(args.max_csslevel_file).replace("GUNC.", "").replace(".maxCSS_level.tsv", "")
     logger.debug(max_csslevel_file)
     for row in max_csslevel_file:
         pass_gunc = max_csslevel_file[row]["pass.GUNC"]
@@ -830,7 +853,7 @@ def summarise(args):
         elif not pass_gunc:
             bin_name = max_csslevel_file[row]["genome"]
             detail_file = os.path.join(
-                args.gunc_detailed_output_dir, bin_name + ".all_levels.tsv"
+                args.gunc_detailed_output_dir, bin_name + f".{db}.all_levels.tsv"
             )
             new_row = get_scores_using_supplied_cont_cutoff(
                 detail_file, args.contamination_cutoff
@@ -863,7 +886,7 @@ def main():
         from . import gunc_database
 
         gunc_database.get_db(args.path, args.database)
-    if args.cmd == "run":
+    elif args.cmd == "run":
         start_checks()
         if not args.db_file:
             logger.error("Database_file argument missing.")
@@ -874,11 +897,11 @@ def main():
                 sys.exit(1)
 
         run(args)
-    if args.cmd == "plot":
+    elif args.cmd == "plot":
         plot(args)
-    if args.cmd == "merge_checkm":
+    elif args.cmd == "merge_checkm":
         merge_checkm(args)
-    if args.cmd == "summarise":
+    elif args.cmd == "summarise":
         summarise(args)
     end_time = datetime.now()
     run_time = str(end_time - start_time).split(".")[0]

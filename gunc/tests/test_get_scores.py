@@ -32,7 +32,7 @@ def test_calc_expected_conditional_entropy():
 
 
 def test_create_base_data():
-    new_base_data = create_base_data(diamond_df, "progenomes_2.1")
+    new_base_data = create_base_data(diamond_df, "progenomes2.1", None)
     pd.testing.assert_frame_equal(ref_base_data, new_base_data)
 
 

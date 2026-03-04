@@ -124,7 +124,7 @@ def calc_expected_conditional_entropy(contigs, taxons):
     return total_entropy
 
 
-def read_genome2taxonomy_reference(db):
+def read_genome2taxonomy_reference(db, custom_genome2taxonomy):
     """Read in genome2taxonomy reference data.
 
     This file translates the genomes in the diamond reference file to
@@ -132,32 +132,38 @@ def read_genome2taxonomy_reference(db):
 
     Arguments:
         db (str): Which db to use: progenomes or gtdb
+        custom_genome2taxonomy (str): genome2taxonomy tsv if using custom db
 
     Returns:
         pandas.DataFrame: genome2taxonomy reference
     """
-    if db == "progenomes_2.1":
-        genome2taxonomy = resource_filename(__name__, "data/genome2taxonomy_ref.tsv")
-    elif db == "gtdb_95":
-        genome2taxonomy = resource_filename(
-            __name__, "data/genome2taxonomy_gtdbref.tsv"
-        )
+    if custom_genome2taxonomy:
+        genome2taxonomy = custom_genome2taxonomy
+    elif db == "progenomes2.1":
+        genome2taxonomy = resource_filename(__name__, "data/genome2taxonomy_pg2.1ref.tsv")
+    elif db == "progenomes3":
+        genome2taxonomy = resource_filename(__name__, "data/genome2taxonomy_pg3ref.tsv")
+    elif db == "gtdb95":
+        genome2taxonomy = resource_filename(__name__, "data/genome2taxonomy_gtdb95ref.tsv")
+    elif db == "gtdb214":
+        genome2taxonomy = resource_filename(__name__, "data/genome2taxonomy_gtdb214ref.tsv")
     else:
-        sys.exit(f"[ERROR] {db} unknown. Allowed: progenomes_2.1, gtdb_95")
+        sys.exit(f"[ERROR] {db} unknown. Allowed: progenomes2.1, progenomes3, gtdb95, gtdb214")
     return pd.read_csv(genome2taxonomy, sep="\t")
 
 
-def create_base_data(diamond_df, db):
+def create_base_data(diamond_df, db, custom_genome2taxonomy):
     """Assign taxonomies to diamond output.
 
     Arguments:
         diamond_df (pandas.DataFrame): diamond output
         db (str): Which db to use: progenomes or gtdb
+        custom_genome2taxonomy (str): genome2taxonomy tsv if using custom db
 
     Returns:
         pandas.DataFrame: merged dataframe
     """
-    genome2taxonomy_df = read_genome2taxonomy_reference(db)
+    genome2taxonomy_df = read_genome2taxonomy_reference(db, custom_genome2taxonomy)
     return pd.merge(diamond_df, genome2taxonomy_df, on="genome", how="inner")
 
 
@@ -430,7 +436,8 @@ def chim_score(
     sensitive=False,
     min_mapped_genes=11,
     use_species_level=False,
-    db="progenomes_2.1",
+    db="progenomes2.1",
+    custom_genome2taxonomy=None,
     plot=False,
 ):
     """Get chimerism scores for a genome.
@@ -446,13 +453,14 @@ def chim_score(
         use_species_level (bool): Allow species level to be selected for maxCSS
                                   (default: (False))
         plot (bool): Return data needed for plotting (default: (False))
+        custom_genome2taxonomy (str): genome2taxonomy file if using custom DB
         db (str): Which db to use: progenomes or gtdb (default: (progenomes)
 
     Returns:
         pandas.DataFrame: GUNC scores
     """
     diamond_df = read_diamond_output(diamond_file_path)
-    base_data = create_base_data(diamond_df, db)
+    base_data = create_base_data(diamond_df, db, custom_genome2taxonomy)
     genes_mapped, contig_count = get_stats(diamond_df)
 
     genome_name = os.path.basename(diamond_file_path).split(".diamond.")[0]

@@ -52,8 +52,10 @@ setup(
     include_package_data=True,
     package_data={
         'gunc': [
-            'gunc/data/genome2taxonomy_ref.tsv',
-            'gunc/data/genome2taxonomy_gtdbref.tsv'
+                'gunc/data/genome2taxonomy_pg2.1ref.tsv',
+                'gunc/data/genome2taxonomy_pg3ref.tsv',
+                'gunc/data/genome2taxonomy_gtdb95ref.tsv',
+                'gunc/data/genome2taxonomy_gtdb214ref.tsv',
         ]
     },
     install_requires=requirements,
