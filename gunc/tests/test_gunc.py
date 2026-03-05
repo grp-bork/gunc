@@ -1,8 +1,10 @@
 import pytest
 import logging
 from ..gunc import *
-from .._version import get_versions
-from pkg_resources import resource_filename
+from importlib.resources import files as _pkg_files
+
+def resource_filename(package, resource):
+    return str(_pkg_files(package).joinpath(resource))
 
 gunc_gene_counts = resource_filename(__name__, "test_data/tiny_test.gene_counts.json")
 test_data_dir = resource_filename(__name__, "test_data/")

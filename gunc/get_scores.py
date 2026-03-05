@@ -6,7 +6,10 @@ import scipy.stats
 import numpy as np
 import pandas as pd
 from collections import OrderedDict
-from pkg_resources import resource_filename
+from importlib.resources import files as _pkg_files
+
+def resource_filename(package, resource):
+    return str(_pkg_files(package).joinpath(resource))
 import warnings
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -139,16 +142,16 @@ def read_genome2taxonomy_reference(db, custom_genome2taxonomy):
     """
     if custom_genome2taxonomy:
         genome2taxonomy = custom_genome2taxonomy
-    elif db == "progenomes2.1":
+    elif db == "progenomes_2.1":
         genome2taxonomy = resource_filename(__name__, "data/genome2taxonomy_pg2.1ref.tsv")
-    elif db == "progenomes3":
+    elif db == "progenomes_3":
         genome2taxonomy = resource_filename(__name__, "data/genome2taxonomy_pg3ref.tsv")
-    elif db == "gtdb95":
+    elif db == "gtdb_95":
         genome2taxonomy = resource_filename(__name__, "data/genome2taxonomy_gtdb95ref.tsv")
-    elif db == "gtdb214":
+    elif db == "gtdb_214":
         genome2taxonomy = resource_filename(__name__, "data/genome2taxonomy_gtdb214ref.tsv")
     else:
-        sys.exit(f"[ERROR] {db} unknown. Allowed: progenomes2.1, progenomes3, gtdb95, gtdb214")
+        sys.exit(f"[ERROR] {db} unknown. Allowed: progenomes_2.1, progenomes_3, gtdb_95, gtdb_214")
     return pd.read_csv(genome2taxonomy, sep="\t")
 
 
@@ -291,7 +294,7 @@ def calc_clade_separation_score(
     """
     if contamination_portion == 0:
         return 0
-    elif contamination_portion == np.nan:
+    elif pd.isna(contamination_portion):
         return np.nan
     elif expected_conditional_entropy == 0:
         return np.nan
@@ -404,8 +407,8 @@ def get_scores_for_taxlevel(
         contamination_portion, conditional_entropy, expected_conditional_entropy
     )
 
-    portion_genes_retained = len(tax_data) / genes_mapped
-    genes_retained_index = genes_mapped / genes_called * portion_genes_retained
+    portion_genes_retained = len(tax_data) / genes_mapped if genes_mapped > 0 else np.nan
+    genes_retained_index = genes_mapped / genes_called * portion_genes_retained if genes_called > 0 else np.nan
     reference_representation_score = genes_retained_index * mean_hit_identity
     adjustment = determine_adjustment(genes_retained_index)
     clade_separation_score_adjusted = clade_separation_score * adjustment
@@ -436,7 +439,7 @@ def chim_score(
     sensitive=False,
     min_mapped_genes=11,
     use_species_level=False,
-    db="progenomes2.1",
+    db="progenomes_2.1",
     custom_genome2taxonomy=None,
     plot=False,
 ):

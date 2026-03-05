@@ -1,10 +1,16 @@
 import os
 import sys
+import logging
 import pandas as pd
 import plotly.graph_objects
-from ._version import get_versions
+from . import __version__
 from .get_scores import chim_score
-from pkg_resources import resource_filename
+from importlib.resources import files as _pkg_files
+
+def resource_filename(package, resource):
+    return str(_pkg_files(package).joinpath(resource))
+
+logger = logging.getLogger(__name__)
 
 
 def reshape_tax_levels(df, tax_levels):
@@ -26,7 +32,7 @@ def reshape_tax_levels(df, tax_levels):
     data = []
     for pair in zip(tax_levels, tax_levels[1:]):
         data += [row + [pair[0]] for row in df[list(pair)].values.tolist()]
-    return pd.pandas.DataFrame(data, columns=["source", "target", "source_tax_level"])
+    return pd.DataFrame(data, columns=["source", "target", "source_tax_level"])
 
 
 def create_cat_codes_from_df(df):
@@ -56,7 +62,7 @@ def convert_data(data, ref_dict):
     Returns:
         iter or pandas.DataFrame: data with values replaced
     """
-    if isinstance(data, pd.pandas.DataFrame):
+    if isinstance(data, pd.DataFrame):
         return data.replace(ref_dict)
     else:
         return [ref_dict.get(item, item) for item in data]
@@ -111,7 +117,7 @@ def extract_node_data(base_data, cat_codes):
                 label_dict[item] = item
     node_colours = [colour_dict.get(x, "black") for x in nodes]
     node_labels = [label_dict.get(x, "") for x in nodes]
-    return pd.pandas.DataFrame(
+    return pd.DataFrame(
         list(zip(nodes, node_colours, node_labels)), columns=["node", "colour", "label"]
     )
 
@@ -242,7 +248,7 @@ def create_html(plot_data, genome_name, display_info, levels_info):
         genome_name=genome_name,
         display_info=display_info,
         levels_info=levels_info,
-        version=get_versions()["version"],
+        version=__version__,
     )
 
 
@@ -303,8 +309,13 @@ def create_viz_from_diamond_file(
     Returns:
         str: HTML to write to disk
     """
-    if "gtdb" in os.path.basename(diamond_file):
+    diamond_basename = os.path.basename(diamond_file)
+    if "gtdb_214" in diamond_basename or "gtdb214" in diamond_basename:
+        db = "gtdb_214"
+    elif "gtdb_95" in diamond_basename or "gtdb95" in diamond_basename:
         db = "gtdb_95"
+    elif "progenomes_3" in diamond_basename or "progenomes3" in diamond_basename:
+        db = "progenomes_3"
     else:
         db = "progenomes_2.1"
     tax_data, genome_name, cutoff = chim_score(
@@ -316,12 +327,12 @@ def create_viz_from_diamond_file(
     if contig_display_num > total_contigs or contig_display_num == 0:
         contig_display_num = total_contigs
     if contig_display_list:
-        print(f"[INFO] Subsampling data to display only {contig_display_list}.")
+        logger.info(f"Subsampling data to display only {contig_display_list}.")
         contigs = contig_display_list.split(",")
         tax_data = tax_data[tax_data["query"].str.startswith(tuple(contigs))]
         contig_display_num = len(contigs)
     elif total_contigs > contig_display_num:
-        print(f"[INFO] Subsampling data to display {contig_display_num} contigs.")
+        logger.info(f"Subsampling data to display {contig_display_num} contigs.")
         tax_data = tax_data.groupby(remove_minor_clade_level).filter(
             lambda x: len(x) > cutoff
         )

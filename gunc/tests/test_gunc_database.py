@@ -1,10 +1,13 @@
 from ..gunc_database import *
-from pkg_resources import resource_filename
+from importlib.resources import files as _pkg_files
+
+def resource_filename(package, resource):
+    return str(_pkg_files(package).joinpath(resource))
 
 
 diamond_output = resource_filename(__name__, "test_data/tiny_test.diamond.out")
 base_url = "https://swifter.embl.de/~fullam/gunc/"
-file_name = "gunc_db_2.0.4.dmnd.gz"
+file_name = "gunc_db_progenomes2.1.dmnd.gz"
 gz_file_url = f"{base_url}{file_name}"
 md5_file_url = f"{base_url}{file_name}.md5"
 
@@ -18,7 +21,7 @@ def test_download_file(tmp_path):
     download_file(md5_file_url, tmp_outfile)
     assert (
         tmp_outfile.read_text()
-        == "bc93a855e0760aad5c4e5f2d0e26da46  gunc_db_2.0.4.dmnd.gz\n"
+        == "bc93a855e0760aad5c4e5f2d0e26da46  gunc_db_progenomes2.1.dmnd.gz\n"
     )
 
 

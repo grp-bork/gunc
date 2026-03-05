@@ -2,7 +2,10 @@ import pytest
 import numpy as np
 import pandas as pd
 from ..get_scores import *
-from pkg_resources import resource_filename
+from importlib.resources import files as _pkg_files
+
+def resource_filename(package, resource):
+    return str(_pkg_files(package).joinpath(resource))
 
 diamond_output = resource_filename(__name__, "test_data/tiny_test.diamond.out")
 diamond_df = read_diamond_output(diamond_output)
@@ -32,7 +35,7 @@ def test_calc_expected_conditional_entropy():
 
 
 def test_create_base_data():
-    new_base_data = create_base_data(diamond_df, "progenomes2.1", None)
+    new_base_data = create_base_data(diamond_df, "progenomes_2.1", None)
     pd.testing.assert_frame_equal(ref_base_data, new_base_data)
 
 

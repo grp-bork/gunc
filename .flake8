@@ -4,7 +4,5 @@ exclude =
     __pycache__,
     build,
     dist,
-    versioneer.py,
-    gunc/_version.py,
     docs/source/conf.py
 max-line-length = 150

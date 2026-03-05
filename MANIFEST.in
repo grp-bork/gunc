@@ -9,9 +9,6 @@ recursive-exclude * *.py[co]
 
 recursive-include docs *.rst conf.py Makefile make.bat
 
-include versioneer.py
-include gunc/_version.py
-
 include gunc/data/template.html
 include gunc/data/genome2taxonomy_pg2.1ref.tsv
 include gunc/data/genome2taxonomy_pg3ref.tsv

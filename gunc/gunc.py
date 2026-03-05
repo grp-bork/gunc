@@ -10,7 +10,7 @@ import multiprocessing
 from . import get_scores
 from datetime import datetime
 from . import external_tools
-from ._version import get_versions
+from . import __version__
 from .external_tools import get_record_count_in_fasta as record_count
 
 logger = logging.getLogger("gunc.py")
@@ -53,8 +53,8 @@ def parse_args(args):
     )
     run.add_argument(
         "--custom_genome2taxonomy",
-        help="If using a custom DB, Use this to provide taxonomy of genomes in the custom DB",
-        default=False,
+        help="If using a custom DB, use this to provide taxonomy of genomes in the custom DB.",
+        default=None,
         metavar=""
     )
     run_group.add_argument(
@@ -127,7 +127,7 @@ def parse_args(args):
     run.add_argument(
         "--min_mapped_genes",
         help=(
-            "Dont calculate GUNC score if number of mapped "
+            "Don't calculate GUNC score if number of mapped "
             "genes is below this value. Default: 11"
         ),
         type=int,
@@ -157,7 +157,7 @@ def parse_args(args):
     vis.add_argument(
         "-t",
         "--tax_levels",
-        help="Tax levels to display (comma-seperated).",
+        help="Tax levels to display (comma-separated).",
         default="kingdom,phylum,family,genus,contig",
         metavar="",
     )
@@ -179,7 +179,7 @@ def parse_args(args):
     vis.add_argument(
         "-l",
         "--contig_display_list",
-        help="Comma seperated list of contig names to plot",
+        help="Comma-separated list of contig names to plot",
         default=None,
         metavar="",
     )
@@ -191,13 +191,13 @@ def parse_args(args):
         default=False,
     )
     download_db.add_argument(
-        "path", help="Download database to given direcory.", metavar="dest_path"
+        "path", help="Download database to given directory.", metavar="dest_path"
     )
     download_db.add_argument(
         "-db",
         "--database",
-        help="Which db to download. progenomes2.1, progenomes3, gtdb95, gtdb214 Default: progenomes2.1",
-        default="progenomes2.1",
+        help="Which db to download. progenomes_2.1, progenomes_3, gtdb_95, gtdb_214 Default: progenomes_2.1",
+        default="progenomes_2.1",
         metavar="",
     )
     download_db.add_argument(
@@ -248,7 +248,7 @@ def parse_args(args):
     summarise.add_argument(
         "-c",
         "--contamination_cutoff",
-        help="Alternatite cutoff to use.",
+        help="Alternative cutoff to use.",
         default=0.05,
         type=float,
         metavar="\b",
@@ -272,7 +272,7 @@ def parse_args(args):
         "--version",
         help="Print version number and exit.",
         action="version",
-        version=get_versions()["version"],
+        version=__version__,
     )
     if not args:
         parser.print_help(sys.stderr)
@@ -284,7 +284,7 @@ def parse_args(args):
 def create_dir(path):
     """Create a directory
 
-    Will create a directory if it doesnt already exist.
+    Will create a directory if it doesn't already exist.
 
     Arguments:
         path (str): directory path
@@ -296,13 +296,8 @@ def create_dir(path):
 def start_checks():
     """Checks if tool dependencies are available."""
     if not external_tools.check_if_tool_exists("diamond"):
-        logger.error("Diamond 2.1.4 not found.")
+        logger.error("Diamond not found.")
         sys.exit(1)
-    else:
-        diamond_ver = external_tools.check_diamond_version()
-        if diamond_ver != "2.1.4":
-            logger.error(f"Diamond version is {diamond_ver}, not 2.1.4")
-            sys.exit(1)
     if not external_tools.check_if_tool_exists("prodigal"):
         logger.error("Prodigal not found.")
         sys.exit(1)
@@ -400,14 +395,17 @@ def write_json(data, filename):
 def get_paths_from_file(input_file):
     """Extract paths from a text file."""
     if input_file.endswith(".gz"):
-        logger.error("Input should be list of filepaths: use -i instead?.")
+        logger.error("Input looks like a FASTA file. Use -i/--input_fasta for a single genome or -d/--input_dir for a directory.")
         sys.exit(1)
     with open(input_file, "r") as f:
         paths = f.readlines()
-    if paths[0].startswith(">"):
-        logger.error("Input should be list of filepaths: use -i instead?.")
+    if not paths:
+        logger.error(f"Input file is empty: {input_file}")
         sys.exit(1)
-    return [path.strip() for path in paths]
+    if paths[0].startswith(">"):
+        logger.error("Input looks like a FASTA file. Use -i/--input_fasta for a single genome or -d/--input_dir for a directory.")
+        sys.exit(1)
+    return [path.strip() for path in paths if path.strip()]
 
 
 def run_from_gene_calls(faas, out_dir, file_suffix):
@@ -448,8 +446,8 @@ def run_from_fnas(fnas, out_dir, file_suffix, threads):
         basename = os.path.basename(fna).split(file_suffix)[0]
         prodigal_outfile = os.path.join(out_dir, f"{basename}.genecalls.faa")
         prodigal_info.append((fna, prodigal_outfile))
-    p = multiprocessing.Pool(int(threads))
-    p.map(run_prodigal, prodigal_info)
+    with multiprocessing.Pool(int(threads)) as p:
+        p.map(run_prodigal, prodigal_info)
     for fna, prodigal_outfile in prodigal_info:
         basename = os.path.basename(fna).split(file_suffix)[0]
         genes_called[basename] = record_count(prodigal_outfile)
@@ -566,7 +564,7 @@ def run_gunc(
                 detailed_gunc_out_dir, f"{basename}.contig_assignments.tsv"
             )
             contig_assignments = create_contig_assignments(
-                diamond_file, gene_call_count
+                diamond_file, gene_call_count, custom_genome2taxonomy
             )
             if contig_assignments is not None:
                 contig_assignments.to_csv(
@@ -606,12 +604,13 @@ def remove_missing_fnas(fnas):
     return existing_fnas
 
 
-def create_contig_assignments(diamond_file, gene_count):
+def create_contig_assignments(diamond_file, gene_count, custom_genome2taxonomy=None):
     """Create contig gene assignment dataframe.
 
     Arguments:
         diamond_file (str): GUNC diamond output file path
         gene_count (int): Count of genes in original fasta
+        custom_genome2taxonomy (str): genome2taxonomy tsv if using custom db
 
     Returns:
         pandas.DataFrame: with contig,
@@ -622,16 +621,16 @@ def create_contig_assignments(diamond_file, gene_count):
     import pandas as pd
 
     diamond_basename = os.path.basename(diamond_file)
-    if "gtdb95" in diamond_basename:
-        db = "gtdb95"
-    elif "gtdb214" in diamond_basename:
-        db = "gtdb214"
-    elif "progenomes3" in diamond_basename:
-        db = "progenomes3"
+    if "gtdb_214" in diamond_basename or "gtdb214" in diamond_basename:
+        db = "gtdb_214"
+    elif "gtdb_95" in diamond_basename or "gtdb95" in diamond_basename:
+        db = "gtdb_95"
+    elif "progenomes_3" in diamond_basename or "progenomes3" in diamond_basename:
+        db = "progenomes_3"
     else:
-        db = "progenomes2.1"
+        db = "progenomes_2.1"
     tax_data, genome_name, cutoff = get_scores.chim_score(
-        diamond_file, gene_count, db=db, plot=True
+        diamond_file, gene_count, db=db, custom_genome2taxonomy=custom_genome2taxonomy, plot=True
     )
     assignments = []
     if len(tax_data) == 0:
@@ -663,11 +662,15 @@ def create_contig_assignments(diamond_file, gene_count):
 def run(args):
     """Run entire GUNC workflow."""
     if not os.path.isdir(args.out_dir):
-        logger.error(f"Output Directory {args.out_dir} doesnt exist.")
+        logger.error(f"Output directory {args.out_dir} doesn't exist.")
         sys.exit(1)
     if not os.path.isdir(args.temp_dir):
-        logger.error(f"Temporary Directory {args.temp_dir} doesnt exist.")
+        logger.error(f"Temporary directory {args.temp_dir} doesn't exist.")
         sys.exit(1)
+    if args.custom_genome2taxonomy:
+        if not os.path.isfile(args.custom_genome2taxonomy):
+            logger.error(f"--custom_genome2taxonomy file not found: {args.custom_genome2taxonomy}")
+            sys.exit(1)
 
     if args.input_dir:
         fastas = get_files_in_dir_with_suffix(args.input_dir, args.file_suffix)
@@ -700,13 +703,13 @@ def run(args):
     if args.custom_genome2taxonomy:
         db = os.path.splitext(db_file)[0]	
     elif "gtdb95" in db_file:
-        db = "gtdb95"
+        db = "gtdb_95"
     elif "gtdb214" in db_file:
-        db = "gtdb214"
+        db = "gtdb_214"
     elif "progenomes3" in db_file:
-        db = "progenomes3"
+        db = "progenomes_3"
     else:
-        db = "progenomes2.1"
+        db = "progenomes_2.1"
 
     diamond_outfiles = run_diamond(
         diamond_input, args.threads, args.temp_dir, args.db_file, args.out_dir, db
@@ -848,9 +851,9 @@ def summarise(args):
     for row in max_csslevel_file:
         pass_gunc = max_csslevel_file[row]["pass.GUNC"]
         logger.debug(pass_gunc)
-        if pass_gunc or pd.isna(pass_gunc):
+        if pass_gunc == "True" or pass_gunc == "nan":
             max_csslevel_file[row][f"pass.GUNC_{args.contamination_cutoff}"] = True
-        elif not pass_gunc:
+        elif pass_gunc == "False":
             bin_name = max_csslevel_file[row]["genome"]
             detail_file = os.path.join(
                 args.gunc_detailed_output_dir, bin_name + f".{db}.all_levels.tsv"
@@ -889,11 +892,11 @@ def main():
     elif args.cmd == "run":
         start_checks()
         if not args.db_file:
-            logger.error("Database_file argument missing.")
+            logger.error("Database file (-r/--db_file) is required. Set it or export the GUNC_DB environment variable.")
             sys.exit(1)
         else:
             if not os.path.isfile(args.db_file):
-                logger.error("Database_file not found.")
+                logger.error(f"Database file not found: {args.db_file}")
                 sys.exit(1)
 
         run(args)

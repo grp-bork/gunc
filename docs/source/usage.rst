@@ -23,7 +23,7 @@ Any of the above commands can be run with :code:`-h` to get function specific in
 
 ------------
 
-GUNC accepts either a progenomes or GTDB based reference database via the :code:`--db_file` option. Both can be downloaded using the :code:`gunc download_db` command (see below). Note that using GTDB will lead to higher resource requirements and longer run times; in accuracy benchmarks, the performance of GTDB and the default proGenome-derived GUNC database performed very similarly.
+GUNC accepts a progenomes or GTDB based reference database via the :code:`--db_file` option. Four databases are available: ``progenomes2.1`` (default), ``progenomes3``, ``gtdb95``, and ``gtdb214``. All can be downloaded using the :code:`gunc download_db` command (see below). Note that using GTDB will lead to higher resource requirements and longer run times; in accuracy benchmarks, the performance of GTDB and the default proGenomes-derived GUNC database performed very similarly.
 
 
 GUNC RUN
@@ -48,13 +48,14 @@ Optional Flags
 
  * :code:`--gene_calls` Input is FASTA faa format genecalls.
  * :code:`--use_species_level` Allow species level to be picked as maxCSS. Default: False
- * :code:`--min_mapped_genes` Dont calculate GUNC score if number of mapped genes is below this value. Default: 11
+ * :code:`--min_mapped_genes` Don't calculate GUNC score if number of mapped genes is below this value. Default: 11
  * :code:`--threads` Number of CPU threads.
  * :code:`--temp_dir` Directory to store temporary files. Default: Current working directory.
  * :code:`--out_dir` Directory in which to put output. Default: Current working directory.
  * :code:`--sensitive` Run with high sensitivity. (Uses a different cutoff to determine an abundant lineage)
  * :code:`--detailed_output` Output scores for every tax_level.
  * :code:`--contig_taxonomy_output` Output taxonomic assignment for each contig.
+ * :code:`--custom_genome2taxonomy` Path to a custom genome-to-taxonomy TSV file when using a custom database.
 
 ------------
 
@@ -73,10 +74,10 @@ Optional Flags
 
  * :code:`--gunc_gene_count_file` GUNC gene_counts.json file. (Not needed if :code:`--diamond` file is in the file structure made by :code:`gunc run`)
  * :code:`--out_dir` Output directory.  Default: Current working directory.
- * :code:`--tax_levels` Tax levels to display (comma-seperated). (default: kingdom,phylum,family,genus,contig)
+ * :code:`--tax_levels` Tax levels to display (comma-separated). (default: kingdom,phylum,family,genus,contig)
  * :code:`--remove_minor_clade_level` Tax level at which to remove minor clades. (default: kingdom)
  * :code:`--contig_display_num` Number of contigs to visualise. (default: 1000, 0 plots all contigs)
- * :code:`--contig_display_list` Comma seperated list of contig names to plot.
+ * :code:`--contig_display_list` Comma-separated list of contig names to plot.
 
 ------------
 
@@ -111,7 +112,7 @@ Required Flags
 Optional Flags
 ^^^^^^^^^^^^^^
 
- * :code:`--db` Which db to download (progenomes or gtdb). Default: progenomes
+ * :code:`--db` Which database to download. Options: ``progenomes2.1`` (default), ``progenomes3``, ``gtdb95``, ``gtdb214``.
 
 ------------
 

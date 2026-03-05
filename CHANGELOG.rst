@@ -2,6 +2,31 @@
 Changelog
 =========
 
+v1.0.7
+------
+
+Features
+^^^^^^^^
+ - Added support for progenomes_3 and gtdb_214 reference databases.
+ - Added ``--custom_genome2taxonomy`` option to allow use of a custom reference database.
+ - Diamond version requirement removed.
+
+Bugfixes
+^^^^^^^^
+ - Fixed ``summarise`` subcommand incorrectly marking all genomes as passing GUNC.
+ - Fixed ``plot`` subcommand using incorrect database names, causing taxonomy lookup to fail silently.
+ - Fixed empty diamond output files not being named correctly when a genome fails to map.
+ - Fixed edge case where contamination score was incorrectly calculated when contamination portion was NaN.
+ - Fixed crash when no genes were called or mapped to the reference database.
+ - Fixed shell injection risk in ``get_record_count_in_fasta``.
+
+Other
+^^^^^
+ - Removed versioneer; version is now statically set.
+ - Reference data files renamed to reflect database version (e.g. ``genome2taxonomy_pg2.1ref.tsv``).
+ - Documentation updated: diamond version, all four database options, ``--custom_genome2taxonomy`` flag.
+
+
 v1.0.6
 ------
 

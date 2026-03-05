@@ -1,7 +1,6 @@
 from os import path
 from setuptools import setup, find_packages
 import sys
-import versioneer
 
 
 # NOTE: This file must remain Python 2 compatible for the foreseeable future,
@@ -35,8 +34,7 @@ with open(path.join(here, 'requirements.txt')) as requirements_file:
 
 setup(
     name='gunc',
-    version=versioneer.get_version(),
-    cmdclass=versioneer.get_cmdclass(),
+    version="1.0.7",
     description="Python package for detection of chimerism and contamination in prokaryotic genomes.",
     long_description=readme,
     author="Anthony Fullam",

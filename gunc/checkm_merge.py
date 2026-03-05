@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 import sys
+import logging
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 
 def read_tsv(tsv_file):
     """Read tsv to pandas.DataFrame
 
     Args:
-        tsv_file (str): Pathof tsv file to read.
+        tsv_file (str): Path of tsv file to read.
 
     Returns:
         pandas.DataFrame: of tsv file
@@ -37,7 +40,7 @@ def merge_checkm_gunc(checkm_file, gunc_file):
         if len(checkmdata) == 1:
             checkmdata = checkmdata.to_dict(orient="records")[0]
         elif len(checkmdata) == 0:
-            print(f"[WARNING] {samplename} not found in {checkm_file}.")
+            logger.warning(f"{samplename} not found in {checkm_file}.")
             continue
         else:
             sys.exit(

@@ -4,7 +4,10 @@ import sys
 import gzip
 import shutil
 import hashlib
+import logging
 import requests
+
+logger = logging.getLogger("gunc_database.py")
 
 
 def md5sum_file(file):
@@ -35,9 +38,19 @@ def download_file(file_url, out_file):
         file_url (str): URL of file to download
         out_file (str): Target file path
     """
-    with requests.get(file_url, stream=True) as r:
-        with open(out_file, "wb") as f:
-            shutil.copyfileobj(r.raw, f)
+    try:
+        with requests.get(file_url, stream=True, timeout=60) as r:
+            r.raise_for_status()
+            with open(out_file, "wb") as f:
+                shutil.copyfileobj(r.raw, f)
+    except requests.exceptions.ConnectionError:
+        sys.exit(f"[ERROR] Could not connect to server. Check your internet connection.")
+    except requests.exceptions.Timeout:
+        sys.exit(f"[ERROR] Connection timed out while downloading {file_url}.")
+    except requests.exceptions.HTTPError as e:
+        sys.exit(f"[ERROR] HTTP error downloading {file_url}: {e}")
+    except requests.exceptions.RequestException as e:
+        sys.exit(f"[ERROR] Download failed: {e}")
 
 
 def decompress_gzip_file(gz_file, out_file):
@@ -65,11 +78,19 @@ def get_md5_from_url(file_url):
     Returns:
         str: md5sum
     """
-    return requests.get(f"{file_url}.md5").text.split(" ")[0]
+    try:
+        r = requests.get(f"{file_url}.md5", timeout=30)
+        r.raise_for_status()
+        parts = r.text.split(" ")
+        if not parts or not parts[0]:
+            sys.exit(f"[ERROR] Unexpected MD5 response from server.")
+        return parts[0]
+    except requests.exceptions.RequestException as e:
+        sys.exit(f"[ERROR] Could not retrieve MD5 checksum: {e}")
 
 
 def check_md5(file_url, file_path):
-    """Check md5 and remove file if incorect.
+    """Check md5 and remove file if incorrect.
 
     Arguments:
         file_url (str): URL of file
@@ -79,54 +100,56 @@ def check_md5(file_url, file_path):
     downloaded_md5 = md5sum_file(file_path)
     if downloaded_md5 != expected_md5:
         os.unlink(file_path)
-        sys.exit(f"[ERROR] MD5 check failed, removing {file_path}.")
+        logger.error(f"MD5 check failed for {file_path}. File removed. Try downloading again.")
+        sys.exit(1)
 
 
-def get_db(base_dir, db="progenomes2.1"):
+def get_db(base_dir, db="progenomes_2.1"):
     """Download GUNC DB.
 
     Arguments:
         base_dir (str): Path of output directory
+        db (str): Which db to download. Allowed: progenomes_2.1, progenomes_3, gtdb_95, gtdb_214
     """
     base_url = "https://swifter.embl.de/~fullam/gunc/"
-    if db == "progenomes2.1":
+    if db == "progenomes_2.1":
         file_name = "gunc_db_progenomes2.1.dmnd.gz"
-    elif db == "progenomes3":    
+    elif db == "progenomes_3":
         file_name = "gunc_db_progenomes3.dmnd.gz"
-    elif db == "gtdb95":
+    elif db == "gtdb_95":
         file_name = "gunc_db_gtdb95.dmnd.gz"
-    elif db == "gtdb214":
+    elif db == "gtdb_214":
         file_name = "gunc_db_gtdb214.dmnd.gz"
     else:
-        sys.exit(f"[ERROR] DB {db} unknown. Allowed: progenomes2.1, progenomes3, gtdb95, gtdb214")
+        sys.exit(f"[ERROR] DB {db} unknown. Allowed: progenomes_2.1, progenomes_3, gtdb_95, gtdb_214")
     gz_file_url = f"{base_url}{file_name}"
     gz_file_path = os.path.join(base_dir, file_name)
     file_url = gz_file_url.replace(".gz", "")
     out_file = gz_file_path.replace(".gz", "")
 
     if not os.path.isdir(base_dir):
-        sys.exit(f"[ERROR] Output Directory {base_dir} doesnt exist.")
+        sys.exit(f"[ERROR] Output directory {base_dir} doesn't exist.")
 
-    print("[INFO] DB downloading...")
+    logger.info("DB downloading...")
 
     download_file(gz_file_url, gz_file_path)
 
-    print("[INFO] DB download successful.")
-    print("[INFO] Computing DB md5sum...")
+    logger.info("DB download successful.")
+    logger.info("Computing DB md5sum...")
 
     check_md5(gz_file_url, gz_file_path)
 
-    print("[INFO] md5sum check successful.")
-    print("[INFO] Uncompressing file...")
+    logger.info("md5sum check successful.")
+    logger.info("Uncompressing file...")
 
     decompress_gzip_file(gz_file_path, out_file)
 
-    print("[INFO] Decompression complete.")
-    print("[INFO] Computing DB md5sum...")
+    logger.info("Decompression complete.")
+    logger.info("Computing DB md5sum...")
 
     check_md5(file_url, out_file)
     os.unlink(gz_file_path)
 
-    print("[INFO] md5sum check successful.")
-    print("[INFO] DB download successful.")
-    print(f"[INFO] DB path: {out_file}")
+    logger.info("md5sum check successful.")
+    logger.info("DB download successful.")
+    logger.info(f"DB saved to: {out_file}. Use with: gunc run -r {out_file}")
