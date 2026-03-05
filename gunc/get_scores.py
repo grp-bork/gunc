@@ -6,13 +6,14 @@ import scipy.stats
 import numpy as np
 import pandas as pd
 from collections import OrderedDict
+import warnings
 from importlib.resources import files as _pkg_files
+
+warnings.simplefilter(action="ignore", category=FutureWarning)
+
 
 def resource_filename(package, resource):
     return str(_pkg_files(package).joinpath(resource))
-import warnings
-
-warnings.simplefilter(action="ignore", category=FutureWarning)
 
 
 def read_diamond_output(file_path):

@@ -44,7 +44,7 @@ def download_file(file_url, out_file):
             with open(out_file, "wb") as f:
                 shutil.copyfileobj(r.raw, f)
     except requests.exceptions.ConnectionError:
-        sys.exit(f"[ERROR] Could not connect to server. Check your internet connection.")
+        sys.exit("[ERROR] Could not connect to server. Check your internet connection.")
     except requests.exceptions.Timeout:
         sys.exit(f"[ERROR] Connection timed out while downloading {file_url}.")
     except requests.exceptions.HTTPError as e:
@@ -83,7 +83,7 @@ def get_md5_from_url(file_url):
         r.raise_for_status()
         parts = r.text.split(" ")
         if not parts or not parts[0]:
-            sys.exit(f"[ERROR] Unexpected MD5 response from server.")
+            sys.exit("[ERROR] Unexpected MD5 response from server.")
         return parts[0]
     except requests.exceptions.RequestException as e:
         sys.exit(f"[ERROR] Could not retrieve MD5 checksum: {e}")

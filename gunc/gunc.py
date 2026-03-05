@@ -701,7 +701,7 @@ def run(args):
 
     db_file = os.path.basename(args.db_file)
     if args.custom_genome2taxonomy:
-        db = os.path.splitext(db_file)[0]	
+        db = os.path.splitext(db_file)[0]
     elif "gtdb95" in db_file:
         db = "gtdb_95"
     elif "gtdb214" in db_file:

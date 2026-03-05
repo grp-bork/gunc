@@ -7,8 +7,10 @@ from . import __version__
 from .get_scores import chim_score
 from importlib.resources import files as _pkg_files
 
+
 def resource_filename(package, resource):
     return str(_pkg_files(package).joinpath(resource))
+
 
 logger = logging.getLogger(__name__)
 
