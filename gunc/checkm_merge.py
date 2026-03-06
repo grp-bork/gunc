@@ -2,6 +2,7 @@
 import sys
 import logging
 import pandas as pd
+from .get_scores import CSS_CHIMERIC_THRESHOLD
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +53,7 @@ def merge_checkm_gunc(checkm_file, gunc_file):
         MIMAG_high = (
             checkmdata["Completeness"] >= 90 and checkmdata["Contamination"] < 5
         )
-        passGUNC = guncdata.clade_separation_score < 0.45
+        passGUNC = guncdata.clade_separation_score < CSS_CHIMERIC_THRESHOLD
         line = {
             "genome": samplename,
             "GUNC.n_contigs": guncdata.n_contigs,

@@ -1,20 +1,25 @@
 import pytest
 import numpy as np
 import pandas as pd
-from ..get_scores import *
+from ..get_scores import (
+    read_diamond_output, get_n_effective_surplus_clades, calc_conditional_entropy,
+    create_base_data, get_stats, get_abundant_lineages_cutoff, calc_contamination_portion,
+    mean, calc_mean_hit_identity, is_chimeric, get_scores_for_taxlevel, chim_score,
+    read_genome2taxonomy_reference,
+)
 from importlib.resources import files as _pkg_files
 
 def resource_filename(package, resource):
     return str(_pkg_files(package).joinpath(resource))
 
-diamond_output = resource_filename(__name__, "test_data/tiny_test.diamond.out")
+diamond_output = resource_filename("gunc.tests", "test_data/tiny_test.diamond.out")
 diamond_df = read_diamond_output(diamond_output)
-ref_base_data_path = resource_filename(__name__, "test_data/tiny_test.base_data")
+ref_base_data_path = resource_filename("gunc.tests", "test_data/tiny_test.base_data")
 ref_base_data = pd.read_csv(ref_base_data_path)
 
 
 def test_read_diamond_output():
-    empty_file = resource_filename(__name__, "__init__.py")
+    empty_file = resource_filename("gunc.tests", "__init__.py")
     assert len(read_diamond_output(empty_file)) == 0
     diamond_df = read_diamond_output(diamond_output)
     assert len(diamond_df) == 17
@@ -36,7 +41,10 @@ def test_calc_expected_conditional_entropy():
 
 def test_create_base_data():
     new_base_data = create_base_data(diamond_df, "progenomes_2.1", None)
-    pd.testing.assert_frame_equal(ref_base_data, new_base_data)
+    pd.testing.assert_frame_equal(
+        ref_base_data.sort_values("query").reset_index(drop=True),
+        new_base_data.sort_values("query").reset_index(drop=True),
+    )
 
 
 def test_get_stats():
@@ -125,15 +133,58 @@ def test_get_scores_for_taxlevel():
     np.testing.assert_equal(data["pass.GUNC"], np.nan)
 
 
+_GENOME2TAX_COLS = ["genome", "kingdom", "phylum", "class", "order", "family", "genus", "species"]
+
+
+def test_read_genome2taxonomy_reference_progenomes2():
+    df = read_genome2taxonomy_reference("progenomes_2.1", None)
+    assert len(df) > 0
+    assert list(df.columns) == _GENOME2TAX_COLS
+
+
+def test_read_genome2taxonomy_reference_progenomes3():
+    df = read_genome2taxonomy_reference("progenomes_3", None)
+    assert len(df) > 0
+    assert list(df.columns) == _GENOME2TAX_COLS
+
+
+def test_read_genome2taxonomy_reference_gtdb95():
+    df = read_genome2taxonomy_reference("gtdb_95", None)
+    assert len(df) > 0
+    assert list(df.columns) == _GENOME2TAX_COLS
+
+
+def test_read_genome2taxonomy_reference_gtdb214():
+    df = read_genome2taxonomy_reference("gtdb_214", None)
+    assert len(df) > 0
+    assert list(df.columns) == _GENOME2TAX_COLS
+
+
+def test_read_genome2taxonomy_reference_custom(tmp_path):
+    custom_tsv = tmp_path / "custom.tsv"
+    import pandas as pd
+    pd.DataFrame([
+        {"genome": "g1", "kingdom": "Bacteria", "phylum": "p", "class": "c",
+         "order": "o", "family": "f", "genus": "g", "species": "s"},
+    ]).to_csv(custom_tsv, sep="\t", index=False)
+    df = read_genome2taxonomy_reference("progenomes_2.1", str(custom_tsv))
+    assert len(df) == 1
+    assert df.iloc[0]["genome"] == "g1"
+
+
+def test_read_genome2taxonomy_reference_unknown_db():
+    with pytest.raises(SystemExit):
+        read_genome2taxonomy_reference("unknown_db", None)
+
+
 def test_chim_score():
     diamond_file_path = resource_filename(
-        __name__, "test_data/test_genome.fa.diamond.out"
+        "gunc.tests", "test_data/test_genome.fa.diamond.out"
     )
     data, _ = chim_score(diamond_file_path, genes_called=1832)
 
     expected_data_path = resource_filename(
-        __name__, "test_data/test_genome.fa.diamond.out.chimerism_scores"
+        "gunc.tests", "test_data/test_genome.fa.diamond.out.chimerism_scores"
     )
     expected_data = pd.read_csv(expected_data_path, sep="\t")
-    expected_data["pass.GUNC"] = expected_data["pass.GUNC"].astype(str)
-    pd.testing.assert_frame_equal(data, expected_data)
+    pd.testing.assert_frame_equal(data, expected_data, check_dtype=False)

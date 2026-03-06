@@ -4,7 +4,7 @@ import logging
 import pandas as pd
 import plotly.graph_objects
 from . import __version__
-from .get_scores import chim_score
+from .get_scores import chim_score, detect_db_from_filename, get_base_data_for_plotting, TAX_LEVELS
 from importlib.resources import files as _pkg_files
 
 
@@ -104,6 +104,8 @@ def extract_node_data(base_data, cat_codes):
     node_colours = {
         "kingdom": "#50514f",
         "phylum": "#f25f5c",
+        "class": "#e39939",
+        "order": "#a44ee6",
         "family": "#ffe066",
         "genus": "#92AE83",
         "species": "#78A1BB",
@@ -266,21 +268,14 @@ def parse_tax_levels_arg(tax_levels):
         list: tax levels to be used in plot
     """
     tax_levels = [x.strip() for x in tax_levels.split(",")]
-    allowed = [
-        "kingdom",
-        "phylum",
-        "class",
-        "order",
-        "family",
-        "genus",
-        "species",
-        "contig",
-    ]
+    allowed = TAX_LEVELS + ["contig"]
     if len(tax_levels) < 2:
-        sys.exit("[Error] Need to provide at least 2 tax_levels.")
+        logger.error("Need to provide at least 2 tax_levels.")
+        sys.exit(1)
     for tax_level in tax_levels:
         if tax_level not in allowed:
-            sys.exit(f'[Error] {tax_level} not known. Allowed: {",".join(allowed)}')
+            logger.error(f'{tax_level} not known. Allowed: {",".join(allowed)}')
+            sys.exit(1)
     sorted_tax_levels = []
     for tax_level in allowed:
         if tax_level in tax_levels:
@@ -312,19 +307,13 @@ def create_viz_from_diamond_file(
         str: HTML to write to disk
     """
     diamond_basename = os.path.basename(diamond_file)
-    if "gtdb_214" in diamond_basename or "gtdb214" in diamond_basename:
-        db = "gtdb_214"
-    elif "gtdb_95" in diamond_basename or "gtdb95" in diamond_basename:
-        db = "gtdb_95"
-    elif "progenomes_3" in diamond_basename or "progenomes3" in diamond_basename:
-        db = "progenomes_3"
-    else:
-        db = "progenomes_2.1"
-    tax_data, genome_name, cutoff = chim_score(
-        diamond_file, gene_count, db=db, plot=True
+    db = detect_db_from_filename(diamond_basename)
+    tax_data, genome_name, cutoff = get_base_data_for_plotting(
+        diamond_file, gene_count, db=db
     )
     if len(tax_data) == 0:
-        sys.exit(f"[ERROR] Diamond output file is empty: {diamond_file}")
+        logger.error(f"Diamond output file is empty: {diamond_file}")
+        sys.exit(1)
     total_contigs = len(tax_data["contig"].unique())
     if contig_display_num > total_contigs or contig_display_num == 0:
         contig_display_num = total_contigs
@@ -341,7 +330,8 @@ def create_viz_from_diamond_file(
         top_contigs = tax_data["contig"].value_counts().head(contig_display_num).index
         tax_data = tax_data[tax_data["contig"].isin(top_contigs)]
     if len(tax_data) == 0:
-        sys.exit("[WARNING] No Data to plot.")
+        logger.error("No data to plot.")
+        sys.exit(1)
     tax_levels = parse_tax_levels_arg(tax_levels)
     node_data, link_data = prepare_data(tax_data, tax_levels)
     viz_data = prepare_plot_data(node_data, link_data)

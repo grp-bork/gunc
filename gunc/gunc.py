@@ -41,7 +41,8 @@ def parse_args(args):
     vis = subparsers.add_parser("plot", help="Create interactive visualisation.")
     summarise = subparsers.add_parser(
         "summarise",
-        help="Reevaluate results using a different contamination_portion cutoff.",
+        aliases=["rescore"],
+        help="Re-score genomes using a different contamination cutoff (alias: rescore).",
     )
 
     run.add_argument(
@@ -236,14 +237,14 @@ def parse_args(args):
         "--max_csslevel_file",
         help="MaxCSS output file from GUNC (e.g. GUNC.progenomes_2.1.maxCSS_level.tsv).",
         required=True,
-        metavar="\b",
+        metavar="FILE",
     )
     summarise.add_argument(
         "-d",
         "--gunc_detailed_output_dir",
         help="GUNC detailed output dir (e.g. gunc_output).",
         required=True,
-        metavar="\b",
+        metavar="DIR",
     )
     summarise.add_argument(
         "-c",
@@ -251,16 +252,46 @@ def parse_args(args):
         help="Alternative cutoff to use.",
         default=0.05,
         type=float,
-        metavar="\b",
+        metavar="FLOAT",
     )
     summarise.add_argument(
         "-o",
         "--output_file",
-        help="File in which to write outputfile with added score.",
+        help="File in which to write output with rescored pass.GUNC column.",
         required=True,
-        metavar="\b",
+        metavar="FILE",
     )
     summarise.add_argument(
+        "-v",
+        "--verbose",
+        help="Verbose output for debugging",
+        action="store_true",
+        default=False,
+    )
+    check = subparsers.add_parser(
+        "check", help="Validate environment and input files before running."
+    )
+    check.add_argument(
+        "-r",
+        "--db_file",
+        help="DiamondDB reference file to validate. Default: GUNC_DB envvar",
+        default=os.environ.get("GUNC_DB"),
+        metavar="FILE",
+    )
+    check.add_argument(
+        "--custom_genome2taxonomy",
+        help="Custom genome-to-taxonomy TSV file to validate.",
+        default=None,
+        metavar="FILE",
+    )
+    check.add_argument(
+        "-o",
+        "--out_dir",
+        help="Output directory to check for write access.",
+        default=None,
+        metavar="DIR",
+    )
+    check.add_argument(
         "-v",
         "--verbose",
         help="Verbose output for debugging",
@@ -293,6 +324,122 @@ def create_dir(path):
         os.makedirs(path)
 
 
+_GENOME2TAX_COLS = ["genome", "kingdom", "phylum", "class", "order", "family", "genus", "species"]
+
+
+def _check_result(label, ok, detail=""):
+    """Print a single check result line."""
+    status = "PASS" if ok else "FAIL"
+    line = f"[{status}] {label}"
+    if detail:
+        line += f": {detail}"
+    print(line)
+    return ok
+
+
+def validate_custom_genome2taxonomy(path):
+    """Validate a custom genome-to-taxonomy TSV file.
+
+    Arguments:
+        path (str): Path to the TSV file.
+
+    Returns:
+        list: List of (label, ok, detail) tuples for each check performed.
+    """
+    import pandas as pd
+
+    results = []
+
+    if not os.path.isfile(path):
+        results.append(("custom_genome2taxonomy exists", False, path))
+        return results
+    results.append(("custom_genome2taxonomy exists", True, path))
+
+    if not os.access(path, os.R_OK):
+        results.append(("custom_genome2taxonomy readable", False, ""))
+        return results
+    results.append(("custom_genome2taxonomy readable", True, ""))
+
+    try:
+        df = pd.read_csv(path, sep="\t", nrows=5)
+    except Exception as e:
+        results.append(("custom_genome2taxonomy parseable as TSV", False, str(e)))
+        return results
+    results.append(("custom_genome2taxonomy parseable as TSV", True, ""))
+
+    missing = [c for c in _GENOME2TAX_COLS if c not in df.columns]
+    if missing:
+        results.append((
+            "custom_genome2taxonomy has required columns",
+            False,
+            f"missing: {', '.join(missing)}; expected: {', '.join(_GENOME2TAX_COLS)}",
+        ))
+    else:
+        results.append(("custom_genome2taxonomy has required columns", True, ", ".join(_GENOME2TAX_COLS)))
+
+    df_full = pd.read_csv(path, sep="\t")
+    n_rows = len(df_full)
+    if n_rows == 0:
+        results.append(("custom_genome2taxonomy has data rows", False, "file is empty"))
+    else:
+        results.append(("custom_genome2taxonomy has data rows", True, f"{n_rows} genomes"))
+
+    if n_rows > 0 and "genome" in df_full.columns:
+        n_empty = df_full["genome"].isna().sum() + (df_full["genome"] == "").sum()
+        if n_empty > 0:
+            results.append(("custom_genome2taxonomy genome column has no empty values", False, f"{n_empty} empty values"))
+        else:
+            results.append(("custom_genome2taxonomy genome column has no empty values", True, ""))
+
+    return results
+
+
+def run_check(args):
+    """Validate environment and input files without running the pipeline."""
+    import pandas as pd
+
+    all_ok = True
+
+    # Tool dependencies
+    for tool in ("diamond", "prodigal", "grep", "zcat"):
+        ok = external_tools.check_if_tool_exists(tool)
+        all_ok = _check_result(f"{tool} on PATH", ok) and all_ok
+
+    # Database file
+    if args.db_file:
+        ok = os.path.isfile(args.db_file)
+        all_ok = _check_result("db_file exists", ok, args.db_file) and all_ok
+        if ok:
+            ok = os.access(args.db_file, os.R_OK)
+            all_ok = _check_result("db_file readable", ok) and all_ok
+            if ok:
+                size_mb = os.path.getsize(args.db_file) / 1024 / 1024
+                ok = size_mb > 0.001
+                all_ok = _check_result("db_file non-empty", ok, f"{size_mb:.1f} MB") and all_ok
+    else:
+        all_ok = _check_result("db_file", False, "not provided and GUNC_DB env var not set") and all_ok
+
+    # Custom genome2taxonomy
+    if args.custom_genome2taxonomy:
+        for label, ok, detail in validate_custom_genome2taxonomy(args.custom_genome2taxonomy):
+            all_ok = _check_result(label, ok, detail) and all_ok
+
+    # Output directory
+    if args.out_dir:
+        ok = os.path.isdir(args.out_dir)
+        all_ok = _check_result("out_dir exists", ok, args.out_dir) and all_ok
+        if ok:
+            ok = os.access(args.out_dir, os.W_OK)
+            all_ok = _check_result("out_dir writable", ok) and all_ok
+
+    print()
+    if all_ok:
+        print("All checks passed.")
+    else:
+        print("One or more checks failed.")
+        sys.exit(1)
+
+
 def start_checks():
     """Checks if tool dependencies are available."""
     if not external_tools.check_if_tool_exists("diamond"):
@@ -313,7 +460,11 @@ def get_files_in_dir_with_suffix(directory, suffix):
     """Get files in directory that end in suffix."""
     files = glob.glob(os.path.join(directory, f"*{suffix}"))
     if len(files) == 0:
-        logger.error(f"No files found in {directory} with ending {suffix}")
+        logger.error(
+            f"No files found in {directory} with ending {suffix}. "
+            f"Use --file_suffix to specify the correct extension "
+            f"(e.g. --file_suffix .fna or --file_suffix .fasta)."
+        )
         sys.exit(1)
     return files
 
@@ -375,8 +526,9 @@ def split_diamond_output(diamond_outfile, out_dir, db):
     output = {}
     with open(diamond_outfile, "r") as f:
         for line in f:
-            genome_name = line.split("\t")[0].split("/")[1]
-            line = line.replace(f"/{genome_name}", "")
+            query = line.split("\t")[0]
+            contig_name, genome_name = query.rsplit("/", 1)
+            line = line.replace(query, contig_name, 1)
             output[genome_name] = output.get(genome_name, "") + line
     for genome_name in output:
         outfile = os.path.join(out_dir, f"{genome_name}.diamond.{db}.out")
@@ -574,7 +726,19 @@ def run_gunc(
                 logger.warning(f"Failed to parse {diamond_file}")
         gunc_output.append(single)
     logger.info("END   Scoring")
-    return pd.concat(gunc_output).sort_values("genome")
+    if not gunc_output:
+        logger.error("No scores produced. Check that input genomes mapped to the reference database.")
+        sys.exit(1)
+    result = pd.concat(gunc_output).sort_values("genome")
+    rrs = result["reference_representation_score"].dropna()
+    n_low_rrs = (rrs < 0.3).sum()
+    if n_low_rrs > 0:
+        logger.warning(
+            f"{n_low_rrs} out of {len(rrs)} genomes were not well represented in the "
+            f"GUNC reference (reference_representation_score < 0.3). "
+            f"Please interpret GUNC clade separation scores for these with caution."
+        )
+    return result
 
 
 def check_for_duplicate_filenames(fnas, file_suffix):
@@ -621,31 +785,16 @@ def create_contig_assignments(diamond_file, gene_count, custom_genome2taxonomy=N
     import pandas as pd
 
     diamond_basename = os.path.basename(diamond_file)
-    if "gtdb_214" in diamond_basename or "gtdb214" in diamond_basename:
-        db = "gtdb_214"
-    elif "gtdb_95" in diamond_basename or "gtdb95" in diamond_basename:
-        db = "gtdb_95"
-    elif "progenomes_3" in diamond_basename or "progenomes3" in diamond_basename:
-        db = "progenomes_3"
-    else:
-        db = "progenomes_2.1"
-    tax_data, genome_name, cutoff = get_scores.chim_score(
-        diamond_file, gene_count, db=db, custom_genome2taxonomy=custom_genome2taxonomy, plot=True
+    db = get_scores.detect_db_from_filename(diamond_basename)
+    tax_data, genome_name, cutoff = get_scores.get_base_data_for_plotting(
+        diamond_file, gene_count, db=db, custom_genome2taxonomy=custom_genome2taxonomy
     )
     assignments = []
     if len(tax_data) == 0:
         return None
     for contig in tax_data["contig"].unique():
         contig_data = tax_data[tax_data["contig"] == contig]
-        for tax_level in [
-            "kingdom",
-            "phylum",
-            "class",
-            "order",
-            "family",
-            "genus",
-            "species",
-        ]:
+        for tax_level in get_scores.TAX_LEVELS:
             counts = contig_data[tax_level].value_counts().to_dict()
             for assignment in counts:
                 assignments.append(
@@ -702,14 +851,8 @@ def run(args):
     db_file = os.path.basename(args.db_file)
     if args.custom_genome2taxonomy:
         db = os.path.splitext(db_file)[0]
-    elif "gtdb95" in db_file:
-        db = "gtdb_95"
-    elif "gtdb214" in db_file:
-        db = "gtdb_214"
-    elif "progenomes3" in db_file:
-        db = "progenomes_3"
     else:
-        db = "progenomes_2.1"
+        db = get_scores.detect_db_from_filename(db_file)
 
     diamond_outfiles = run_diamond(
         diamond_input, args.threads, args.temp_dir, args.db_file, args.out_dir, db
@@ -732,6 +875,7 @@ def run(args):
     )
     gunc_out_file = os.path.join(args.out_dir, f"GUNC.{db}.maxCSS_level.tsv")
     gunc_output.to_csv(gunc_out_file, index=False, sep="\t", na_rep="nan")
+    logger.info(f"Output written to: {gunc_out_file}")
 
 
 def add_empty_diamond_output(diamond_outdir, fnas, file_suffix, db):
@@ -766,9 +910,7 @@ def add_empty_diamond_output(diamond_outdir, fnas, file_suffix, db):
         logger.error("No diamond output files.")
         sys.exit(1)
     else:
-        print(
-            f"[INFO] {count_existing_diamond_files}/{len(fnas)} run successfully with diamond"
-        )
+        logger.info(f"{count_existing_diamond_files}/{len(fnas)} run successfully with diamond")
     return expected_diamond_outfiles
 
 
@@ -811,6 +953,7 @@ def plot(args):
     viz_html_path = os.path.join(args.out_dir, f"{basename}.viz.html")
     with open(viz_html_path, "w") as f:
         f.write(viz_html)
+    logger.info(f"Output written to: {viz_html_path}")
 
 
 def merge_checkm(args):
@@ -820,6 +963,7 @@ def merge_checkm(args):
     merged = checkm_merge.merge_checkm_gunc(args.checkm_file, args.gunc_file)
     outfile = os.path.join(args.out_dir, "GUNC_checkM.merged.tsv")
     merged.to_csv(outfile, sep="\t", index=False)
+    logger.info(f"Output written to: {outfile}")
 
 
 def get_scores_using_supplied_cont_cutoff(detail_file, cutoff=0.05):
@@ -834,7 +978,7 @@ def get_scores_using_supplied_cont_cutoff(detail_file, cutoff=0.05):
         max_CSSidx = df["clade_separation_score"].idxmax()
         if not pd.isna(max_CSSidx):
             max_CSS = df.loc[[max_CSSidx]].to_dict("records")[0]
-            if max_CSS["clade_separation_score"] > 0.45:
+            if max_CSS["clade_separation_score"] > get_scores.CSS_CHIMERIC_THRESHOLD:
                 max_CSS[f"pass.GUNC_{cutoff}"] = False
                 return max_CSS
     max_CSS[f"pass.GUNC_{cutoff}"] = True
@@ -851,9 +995,9 @@ def summarise(args):
     for row in max_csslevel_file:
         pass_gunc = max_csslevel_file[row]["pass.GUNC"]
         logger.debug(pass_gunc)
-        if pass_gunc == "True" or pass_gunc == "nan":
+        if pass_gunc is True or pass_gunc == "True" or pd.isna(pass_gunc):
             max_csslevel_file[row][f"pass.GUNC_{args.contamination_cutoff}"] = True
-        elif pass_gunc == "False":
+        elif pass_gunc is False or pass_gunc == "False":
             bin_name = max_csslevel_file[row]["genome"]
             detail_file = os.path.join(
                 args.gunc_detailed_output_dir, bin_name + f".{db}.all_levels.tsv"
@@ -865,6 +1009,7 @@ def summarise(args):
     out_df = pd.DataFrame.from_dict(max_csslevel_file, orient="index")
     logger.debug(out_df)
     out_df.to_csv(args.output_file, index=False, sep="\t", na_rep="nan")
+    logger.info(f"Output written to: {args.output_file}")
 
 
 def main():
@@ -885,7 +1030,9 @@ def main():
     logger.debug(args)
     start_time = datetime.now()
     logger.info(f'START {start_time.strftime("%Y-%m-%d")}')
-    if args.cmd == "download_db":
+    if args.cmd == "check":
+        run_check(args)
+    elif args.cmd == "download_db":
         from . import gunc_database
 
         gunc_database.get_db(args.path, args.database)
@@ -904,7 +1051,7 @@ def main():
         plot(args)
     elif args.cmd == "merge_checkm":
         merge_checkm(args)
-    elif args.cmd == "summarise":
+    elif args.cmd in ("summarise", "rescore"):
         summarise(args)
     end_time = datetime.now()
     run_time = str(end_time - start_time).split(".")[0]

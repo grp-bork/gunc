@@ -1,55 +1,61 @@
-image: "python:3.11.3"
-
-before_script:
-  - python --version
-  - pip install -r requirements.txt
-  - pip install -r requirements-dev.txt
+default:
+  before_script:
+    - python --version
+    - pip install -e ".[dev]"
 
 stages:
-  - Static Analysis
-  - Unit Test
-  - Documentation
+  - static_analysis
+  - test
+  - docs
 
 flake8:
-  stage: Static Analysis
-  #allow_failure: true
+  stage: static_analysis
+  image: "python:3.11"
   script:
-  - python3 -m flake8 gunc/*.py
-  except:
-    - docs
+    - flake8 gunc/
+  rules:
+    - if: $CI_COMMIT_BRANCH != "docs"
 
 unit_test:
-  stage: Unit Test
+  stage: test
+  parallel:
+    matrix:
+      - PYTHON_VERSION: ["3.9", "3.10", "3.11"]
+  image: "python:${PYTHON_VERSION}"
   script:
-  - python -m pytest
-  except:
-    - docs
+    - pytest -m "not integration"
+  rules:
+    - if: $CI_COMMIT_BRANCH != "docs"
 
 coverage:
-  stage: Unit Test
+  stage: test
+  image: "python:3.11"
   script:
-    - coverage run -m pytest
+    - coverage run -m pytest -m "not integration"
     - coverage report -m
     - coverage xml -o coverage.xml
   artifacts:
     reports:
       coverage_report:
         coverage_format: cobertura
-        path: cobertura-coverage.xml
+        path: coverage.xml
     expire_in: 1 week
-  except:
-    - docs
+  coverage: '/TOTAL.*\s+(\d+%)$/'
+  rules:
+    - if: $CI_COMMIT_BRANCH != "docs"
 
 pages:
-  stage: Documentation
+  stage: docs
+  image: "python:3.11"
+  before_script:
+    - pip install -e ".[docs]"
   script:
-    - python3 -m pip install .
     - make -C docs html
     - mkdir public
     - mv docs/build/html/* ./public
   artifacts:
     paths:
-    - public
+      - public
     expire_in: 1 week
-  only:
-    - docs
+  rules:
+    - if: $CI_COMMIT_BRANCH == "docs"

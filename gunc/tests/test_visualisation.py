@@ -1,5 +1,5 @@
 import pandas as pd
-from ..visualisation import *
+from ..visualisation import create_cat_codes_from_df, convert_data, group_identical_rows
 
 
 def test_create_cat_codes_from_df():

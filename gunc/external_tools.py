@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import sys
 import logging
 import shutil
@@ -129,6 +130,8 @@ def prodigal(input_file, out_file):
             )
     except subprocess.CalledProcessError:
         logger.error(f"Failed to run Prodigal {input_file}")
+        if os.path.isfile(out_file):
+            os.unlink(out_file)
 
 
 def diamond(input_file, threads, temp_dir, database_file, out_file):
@@ -176,7 +179,7 @@ def check_diamond_version():
     """Return version of diamond found."""
     return (
         subprocess.check_output(
-            "diamond --version", shell=True, universal_newlines=True
+            ["diamond", "--version"], universal_newlines=True
         )
         .strip()
         .split()[2]
