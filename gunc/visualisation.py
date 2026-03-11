@@ -4,7 +4,7 @@ import logging
 import pandas as pd
 import plotly.graph_objects
 from . import __version__
-from .get_scores import chim_score, detect_db_from_filename, get_base_data_for_plotting, TAX_LEVELS
+from .get_scores import detect_db_from_filename, get_base_data_for_plotting, TAX_LEVELS
 from importlib.resources import files as _pkg_files
 
 
@@ -13,6 +13,28 @@ def resource_filename(package, resource):
 
 
 logger = logging.getLogger(__name__)
+
+NODE_COLOURS = {
+    "kingdom": "#50514f",
+    "phylum": "#f25f5c",
+    "class": "#e39939",
+    "order": "#a44ee6",
+    "family": "#ffe066",
+    "genus": "#92AE83",
+    "species": "#78A1BB",
+    "contig": "#86BBBD",
+}
+
+LINK_COLOURS = {
+    "kingdom": "rgba(80,81,79,0.4)",
+    "phylum": "rgba(242,95,92,0.4)",
+    "class": "rgba(227, 153, 57,0.4)",
+    "order": "rgba(164, 78, 230,0.4)",
+    "family": "rgba(255,224,102,0.4)",
+    "genus": "rgba(146,174,131,0.4)",
+    "species": "rgba(120,161,187,0.4)",
+    "contig": "rgba(134,187,189,0.4)",
+}
 
 
 def reshape_tax_levels(df, tax_levels):
@@ -52,10 +74,10 @@ def create_cat_codes_from_df(df):
 
 
 def convert_data(data, ref_dict):
-    """Convert data using a feference dict.
+    """Convert data using a reference dict.
 
     Replace all values in data using mapping in ref_dict.
-    Data can be a pandas.DataFrame or iteable.
+    Data can be a pandas.DataFrame or iterable.
 
     Arguments:
         data (iter or pandas.DataFrame): Data to be converted
@@ -101,28 +123,18 @@ def extract_node_data(base_data, cat_codes):
     Returns:
         pandas.DataFrame: with node,colour,label columns
     """
-    node_colours = {
-        "kingdom": "#50514f",
-        "phylum": "#f25f5c",
-        "class": "#e39939",
-        "order": "#a44ee6",
-        "family": "#ffe066",
-        "genus": "#92AE83",
-        "species": "#78A1BB",
-        "contig": "#86BBBD",
-    }
     nodes = list(cat_codes.keys())
     colour_dict = {}
     label_dict = {}
     for level in base_data.columns:
         for item in base_data[level].unique():
-            colour_dict[item] = node_colours[level]
+            colour_dict[item] = NODE_COLOURS[level]
             if level != "contig":
                 label_dict[item] = item
-    node_colours = [colour_dict.get(x, "black") for x in nodes]
+    node_colour_list = [colour_dict.get(x, "black") for x in nodes]
     node_labels = [label_dict.get(x, "") for x in nodes]
     return pd.DataFrame(
-        list(zip(nodes, node_colours, node_labels)), columns=["node", "colour", "label"]
+        list(zip(nodes, node_colour_list, node_labels)), columns=["node", "colour", "label"]
     )
 
 
@@ -140,36 +152,16 @@ def prepare_data(tax_data, tax_levels):
         pandas.DataFrame: link_data
     """
 
-    node_colours = {
-        "kingdom": "#50514f",
-        "phylum": "#f25f5c",
-        "class": "#e39939",
-        "order": "#a44ee6",
-        "family": "#ffe066",
-        "genus": "#92AE83",
-        "species": "#78A1BB",
-        "contig": "#86BBBD",
-    }
-    link_colours = {
-        "kingdom": "rgba(80,81,79,0.4)",
-        "phylum": "rgba(242,95,92,0.4)",
-        "class": "rgba(227, 153, 57,0.4)",
-        "order": "rgba(164, 78, 230,0.4)",
-        "family": "rgba(255,224,102,0.4)",
-        "genus": "rgba(146,174,131,0.4)",
-        "species": "rgba(120,161,187,0.4)",
-        "contig": "rgba(134,187,189,0.4)",
-    }
     base_data = reshape_tax_levels(tax_data, tax_levels)
     cat_codes = create_cat_codes_from_df(base_data)
     link_data = group_identical_rows(base_data)
     link_data["sourceID"] = convert_data(link_data["source"], cat_codes)
     link_data["targetID"] = convert_data(link_data["target"], cat_codes)
     link_data["node_colours"] = convert_data(
-        link_data["source_tax_level"], node_colours
+        link_data["source_tax_level"], NODE_COLOURS
     )
     link_data["link_colours"] = convert_data(
-        link_data["source_tax_level"], link_colours
+        link_data["source_tax_level"], LINK_COLOURS
     )
     node_data = extract_node_data(tax_data[tax_levels], cat_codes)
     return node_data, link_data
@@ -236,7 +228,7 @@ def get_html_template():
 def create_html(plot_data, genome_name, display_info, levels_info):
     """Compile final HTML output.
 
-    Put the plot ond ohter data in to HTML template
+    Put the plot and other data in to HTML template
 
     Arguments:
         plot_data (plotly.graph_object.Figure): sankey plot
