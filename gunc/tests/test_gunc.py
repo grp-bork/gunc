@@ -1,6 +1,5 @@
 import argparse
 import pytest
-import logging
 import pandas as pd
 from ..gunc import (
     get_genecount_from_gunc_output, start_checks, parse_args,
@@ -10,8 +9,10 @@ from ..gunc import (
 from ..get_scores import CSS_CHIMERIC_THRESHOLD, detect_db_from_filename
 from importlib.resources import files as _pkg_files
 
+
 def resource_filename(package, resource):
     return str(_pkg_files(package).joinpath(resource))
+
 
 gunc_gene_counts = resource_filename("gunc.tests", "test_data/tiny_test.gene_counts.json")
 test_data_dir = resource_filename("gunc.tests", "test_data/")
@@ -22,7 +23,6 @@ def test_get_genecount_from_gunc_output():
 
 
 def test_start_checks():
-    logger = logging.getLogger()
     with pytest.raises(SystemExit):
         start_checks()
 
@@ -140,18 +140,17 @@ def test_summarise_pass_gunc_true(tmp_path):
     args = _make_summarise_args(tmp_path, maxcss)
     summarise(args)
     out = pd.read_csv(args.output_file, sep="\t")
-    assert out.loc[0, "pass.GUNC_0.05"] is True or out.loc[0, "pass.GUNC_0.05"] == True
+    assert bool(out.loc[0, "pass.GUNC_0.05"]) is True
 
 
 def test_summarise_pass_gunc_nan(tmp_path):
     """Genomes with pass.GUNC=NaN (could not be scored) are treated as passing."""
-    import numpy as np
     maxcss = tmp_path / "GUNC.progenomes_2.1.maxCSS_level.tsv"
     _write_maxcss_tsv(maxcss, [_detail_row("genome_b", "genus", float("nan"), float("nan"), pass_gunc=float("nan"))])
     args = _make_summarise_args(tmp_path, maxcss)
     summarise(args)
     out = pd.read_csv(args.output_file, sep="\t")
-    assert out.loc[0, "pass.GUNC_0.05"] is True or out.loc[0, "pass.GUNC_0.05"] == True
+    assert bool(out.loc[0, "pass.GUNC_0.05"]) is True
 
 
 def test_summarise_pass_gunc_false_rescores(tmp_path):
@@ -174,7 +173,7 @@ def test_summarise_pass_gunc_false_rescores(tmp_path):
     args = _make_summarise_args(tmp_path, maxcss)
     summarise(args)
     out = pd.read_csv(args.output_file, sep="\t")
-    assert out.loc[0, "pass.GUNC_0.05"] is False or out.loc[0, "pass.GUNC_0.05"] == False
+    assert bool(out.loc[0, "pass.GUNC_0.05"]) is False
 
 
 def test_summarise_pass_gunc_false_passes_at_cutoff(tmp_path):
@@ -197,7 +196,7 @@ def test_summarise_pass_gunc_false_passes_at_cutoff(tmp_path):
     args = _make_summarise_args(tmp_path, maxcss)
     summarise(args)
     out = pd.read_csv(args.output_file, sep="\t")
-    assert out.loc[0, "pass.GUNC_0.05"] is True or out.loc[0, "pass.GUNC_0.05"] == True
+    assert bool(out.loc[0, "pass.GUNC_0.05"]) is True
 
 
 # --- detect_db_from_filename (T4) ---

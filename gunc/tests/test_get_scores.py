@@ -9,8 +9,10 @@ from ..get_scores import (
 )
 from importlib.resources import files as _pkg_files
 
+
 def resource_filename(package, resource):
     return str(_pkg_files(package).joinpath(resource))
+
 
 diamond_output = resource_filename("gunc.tests", "test_data/tiny_test.diamond.out")
 diamond_df = read_diamond_output(diamond_output)
