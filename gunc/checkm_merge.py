@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 def read_tsv(tsv_file):
     """Read tsv to pandas.DataFrame
 
-    Args:
+    Arguments:
         tsv_file (str): Path of tsv file to read.
 
     Returns:
@@ -22,8 +22,8 @@ def read_tsv(tsv_file):
 def merge_checkm_gunc(checkm_file, gunc_file):
     """Merge checkM and gunc outputs.
 
-    Args:
-        checkm_file (str): Path of qa.tsv file form checkm
+    Arguments:
+        checkm_file (str): Path of qa.tsv file from checkm
         gunc_file (str): Path of gunc_scores.tsv file
 
     Returns:
@@ -36,7 +36,8 @@ def merge_checkm_gunc(checkm_file, gunc_file):
         try:
             samplename = guncdata.genome
         except AttributeError:
-            sys.exit(f"[ERROR] Invalid input file: {gunc_file}")
+            logger.error(f"Invalid input file: {gunc_file}")
+            sys.exit(1)
         checkmdata = checkm[checkm["Bin Id"] == samplename]
         if len(checkmdata) == 1:
             checkmdata = checkmdata.to_dict(orient="records")[0]
@@ -44,9 +45,8 @@ def merge_checkm_gunc(checkm_file, gunc_file):
             logger.warning(f"{samplename} not found in {checkm_file}.")
             continue
         else:
-            sys.exit(
-                f"[ERROR] {samplename} appears more " f"than once in {checkm_file}"
-            )
+            logger.error(f"{samplename} appears more than once in {checkm_file}")
+            sys.exit(1)
         MIMAG_medium = (
             checkmdata["Completeness"] >= 50 and checkmdata["Contamination"] < 10
         )
