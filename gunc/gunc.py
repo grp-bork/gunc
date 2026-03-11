@@ -197,7 +197,7 @@ def parse_args(args):
     download_db.add_argument(
         "-db",
         "--database",
-        help="Which db to download. progenomes_2.1, progenomes_3, gtdb_95, gtdb_214 Default: progenomes_2.1",
+        help="Which db to download. progenomes_2.1, progenomes_3, gtdb_95, gtdb_214, test_data. Default: progenomes_2.1",
         default="progenomes_2.1",
         metavar="",
     )
@@ -361,7 +361,7 @@ def validate_custom_genome2taxonomy(path):
     results.append(("custom_genome2taxonomy readable", True, ""))
 
     try:
-        df = pd.read_csv(path, sep="\t", nrows=5)
+        df = pd.read_csv(path, sep="\t")
     except Exception as e:
         results.append(("custom_genome2taxonomy parseable as TSV", False, str(e)))
         return results
@@ -377,15 +377,14 @@ def validate_custom_genome2taxonomy(path):
     else:
         results.append(("custom_genome2taxonomy has required columns", True, ", ".join(_GENOME2TAX_COLS)))
 
-    df_full = pd.read_csv(path, sep="\t")
-    n_rows = len(df_full)
+    n_rows = len(df)
     if n_rows == 0:
         results.append(("custom_genome2taxonomy has data rows", False, "file is empty"))
     else:
         results.append(("custom_genome2taxonomy has data rows", True, f"{n_rows} genomes"))
 
-    if n_rows > 0 and "genome" in df_full.columns:
-        n_empty = df_full["genome"].isna().sum() + (df_full["genome"] == "").sum()
+    if n_rows > 0 and "genome" in df.columns:
+        n_empty = df["genome"].isna().sum() + (df["genome"] == "").sum()
         if n_empty > 0:
             results.append(("custom_genome2taxonomy genome column has no empty values", False, f"{n_empty} empty values"))
         else:
@@ -396,14 +395,30 @@ def validate_custom_genome2taxonomy(path):
 
 def run_check(args):
     """Validate environment and input files without running the pipeline."""
-    import pandas as pd
-
     all_ok = True
 
     # Tool dependencies
     for tool in ("diamond", "prodigal", "grep", "zcat"):
         ok = external_tools.check_if_tool_exists(tool)
         all_ok = _check_result(f"{tool} on PATH", ok) and all_ok
+
+    # Diamond version
+    skip_ver = bool(os.environ.get("GUNC_SKIP_DIAMOND_VERSION_CHECK"))
+    if skip_ver:
+        _check_result(
+            "diamond version",
+            True,
+            f"skipped (GUNC_SKIP_DIAMOND_VERSION_CHECK set)",
+        )
+    else:
+        required = external_tools.REQUIRED_DIAMOND_VERSION
+        ok = external_tools.check_diamond_version_correct()
+        detail = (
+            external_tools.check_diamond_version() if external_tools.check_if_tool_exists("diamond") else "diamond not found"
+        )
+        all_ok = _check_result(
+            f"diamond version == {required}", ok, detail
+        ) and all_ok
 
     # Database file
     if args.db_file:
@@ -445,6 +460,15 @@ def start_checks():
     if not external_tools.check_if_tool_exists("diamond"):
         logger.error("Diamond not found.")
         sys.exit(1)
+    if not os.environ.get("GUNC_SKIP_DIAMOND_VERSION_CHECK"):
+        if not external_tools.check_diamond_version_correct():
+            actual = external_tools.check_diamond_version()
+            required = external_tools.REQUIRED_DIAMOND_VERSION
+            logger.error(
+                f"Diamond version {actual} found but {required} is required. "
+                "Set GUNC_SKIP_DIAMOND_VERSION_CHECK=1 to bypass this check."
+            )
+            sys.exit(1)
     if not external_tools.check_if_tool_exists("prodigal"):
         logger.error("Prodigal not found.")
         sys.exit(1)
@@ -472,7 +496,7 @@ def get_files_in_dir_with_suffix(directory, suffix):
 def openfile(filename):
     """Open file whether gzipped or not."""
     if filename.endswith(".gz"):
-        return gzip.open(filename, "r")
+        return gzip.open(filename, "rt")
     else:
         return open(filename, "r")
 
@@ -930,9 +954,13 @@ def get_gene_count_file(args):
 
 def get_genecount_from_gunc_output(gene_counts_file, basename):
     """Extract gene count from GUNC gene_counts.json file."""
-    with open(gene_counts_file) as f:
-        data = json.load(f)
-    return int(data[basename])
+    try:
+        with open(gene_counts_file) as f:
+            data = json.load(f)
+        return int(data[basename])
+    except (KeyError, ValueError) as e:
+        logger.error(f"Could not read gene count for {basename} from {gene_counts_file}: {e}")
+        sys.exit(1)
 
 
 def plot(args):
@@ -1002,6 +1030,9 @@ def summarise(args):
             detail_file = os.path.join(
                 args.gunc_detailed_output_dir, bin_name + f".{db}.all_levels.tsv"
             )
+            if not os.path.isfile(detail_file):
+                logger.error(f"Detail file not found: {detail_file}")
+                sys.exit(1)
             new_row = get_scores_using_supplied_cont_cutoff(
                 detail_file, args.contamination_cutoff
             )
