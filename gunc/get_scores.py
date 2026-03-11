@@ -67,7 +67,7 @@ def read_diamond_output(file_path):
     if len(df) == 0:
         return df
     else:
-        df["contig"] = df["query"].str.rpartition("_")[[0]]
+        df["contig"] = df["query"].str.rpartition("_")[0]
         return df
 
 
