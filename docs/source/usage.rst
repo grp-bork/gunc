@@ -197,7 +197,7 @@ Required Flags
 Optional Flags
 ^^^^^^^^^^^^^^
 
- * :code:`--db` Which database to download. Options: ``progenomes_2.1`` (default), ``progenomes_3``, ``gtdb_95``, ``gtdb_214``.
+ * :code:`-db` Which database to download. Options: ``progenomes_2.1`` (default), ``progenomes_3``, ``gtdb_95``, ``gtdb_214``.
 
 ------------
 

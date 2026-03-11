@@ -141,16 +141,18 @@ def get_test_data(base_dir):
 
     logger.info("Test data downloaded successfully.")
     logger.info(f"Files saved to: {base_dir}")
-    logger.info("To verify your installation, run:")
-    logger.info(
+    print("\nTo verify your installation, run:")
+    print(
+        f"  mkdir gunc_test_out \n"
         f"  gunc run --gene_calls \\\n"
         f"    --input_dir {base_dir} \\\n"
         f"    --file_suffix .faa \\\n"
         f"    --db_file {base_dir}/ci_test.dmnd \\\n"
         f"    --custom_genome2taxonomy {base_dir}/genome2taxonomy.tsv \\\n"
         f"    --out_dir ./gunc_test_out"
+        f"  \n"
     )
-    logger.info("Expected: chimeric -> pass.GUNC=False, clean -> pass.GUNC=True")
+    print("Expected: chimeric -> pass.GUNC=False, clean -> pass.GUNC=True\n\n")
 
 
 def get_db(base_dir, db="progenomes_2.1"):
