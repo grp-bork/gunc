@@ -31,6 +31,7 @@ def test_check_diamond_version_correct_wrong_version(monkeypatch):
 
 def test_check_diamond_version_correct_diamond_missing(monkeypatch):
     from .. import external_tools
+
     def raise_error():
         raise FileNotFoundError("diamond not found")
     monkeypatch.setattr(external_tools, "check_diamond_version", raise_error)

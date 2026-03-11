@@ -408,7 +408,7 @@ def run_check(args):
         _check_result(
             "diamond version",
             True,
-            f"skipped (GUNC_SKIP_DIAMOND_VERSION_CHECK set)",
+            "skipped (GUNC_SKIP_DIAMOND_VERSION_CHECK set)",
         )
     else:
         required = external_tools.REQUIRED_DIAMOND_VERSION
