@@ -70,6 +70,14 @@ When using :code:`--custom_genome2taxonomy`, the file must be a tab-separated TS
 
 The ``genome`` column must match the sequence identifiers used in your diamond database. No header transformation is needed — the column names must appear exactly as shown.
 
+In addition the GUNC_DB diamond db can be made as follows:
+
+.. code-block:: shell
+
+    tantan -p -s 0.9 -x X input.faa > masked.faa # premasking the db saves time and compute later so it is not done for every run 
+    diamond makedb -p 24 --in masked.faa -d gunc_db.dmnd
+
+
 ------------
 
 GUNC CHECK
