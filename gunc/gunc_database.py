@@ -7,7 +7,7 @@ import hashlib
 import logging
 import requests
 
-logger = logging.getLogger("gunc_database.py")
+logger = logging.getLogger(__name__)
 
 
 def md5sum_file(file):
@@ -44,13 +44,17 @@ def download_file(file_url, out_file):
             with open(out_file, "wb") as f:
                 shutil.copyfileobj(r.raw, f)
     except requests.exceptions.ConnectionError:
-        sys.exit("[ERROR] Could not connect to server. Check your internet connection.")
+        logger.error("Could not connect to server. Check your internet connection.")
+        sys.exit(1)
     except requests.exceptions.Timeout:
-        sys.exit(f"[ERROR] Connection timed out while downloading {file_url}.")
+        logger.error(f"Connection timed out while downloading {file_url}.")
+        sys.exit(1)
     except requests.exceptions.HTTPError as e:
-        sys.exit(f"[ERROR] HTTP error downloading {file_url}: {e}")
+        logger.error(f"HTTP error downloading {file_url}: {e}")
+        sys.exit(1)
     except requests.exceptions.RequestException as e:
-        sys.exit(f"[ERROR] Download failed: {e}")
+        logger.error(f"Download failed: {e}")
+        sys.exit(1)
 
 
 def decompress_gzip_file(gz_file, out_file):
@@ -62,9 +66,15 @@ def decompress_gzip_file(gz_file, out_file):
         gz_file (str): Path of gzip file
         out_file (str): Path of target uncompressed out file
     """
-    with gzip.open(gz_file, "rb") as f_in:
-        with open(out_file, "wb") as f_out:
-            shutil.copyfileobj(f_in, f_out)
+    try:
+        with gzip.open(gz_file, "rb") as f_in:
+            with open(out_file, "wb") as f_out:
+                shutil.copyfileobj(f_in, f_out)
+    except Exception as e:
+        if os.path.exists(out_file):
+            os.unlink(out_file)
+        logger.error(f"Decompression of {gz_file} failed: {e}")
+        sys.exit(1)
 
 
 def get_md5_from_url(file_url):
@@ -83,10 +93,12 @@ def get_md5_from_url(file_url):
         r.raise_for_status()
         parts = r.text.split(" ")
         if not parts or not parts[0]:
-            sys.exit("[ERROR] Unexpected MD5 response from server.")
+            logger.error("Unexpected MD5 response from server.")
+            sys.exit(1)
         return parts[0]
     except requests.exceptions.RequestException as e:
-        sys.exit(f"[ERROR] Could not retrieve MD5 checksum: {e}")
+        logger.error(f"Could not retrieve MD5 checksum: {e}")
+        sys.exit(1)
 
 
 def check_md5(file_url, file_path):
@@ -104,14 +116,56 @@ def check_md5(file_url, file_path):
         sys.exit(1)
 
 
+def get_test_data(base_dir):
+    """Download GUNC test data.
+
+    Downloads a minimal diamond database and two test genomes (chimeric and
+    clean) that can be used to verify a GUNC installation end-to-end.
+
+    Arguments:
+        base_dir (str): Path of output directory
+    """
+    base_url = "https://black.embl.de/~fullam/gunc/test_data/"
+    files = ["ci_test.dmnd", "chimeric.faa", "clean.faa", "genome2taxonomy.tsv"]
+
+    if not os.path.isdir(base_dir):
+        logger.error(f"Output directory {base_dir} doesn't exist.")
+        sys.exit(1)
+
+    for file_name in files:
+        url = f"{base_url}{file_name}"
+        out_path = os.path.join(base_dir, file_name)
+        logger.info(f"Downloading {file_name}...")
+        download_file(url, out_path)
+        check_md5(url, out_path)
+
+    logger.info("Test data downloaded successfully.")
+    logger.info(f"Files saved to: {base_dir}")
+    logger.info("To verify your installation, run:")
+    logger.info(
+        f"  gunc run --gene_calls \\\n"
+        f"    --input_dir {base_dir} \\\n"
+        f"    --file_suffix .faa \\\n"
+        f"    --db_file {base_dir}/ci_test.dmnd \\\n"
+        f"    --custom_genome2taxonomy {base_dir}/genome2taxonomy.tsv \\\n"
+        f"    --out_dir ./gunc_test_out"
+    )
+    logger.info("Expected: chimeric -> pass.GUNC=False, clean -> pass.GUNC=True")
+
+
 def get_db(base_dir, db="progenomes_2.1"):
     """Download GUNC DB.
 
     Arguments:
         base_dir (str): Path of output directory
-        db (str): Which db to download. Allowed: progenomes_2.1, progenomes_3, gtdb_95, gtdb_214
+        db (str): Which db to download. Allowed: progenomes_2.1, progenomes_3,
+                  gtdb_95, gtdb_214, test_data
     """
-    base_url = "https://swifter.embl.de/~fullam/gunc/"
+    if db == "test_data":
+        get_test_data(base_dir)
+        return
+
+    base_url = "https://black.embl.de/~fullam/gunc/"
     if db == "progenomes_2.1":
         file_name = "gunc_db_progenomes2.1.dmnd.gz"
     elif db == "progenomes_3":
@@ -121,14 +175,16 @@ def get_db(base_dir, db="progenomes_2.1"):
     elif db == "gtdb_214":
         file_name = "gunc_db_gtdb214.dmnd.gz"
     else:
-        sys.exit(f"[ERROR] DB {db} unknown. Allowed: progenomes_2.1, progenomes_3, gtdb_95, gtdb_214")
+        logger.error(f"DB {db} unknown. Allowed: progenomes_2.1, progenomes_3, gtdb_95, gtdb_214, test_data")
+        sys.exit(1)
     gz_file_url = f"{base_url}{file_name}"
     gz_file_path = os.path.join(base_dir, file_name)
     file_url = gz_file_url.replace(".gz", "")
     out_file = gz_file_path.replace(".gz", "")
 
     if not os.path.isdir(base_dir):
-        sys.exit(f"[ERROR] Output directory {base_dir} doesn't exist.")
+        logger.error(f"Output directory {base_dir} doesn't exist.")
+        sys.exit(1)
 
     logger.info("DB downloading...")
 
