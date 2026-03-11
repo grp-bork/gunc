@@ -11,14 +11,17 @@ Summary
 This release adds support for two new reference databases (ProGenomes 3, GTDB r214) and
 a custom database option. A new ``gunc check`` subcommand validates your environment before
 submitting a long job, and ``gunc rescore`` is introduced as a clearer alias for 
-``gunc summarise``. A warning is now emitted when genomes have low reference representation scores.
+``gunc summarise``. In addition a test_data database type has been added, which comprised of a minimal test set (sample, db, taxonomy) which can be used in CI/CD pipeline. 
+A warning is now emitted when genomes have low reference representation scores.
 Packaging has been modernised to ``pyproject.toml`` and the CI pipeline updated.
 
 Features
 ^^^^^^^^
  - Added support for progenomes_3 and gtdb_214 reference databases.
+ - Added support for test_data set, a minimal set of data that can be used in CI/CD pipelines).
  - Added ``--custom_genome2taxonomy`` option to allow use of a custom reference database.
- - Diamond version requirement removed.
+ - Diamond version pinned to 2.1.24; enforced at startup with a clear error message. Set ``GUNC_SKIP_DIAMOND_VERSION_CHECK=1`` to bypass.
+ - Added ``test_data`` option to ``gunc download_db`` (``--db test_data``): downloads a minimal diamond database and two test genomes (chimeric and clean) that can be used to verify a GUNC installation end-to-end.
  - Added ``gunc rescore`` as the preferred name for the ``summarise`` subcommand; ``gunc summarise`` remains as a backward-compatible alias.
  - Added ``gunc check`` subcommand to validate environment (tool dependencies, database file, custom genome-to-taxonomy TSV format, output directory write access) without running the pipeline.
  - All subcommands (``run``, ``plot``, ``merge_checkm``, ``summarise``) now log the output file path on completion.
