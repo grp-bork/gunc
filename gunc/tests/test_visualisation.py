@@ -15,7 +15,7 @@ def test_convert_data():
     result = ["a", "b", "c"]
     assert convert_data(data, ref_dict) == result
     df_data = pd.DataFrame(data)
-    pd.testing.assert_frame_equal(convert_data(df_data, ref_dict), pd.DataFrame(result))
+    pd.testing.assert_frame_equal(convert_data(df_data, ref_dict), pd.DataFrame(result, dtype=object))
 
 
 def test_group_identical_rows():
