@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gunc"
-version = "1.0.7"
+version = "1.1.0"
 description = "Python package for detection of chimerism and contamination in prokaryotic genomes."
 readme = "README.rst"
 requires-python = ">=3.6"
