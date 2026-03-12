@@ -1,0 +1,75 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gunc"
+version = "1.0.7"
+description = "Python package for detection of chimerism and contamination in prokaryotic genomes."
+readme = "README.rst"
+requires-python = ">=3.6"
+license = {text = "GPL-3.0-or-later"}
+authors = [
+    {name = "Anthony Fullam", email = "anthony.fullam@embl.de"},
+]
+classifiers = [
+    "Environment :: Console",
+    "Natural Language :: English",
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+]
+dependencies = [
+    "numpy>=1.20",
+    "scipy>=1.7",
+    "pandas>=2.0.0",
+    "plotly>=5.0",
+    "requests>=2.22.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "coverage",
+    "flake8",
+    "pytest",
+]
+docs = [
+    "sphinx",
+    "ipython",
+    "matplotlib",
+    "numpydoc",
+    "sphinx-copybutton",
+    "sphinx_rtd_theme",
+]
+dev = ["gunc[test,docs]"]
+
+[project.urls]
+Homepage = "https://github.com/grp-bork/gunc"
+
+[project.scripts]
+gunc = "gunc.gunc:main"
+
+[tool.setuptools.packages.find]
+exclude = ["docs*", "tests*"]
+
+[tool.setuptools.package-data]
+gunc = [
+    "data/genome2taxonomy_pg2.1ref.tsv",
+    "data/genome2taxonomy_pg3ref.tsv",
+    "data/genome2taxonomy_gtdb95ref.tsv",
+    "data/genome2taxonomy_gtdb214ref.tsv",
+    "data/template.html",
+    "tests/test_data/*",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["gunc/tests"]
+
+[tool.coverage.run]
+source = ["gunc"]
+
+[tool.coverage.report]
+omit = ["*/python?.?/*", "*/site-packages/nose/*"]
+exclude_lines = ["if __name__ == '__main__':"]

@@ -1,5 +1,5 @@
 import pandas as pd
-from ..visualisation import *
+from ..visualisation import create_cat_codes_from_df, convert_data, group_identical_rows
 
 
 def test_create_cat_codes_from_df():
@@ -15,7 +15,7 @@ def test_convert_data():
     result = ["a", "b", "c"]
     assert convert_data(data, ref_dict) == result
     df_data = pd.DataFrame(data)
-    pd.testing.assert_frame_equal(convert_data(df_data, ref_dict), pd.DataFrame(result))
+    pd.testing.assert_frame_equal(convert_data(df_data, ref_dict), pd.DataFrame(result, dtype=object))
 
 
 def test_group_identical_rows():

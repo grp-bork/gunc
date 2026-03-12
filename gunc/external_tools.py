@@ -1,54 +1,11 @@
 #!/usr/bin/env python3
+import os
 import sys
+import logging
 import shutil
-import argparse
 import subprocess
 
-
-def parse_args(args):
-    """Parse Arguments
-
-    Arguments:
-        args (list): List of args supplied to script.
-
-    Returns:
-        Namespace: assigned args
-
-    """
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-d",
-        "--database_file",
-        help="Diamond database reference file.",
-        required=True,
-        metavar="",
-    )
-    parser.add_argument(
-        "-i",
-        "--input_file",
-        help="Input file in FASTA format..",
-        required=True,
-        metavar="",
-    )
-    parser.add_argument(
-        "-p",
-        "--diamond_threads",
-        help="number of CPU threads used for diamond search.",
-        default="10",
-        metavar="",
-    )
-    parser.add_argument(
-        "-t",
-        "--temp_dir",
-        help="Directory to store temporary files.",
-        required=True,
-        metavar="",
-    )
-    parser.add_argument(
-        "-o", "--out_file", help="Output file.", required=True, metavar=""
-    )
-    args = parser.parse_args()
-    return args
+logger = logging.getLogger(__name__)
 
 
 def get_record_count_in_fasta(fasta_file):
@@ -62,17 +19,21 @@ def get_record_count_in_fasta(fasta_file):
     """
     try:
         if fasta_file.endswith(".gz"):
+            zcat = subprocess.Popen(
+                ["zcat", fasta_file], stdout=subprocess.PIPE
+            )
             count = subprocess.check_output(
-                f'zcat {fasta_file} | grep -c ">"', shell=True, universal_newlines=True
+                ["grep", "-c", ">"], stdin=zcat.stdout, universal_newlines=True
             ).strip()
+            zcat.wait()
         else:
             count = subprocess.check_output(
-                f'grep -c ">" {fasta_file}', shell=True, universal_newlines=True
+                ["grep", "-c", ">", fasta_file], universal_newlines=True
             ).strip()
     except subprocess.CalledProcessError as e:
         count = 0
         if e.returncode > 1:
-            print(f"[WARNING] Counting records failed {fasta_file}")
+            logger.warning(f"Counting records failed {fasta_file}")
     return int(count)
 
 
@@ -121,7 +82,9 @@ def prodigal(input_file, out_file):
                 universal_newlines=True,
             )
     except subprocess.CalledProcessError:
-        print(f"[ERROR] Failed to run Prodigal {input_file}")
+        logger.error(f"Failed to run Prodigal {input_file}")
+        if os.path.isfile(out_file):
+            os.unlink(out_file)
 
 
 def diamond(input_file, threads, temp_dir, database_file, out_file):
@@ -131,7 +94,7 @@ def diamond(input_file, threads, temp_dir, database_file, out_file):
         input_file (str): full path of gene calls
         threads (int): number of threads to use
         temp_dir (str): path of directory to use for tmp files
-        database_file (str): full path fof diamond db file
+        database_file (str): full path of diamond db file
         out_file (str): full path of output file
     """
     try:
@@ -162,27 +125,35 @@ def diamond(input_file, threads, temp_dir, database_file, out_file):
             universal_newlines=True,
         )
     except subprocess.CalledProcessError as e:
-        sys.exit(f"[ERROR] Failed to run Diamond on {input_file} \n {e.output}")
+        logger.error(f"Failed to run Diamond on {input_file}: {e.output}")
+        sys.exit(1)
+
+
+REQUIRED_DIAMOND_VERSION = "2.1.24"
 
 
 def check_diamond_version():
     """Return version of diamond found."""
     return (
         subprocess.check_output(
-            "diamond --version", shell=True, universal_newlines=True
+            ["diamond", "--version"], universal_newlines=True
         )
         .strip()
         .split()[2]
     )
 
 
+def check_diamond_version_correct():
+    """Return True if diamond version matches REQUIRED_DIAMOND_VERSION.
+
+    Set env var GUNC_SKIP_DIAMOND_VERSION_CHECK=1 to bypass this check.
+    """
+    try:
+        return check_diamond_version() == REQUIRED_DIAMOND_VERSION
+    except Exception:
+        return False
+
+
 def check_if_tool_exists(tool_name):
     """Check if tool is available."""
     return shutil.which(tool_name) is not None
-
-
-if __name__ == "__main__":
-    args = parse_args(sys.argv[1:])
-    diamond(
-        args.input_file, args.threads, args.temp_dir, args.database_file, args.out_file
-    )

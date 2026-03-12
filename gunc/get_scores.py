@@ -1,15 +1,51 @@
 #!/usr/bin/env python3
 import os
 import sys
+import logging
 import scipy
 import scipy.stats
 import numpy as np
 import pandas as pd
 from collections import OrderedDict
-from pkg_resources import resource_filename
 import warnings
+from importlib.resources import files as _pkg_files
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
+
+logger = logging.getLogger(__name__)
+
+
+def resource_filename(package, resource):
+    return str(_pkg_files(package).joinpath(resource))
+
+
+# Ordered list of the seven taxonomic levels used throughout scoring and output.
+TAX_LEVELS = ["kingdom", "phylum", "class", "order", "family", "genus", "species"]
+
+# CSS threshold above which a genome is called chimeric (calibrated by benchmarking).
+CSS_CHIMERIC_THRESHOLD = 0.45
+
+
+def detect_db_from_filename(filename):
+    """Detect the db string from a diamond output or database filename.
+
+    Handles both current naming (gtdb_95) and legacy naming (gtdb95) for
+    backward compatibility with output files from v1.0.6 and earlier.
+
+    Arguments:
+        filename (str): Basename of a diamond output file or .dmnd file.
+
+    Returns:
+        str: db string, one of: progenomes_2.1, progenomes_3, gtdb_95, gtdb_214
+    """
+    if "gtdb_214" in filename or "gtdb214" in filename:
+        return "gtdb_214"
+    elif "gtdb_95" in filename or "gtdb95" in filename:
+        return "gtdb_95"
+    elif "progenomes_3" in filename or "progenomes3" in filename:
+        return "progenomes_3"
+    else:
+        return "progenomes_2.1"
 
 
 def read_diamond_output(file_path):
@@ -31,7 +67,7 @@ def read_diamond_output(file_path):
     if len(df) == 0:
         return df
     else:
-        df["contig"] = df["query"].str.rpartition("_")[[0]]
+        df["contig"] = df["query"].str.rpartition("_")[0]
         return df
 
 
@@ -124,7 +160,7 @@ def calc_expected_conditional_entropy(contigs, taxons):
     return total_entropy
 
 
-def read_genome2taxonomy_reference(db):
+def read_genome2taxonomy_reference(db, custom_genome2taxonomy):
     """Read in genome2taxonomy reference data.
 
     This file translates the genomes in the diamond reference file to
@@ -132,32 +168,39 @@ def read_genome2taxonomy_reference(db):
 
     Arguments:
         db (str): Which db to use: progenomes or gtdb
+        custom_genome2taxonomy (str): genome2taxonomy tsv if using custom db
 
     Returns:
         pandas.DataFrame: genome2taxonomy reference
     """
-    if db == "progenomes_2.1":
-        genome2taxonomy = resource_filename(__name__, "data/genome2taxonomy_ref.tsv")
+    if custom_genome2taxonomy:
+        genome2taxonomy = custom_genome2taxonomy
+    elif db == "progenomes_2.1":
+        genome2taxonomy = resource_filename("gunc", "data/genome2taxonomy_pg2.1ref.tsv")
+    elif db == "progenomes_3":
+        genome2taxonomy = resource_filename("gunc", "data/genome2taxonomy_pg3ref.tsv")
     elif db == "gtdb_95":
-        genome2taxonomy = resource_filename(
-            __name__, "data/genome2taxonomy_gtdbref.tsv"
-        )
+        genome2taxonomy = resource_filename("gunc", "data/genome2taxonomy_gtdb95ref.tsv")
+    elif db == "gtdb_214":
+        genome2taxonomy = resource_filename("gunc", "data/genome2taxonomy_gtdb214ref.tsv")
     else:
-        sys.exit(f"[ERROR] {db} unknown. Allowed: progenomes_2.1, gtdb_95")
+        logger.error(f"{db} unknown. Allowed: progenomes_2.1, progenomes_3, gtdb_95, gtdb_214")
+        sys.exit(1)
     return pd.read_csv(genome2taxonomy, sep="\t")
 
 
-def create_base_data(diamond_df, db):
+def create_base_data(diamond_df, db, custom_genome2taxonomy):
     """Assign taxonomies to diamond output.
 
     Arguments:
         diamond_df (pandas.DataFrame): diamond output
         db (str): Which db to use: progenomes or gtdb
+        custom_genome2taxonomy (str): genome2taxonomy tsv if using custom db
 
     Returns:
         pandas.DataFrame: merged dataframe
     """
-    genome2taxonomy_df = read_genome2taxonomy_reference(db)
+    genome2taxonomy_df = read_genome2taxonomy_reference(db, custom_genome2taxonomy)
     return pd.merge(diamond_df, genome2taxonomy_df, on="genome", how="inner")
 
 
@@ -285,7 +328,7 @@ def calc_clade_separation_score(
     """
     if contamination_portion == 0:
         return 0
-    elif contamination_portion == np.nan:
+    elif pd.isna(contamination_portion):
         return np.nan
     elif expected_conditional_entropy == 0:
         return np.nan
@@ -329,7 +372,7 @@ def is_chimeric(clade_separation_score_adjusted):
     Returns:
         bool: is genome chimeric
     """
-    if clade_separation_score_adjusted > 0.45:
+    if clade_separation_score_adjusted > CSS_CHIMERIC_THRESHOLD:
         return True
     else:
         return False
@@ -398,8 +441,8 @@ def get_scores_for_taxlevel(
         contamination_portion, conditional_entropy, expected_conditional_entropy
     )
 
-    portion_genes_retained = len(tax_data) / genes_mapped
-    genes_retained_index = genes_mapped / genes_called * portion_genes_retained
+    portion_genes_retained = len(tax_data) / genes_mapped if genes_mapped > 0 else np.nan
+    genes_retained_index = genes_mapped / genes_called * portion_genes_retained if genes_called > 0 else np.nan
     reference_representation_score = genes_retained_index * mean_hit_identity
     adjustment = determine_adjustment(genes_retained_index)
     clade_separation_score_adjusted = clade_separation_score * adjustment
@@ -424,6 +467,35 @@ def get_scores_for_taxlevel(
     )
 
 
+def get_base_data_for_plotting(
+    diamond_file_path,
+    genes_called=0,
+    sensitive=False,
+    db="progenomes_2.1",
+    custom_genome2taxonomy=None,
+):
+    """Get base data needed for plotting a genome's taxonomy assignments.
+
+    Arguments:
+        diamond_file_path (str): Full path to diamond output
+
+    Keyword Arguments:
+        genes_called (int): Number of genes called (unused, kept for API compat)
+        sensitive (bool): Run in sensitive mode (default: False)
+        db (str): Which db to use (default: progenomes_2.1)
+        custom_genome2taxonomy (str): genome2taxonomy file if using custom DB
+
+    Returns:
+        tuple: (base_data DataFrame, genome_name str, abundant_lineages_cutoff int)
+    """
+    diamond_df = read_diamond_output(diamond_file_path)
+    base_data = create_base_data(diamond_df, db, custom_genome2taxonomy)
+    genes_mapped, _ = get_stats(diamond_df)
+    genome_name = os.path.basename(diamond_file_path).split(".diamond.")[0]
+    abundant_lineages_cutoff = get_abundant_lineages_cutoff(sensitive, genes_mapped)
+    return base_data, genome_name, abundant_lineages_cutoff
+
+
 def chim_score(
     diamond_file_path,
     genes_called=0,
@@ -431,7 +503,7 @@ def chim_score(
     min_mapped_genes=11,
     use_species_level=False,
     db="progenomes_2.1",
-    plot=False,
+    custom_genome2taxonomy=None,
 ):
     """Get chimerism scores for a genome.
 
@@ -445,31 +517,21 @@ def chim_score(
                                 at which to calculate scores (default: (11)
         use_species_level (bool): Allow species level to be selected for maxCSS
                                   (default: (False))
-        plot (bool): Return data needed for plotting (default: (False))
+        custom_genome2taxonomy (str): genome2taxonomy file if using custom DB
         db (str): Which db to use: progenomes or gtdb (default: (progenomes)
 
     Returns:
-        pandas.DataFrame: GUNC scores
+        tuple: (all_levels DataFrame, max_CSS DataFrame)
     """
     diamond_df = read_diamond_output(diamond_file_path)
-    base_data = create_base_data(diamond_df, db)
+    base_data = create_base_data(diamond_df, db, custom_genome2taxonomy)
     genes_mapped, contig_count = get_stats(diamond_df)
 
     genome_name = os.path.basename(diamond_file_path).split(".diamond.")[0]
     abundant_lineages_cutoff = get_abundant_lineages_cutoff(sensitive, genes_mapped)
-    if plot:
-        return base_data, genome_name, abundant_lineages_cutoff
 
     scores = []
-    for tax_level in [
-        "kingdom",
-        "phylum",
-        "class",
-        "order",
-        "family",
-        "genus",
-        "species",
-    ]:
+    for tax_level in TAX_LEVELS:
         scores.append(
             get_scores_for_taxlevel(
                 base_data,
@@ -483,7 +545,6 @@ def chim_score(
             )
         )
     df = pd.DataFrame(scores).round(2)
-    df["pass.GUNC"] = df["pass.GUNC"].astype(str)
     if df["clade_separation_score"].isnull().all():
         max_CSSidx = 0
     elif use_species_level:
