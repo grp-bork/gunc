@@ -2,7 +2,7 @@
 Changelog
 =========
 
-v1.0.7
+v1.1.0
 ------
 
 Summary
