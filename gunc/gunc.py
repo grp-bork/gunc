@@ -1016,6 +1016,13 @@ def get_scores_using_supplied_cont_cutoff(detail_file, cutoff=0.05):
 def summarise(args):
     import pandas as pd
 
+    # TODO: in a future major version, replace --output_file with --out_dir
+    #       to be consistent with other subcommands (e.g. merge_checkm).
+    output_parent = os.path.dirname(os.path.abspath(args.output_file))
+    if not os.path.isdir(output_parent):
+        logger.error(f"Output directory does not exist: '{output_parent}'")
+        sys.exit(1)
+
     max_csslevel_file = pd.read_csv(args.max_csslevel_file, sep="\t", header=0)
     max_csslevel_file = max_csslevel_file.to_dict("index")
     db = os.path.basename(args.max_csslevel_file).replace("GUNC.", "").replace(".maxCSS_level.tsv", "")
