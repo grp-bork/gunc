@@ -10,6 +10,42 @@ import requests
 logger = logging.getLogger(__name__)
 
 
+DB_DOWNLOADS = {
+    "progenomes_2.1": {
+        "url": "https://zenodo.org/records/19631736/files/gunc_db_progenomes2.1.dmnd.gz",
+        "file_name": "gunc_db_progenomes2.1.dmnd.gz",
+        "gz_md5": "bc93a855e0760aad5c4e5f2d0e26da46",
+        "dmnd_md5": "447c9330056b02f29f30fe81fe4af4eb",
+    },
+    "progenomes_3": {
+        "url": "https://zenodo.org/records/19631883/files/gunc_db_progenomes3.dmnd.gz",
+        "file_name": "gunc_db_progenomes3.dmnd.gz",
+        "gz_md5": "a26b3be496017f291eece27740d0f37f",
+        "dmnd_md5": "b1a9347d219a632e9ecf4652dee9bdd1",
+    },
+    "gtdb_95": {
+        "url": "https://zenodo.org/records/19631804/files/gunc_db_gtdb95.dmnd.gz",
+        "file_name": "gunc_db_gtdb95.dmnd.gz",
+        "gz_md5": "14ed95a2fb1360925e28b7b55df14574",
+        "dmnd_md5": "3b502dc047efaafb9831a5eaec7617fd",
+    },
+    "gtdb_214": {
+        "url": "https://zenodo.org/records/19632326/files/gunc_db_gtdb214.dmnd.gz",
+        "file_name": "gunc_db_gtdb214.dmnd.gz",
+        "gz_md5": "3933007d83a7a85e4672295ee1f9d91f",
+        "dmnd_md5": "ac4d6304cab3d62a396703eeb039d3b7",
+    },
+}
+
+TEST_DATA_BASE_URL = "https://zenodo.org/records/19631420/files/"
+TEST_DATA_FILES = {
+    "ci_test.dmnd": "1b040a71b351f4767d1994ca5a6f1a54",
+    "chimeric.faa": "4137809237c834348017170e4ee6eb1f",
+    "clean.faa": "a28f35b61a5d2adad21ee22e68765405",
+    "genome2taxonomy.tsv": "7d074a2063907f1d1c9613043ed0c68a",
+}
+
+
 def md5sum_file(file):
     """Computes MD5 sum of file.
 
@@ -77,38 +113,13 @@ def decompress_gzip_file(gz_file, out_file):
         sys.exit(1)
 
 
-def get_md5_from_url(file_url):
-    """Read md5sum file from url
-
-    Assumes the md5 file is the file url with .md5 appended
-
-    Arguments:
-        file_url (str): URL of file
-
-    Returns:
-        str: md5sum
-    """
-    try:
-        r = requests.get(f"{file_url}.md5", timeout=30)
-        r.raise_for_status()
-        parts = r.text.split(" ")
-        if not parts or not parts[0]:
-            logger.error("Unexpected MD5 response from server.")
-            sys.exit(1)
-        return parts[0]
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Could not retrieve MD5 checksum: {e}")
-        sys.exit(1)
-
-
-def check_md5(file_url, file_path):
+def check_md5(file_path, expected_md5):
     """Check md5 and remove file if incorrect.
 
     Arguments:
-        file_url (str): URL of file
         file_path (str): Path of file
+        expected_md5 (str): Expected md5sum
     """
-    expected_md5 = get_md5_from_url(file_url)
     downloaded_md5 = md5sum_file(file_path)
     if downloaded_md5 != expected_md5:
         os.unlink(file_path)
@@ -125,19 +136,16 @@ def get_test_data(base_dir):
     Arguments:
         base_dir (str): Path of output directory
     """
-    base_url = "https://black.embl.de/~fullam/gunc/test_data/"
-    files = ["ci_test.dmnd", "chimeric.faa", "clean.faa", "genome2taxonomy.tsv"]
-
     if not os.path.isdir(base_dir):
         logger.error(f"Output directory {base_dir} doesn't exist.")
         sys.exit(1)
 
-    for file_name in files:
-        url = f"{base_url}{file_name}"
+    for file_name, expected_md5 in TEST_DATA_FILES.items():
+        url = f"{TEST_DATA_BASE_URL}{file_name}"
         out_path = os.path.join(base_dir, file_name)
         logger.info(f"Downloading {file_name}...")
         download_file(url, out_path)
-        check_md5(url, out_path)
+        check_md5(out_path, expected_md5)
 
     logger.info("Test data downloaded successfully.")
     logger.info(f"Files saved to: {base_dir}")
@@ -167,22 +175,13 @@ def get_db(base_dir, db="progenomes_2.1"):
         get_test_data(base_dir)
         return
 
-    base_url = "https://black.embl.de/~fullam/gunc/"
-    if db == "progenomes_2.1":
-        file_name = "gunc_db_progenomes2.1.dmnd.gz"
-    elif db == "progenomes_3":
-        file_name = "gunc_db_progenomes3.dmnd.gz"
-    elif db == "gtdb_95":
-        file_name = "gunc_db_gtdb95.dmnd.gz"
-    elif db == "gtdb_214":
-        file_name = "gunc_db_gtdb214.dmnd.gz"
-    else:
+    if db not in DB_DOWNLOADS:
         logger.error(f"DB {db} unknown. Allowed: progenomes_2.1, progenomes_3, gtdb_95, gtdb_214, test_data")
         sys.exit(1)
-    gz_file_url = f"{base_url}{file_name}"
-    gz_file_path = os.path.join(base_dir, file_name)
-    file_url = gz_file_url.replace(".gz", "")
-    out_file = gz_file_path.replace(".gz", "")
+    entry = DB_DOWNLOADS[db]
+    gz_file_url = entry["url"]
+    gz_file_path = os.path.join(base_dir, entry["file_name"])
+    out_file = gz_file_path[:-3]  # strip .gz
 
     if not os.path.isdir(base_dir):
         logger.error(f"Output directory {base_dir} doesn't exist.")
@@ -195,7 +194,7 @@ def get_db(base_dir, db="progenomes_2.1"):
     logger.info("DB download successful.")
     logger.info("Computing DB md5sum...")
 
-    check_md5(gz_file_url, gz_file_path)
+    check_md5(gz_file_path, entry["gz_md5"])
 
     logger.info("md5sum check successful.")
     logger.info("Uncompressing file...")
@@ -205,7 +204,7 @@ def get_db(base_dir, db="progenomes_2.1"):
     logger.info("Decompression complete.")
     logger.info("Computing DB md5sum...")
 
-    check_md5(file_url, out_file)
+    check_md5(out_file, entry["dmnd_md5"])
     os.unlink(gz_file_path)
 
     logger.info("md5sum check successful.")

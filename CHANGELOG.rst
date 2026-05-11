@@ -2,6 +2,15 @@
 Changelog
 =========
 
+v1.1.1
+------
+
+Summary
+^^^^^^^
+
+Minor release that updates the source of the reference database. No other changes.
+
+
 v1.1.0
 ------
 
