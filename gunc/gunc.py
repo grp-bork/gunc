@@ -496,9 +496,9 @@ def get_files_in_dir_with_suffix(directory, suffix):
 def openfile(filename):
     """Open file whether gzipped or not."""
     if filename.endswith(".gz"):
-        return gzip.open(filename, "rt")
+        return gzip.open(filename, "rt", encoding="utf-8")
     else:
-        return open(filename, "r")
+        return open(filename, "r", encoding="utf-8")
 
 
 def merge_genecalls(genecall_files, out_dir, file_suffix):
@@ -517,7 +517,7 @@ def merge_genecalls(genecall_files, out_dir, file_suffix):
         str: path of the merged file
     """
     merged_outfile = os.path.join(out_dir, "genecalls.merged.faa")
-    with open(merged_outfile, "w") as ofile:
+    with open(merged_outfile, "w", encoding="utf-8") as ofile:
         for file in genecall_files:
             if os.path.isfile(file):
                 with openfile(file) as infile:
@@ -548,7 +548,7 @@ def split_diamond_output(diamond_outfile, out_dir, db):
     """
     outfiles = []
     output = {}
-    with open(diamond_outfile, "r") as f:
+    with open(diamond_outfile, "r", encoding="utf-8") as f:
         for line in f:
             query = line.split("\t")[0]
             contig_name, genome_name = query.rsplit("/", 1)
@@ -557,7 +557,7 @@ def split_diamond_output(diamond_outfile, out_dir, db):
     for genome_name in output:
         outfile = os.path.join(out_dir, f"{genome_name}.diamond.{db}.out")
         outfiles.append(outfile)
-        with open(outfile, "w") as ofile:
+        with open(outfile, "w", encoding="utf-8") as ofile:
             ofile.write(output[genome_name])
     return outfiles
 
@@ -573,7 +573,7 @@ def get_paths_from_file(input_file):
     if input_file.endswith(".gz"):
         logger.error("Input looks like a FASTA file. Use -i/--input_fasta for a single genome or -d/--input_dir for a directory.")
         sys.exit(1)
-    with open(input_file, "r") as f:
+    with open(input_file, "r", encoding="utf-8") as f:
         paths = f.readlines()
     if not paths:
         logger.error(f"Input file is empty: {input_file}")
@@ -926,7 +926,7 @@ def add_empty_diamond_output(diamond_outdir, fnas, file_suffix, db):
         )
         if not os.path.isfile(diamond_outfile):
             logger.warning(f"No genes mapped to reference: {basename}")
-            open(diamond_outfile, "a").close()
+            open(diamond_outfile, "a", encoding="utf-8").close()
         else:
             count_existing_diamond_files += 1
         expected_diamond_outfiles.append(diamond_outfile)
@@ -955,7 +955,7 @@ def get_gene_count_file(args):
 def get_genecount_from_gunc_output(gene_counts_file, basename):
     """Extract gene count from GUNC gene_counts.json file."""
     try:
-        with open(gene_counts_file) as f:
+        with open(gene_counts_file, encoding="utf-8") as f:
             data = json.load(f)
         return int(data[basename])
     except (KeyError, ValueError) as e:
@@ -979,7 +979,7 @@ def plot(args):
     )
 
     viz_html_path = os.path.join(args.out_dir, f"{basename}.viz.html")
-    with open(viz_html_path, "w") as f:
+    with open(viz_html_path, "w", encoding="utf-8") as f:
         f.write(viz_html)
     logger.info(f"Output written to: {viz_html_path}")
 
