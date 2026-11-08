@@ -496,7 +496,7 @@ def get_files_in_dir_with_suffix(directory, suffix):
 def openfile(filename):
     """Open file whether gzipped or not."""
     if filename.endswith(".gz"):
-        return gzip.open(filename, "rt")
+        return gzip.open(filename, "rt", encoding="utf-8")
     else:
         return open(filename, "r", encoding="utf-8")
 
